@@ -1,0 +1,19 @@
+<!--
+    This file is imported by any project that imports Microsoft.Common.props
+-->
+<Project>
+    <PropertyGroup>
+        <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+        <SolutionDirectory>$([System.IO.Path]::GetDirectoryName('$(DirectoryBuildPropsPath)'))</SolutionDirectory>
+        <MainOutput Condition="'$(Configuration)' == 'Debug'">$(SolutionDirectory)\ControlConnection.App\bin\Debug</MainOutput>
+        <MainOutput Condition="'$(Configuration)' == 'Release'">$(SolutionDirectory)\ControlConnection.App\bin\Release</MainOutput>
+        <PluginOutput>$(MainOutput)\Plugins</PluginOutput>
+        <Obfuscate Condition="'$(Configuration)' != 'Debug'">true</Obfuscate>
+    </PropertyGroup>
+
+<!--
+    <PropertyGroup>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    </PropertyGroup>
+    -->
+</Project>
