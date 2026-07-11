@@ -1,21 +1,17 @@
 using AFOCS.App.Core;
 using AFOCS.App.Enums;
 using AFOCS.App.Shared;
-using Caliburn.Micro;
-using ControlzEx.Standard;
 using Microsoft.Extensions.Logging;
 using NationalInstruments.Visa;
 
-namespace AFOCS.App.Devices
+namespace AFOCS.App.Devices.Implementation
 {
     public enum ProgrammablePowerSupplyChannel
     {
         Channel1 = 1,
         Channel2 = 2,
     }
-    /// <summary>
-    /// 编程电源  型号:DP832A
-    /// </summary>
+
     public class ProgrammablePowerSupply : IProgrammablePowerSupply
     {
         public bool IsConnected { get; private set; }
@@ -28,10 +24,10 @@ namespace AFOCS.App.Devices
         private readonly ILogger<ProgrammablePowerSupply> _logger;
         private readonly SemaphoreSlim _lock = new(1, 1);
 
-        public ProgrammablePowerSupply()
+        public ProgrammablePowerSupply(IConfigService configService, ILogger<ProgrammablePowerSupply> logger)
         {
-            _configService = IoC.Get<IConfigService>();
-            _logger = IoC.Get<ILogger<ProgrammablePowerSupply>>();
+            _configService = configService;
+            _logger = logger;
         }
 
         public async Task<Result> InitializeAsync(CancellationToken token = default)
@@ -57,7 +53,6 @@ namespace AFOCS.App.Devices
                 {
                     _logger.LogWarning($"设备错误状态: {errorResult.Message}");
                 }
-
                 return Result.Success($"可编程电源({config.VisaAddress})初始化成功");
             }
             catch (Exception ex)
@@ -120,13 +115,13 @@ namespace AFOCS.App.Devices
 
         public async Task<Result> SetChannelStatusAsync(int channel, bool status)
         {
-            return await SendCommandAsync($"OUTPut CH{channel},{(status?"ON":"OFF")}");
+            return await SendCommandAsync($"OUTPut CH{channel},{(status ? "ON" : "OFF")}");
         }
 
         public async Task<Result<bool>> GetChannelStatusAsync(int channel)
         {
             var result = await SendQueryAsync($"OUTP? CH{channel}");
-            if (!result.IsSuccess || string.IsNullOrWhiteSpace(result.Data)) 
+            if (!result.IsSuccess || string.IsNullOrWhiteSpace(result.Data))
                 return Result<bool>.Fail(result.Code, result.Message);
             return Result<bool>.Success(result.Data.ToLower().Equals("on"));
         }
@@ -138,19 +133,18 @@ namespace AFOCS.App.Devices
 
         public async Task<Result<(double, double)>> GetVoltageAndCurrentAsync(int channel)
         {
-            
             var result = await SendQueryAsync($"APPL? CH{channel}");
             if (!result.IsSuccess) return Result<(double, double)>.Fail(result.Code, result.Message);
             var datas = result.Data?.Split(",");
 
             if (datas != null && datas.Length == 3)
             {
-                if (double.TryParse(datas[1], out double voltage) && double.TryParse(datas[1], out double current))
+                if (double.TryParse(datas[1], out double voltage) && double.TryParse(datas[2], out double current))
                 {
-                    return Result<(double, double)>.Success((voltage,current));
+                    return Result<(double, double)>.Success((voltage, current));
                 }
             }
-         
+
             return Result<(double, double)>.Fail(ResultCode.Fail, $"未知返回数据:{result.Data}");
         }
 

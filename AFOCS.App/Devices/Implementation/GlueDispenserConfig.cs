@@ -1,7 +1,4 @@
-﻿using AFOCS.App.Communication;
-using AFOCS.App.Enums;
-
-namespace AFOCS.App.Devices
+﻿namespace AFOCS.App.Devices.Implementation
 {
     public class GlueDispenserConfigBase
     {

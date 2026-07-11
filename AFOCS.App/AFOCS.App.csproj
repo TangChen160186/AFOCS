@@ -12,7 +12,9 @@
   <ItemGroup>
     <Folder Include="Advance\" />
     <Folder Include="Converters\" />
+    <Folder Include="ViewModels\Test\" />
     <Folder Include="Views\DeviceConfig\" />
+    <Folder Include="Views\Test\" />
   </ItemGroup>
     <ItemGroup>
         <ApplicationDefinition Remove="App.xaml" />

@@ -20,7 +20,7 @@ namespace AFOCS.App.Communication
         private readonly Encoding _encoding = Encoding.ASCII;
 
         private readonly StringBuilder _receiveBuffer = new();
-        private readonly object _bufferLock = new();
+        private readonly Lock _bufferLock = new();
         private TaskCompletionSource<string>? _responseTcs;
         private string? _currentTerminator;
 
@@ -67,7 +67,7 @@ namespace AFOCS.App.Communication
                 };
 
                 var connectTask = _tcpClient.ConnectAsync(config.IpAddress, config.Port);
-                var timeoutTask = Task.Delay(config.ConnectTimeout, cancellationToken);
+                var timeoutTask = Task.Delay(10000, cancellationToken);
 
                 if (await Task.WhenAny(connectTask, timeoutTask).ConfigureAwait(false) == timeoutTask)
                 {
@@ -196,7 +196,7 @@ namespace AFOCS.App.Communication
 
                             lock (_bufferLock)
                             {
-                                _receiveBuffer.Append(receivedText);
+                                _receiveBuffer.Append(receivedText.TrimStart());
 
                                 if (_responseTcs != null && !_responseTcs.Task.IsCompleted && _currentTerminator != null)
                                 {

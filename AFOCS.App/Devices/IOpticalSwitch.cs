@@ -6,7 +6,7 @@ namespace AFOCS.App.Devices
     {
         public Task<Result<bool>> SwitchChannelAsync(int group, int channel);
 
-        public Task<Result<bool>> SwitchChannelAsync(List<int> groups, List<int> channels);
+        public Task<Result<bool>> SwitchChannelAsync(int[] groups, int[] channels);
 
         public Task<Result<Dictionary<int,int>>> GetAllChannelStatusAsync();
 

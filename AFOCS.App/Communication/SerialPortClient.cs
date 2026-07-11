@@ -142,7 +142,7 @@ namespace AFOCS.App.Communication
 
                                 lock (_bufferLock)
                                 {
-                                    _receiveBuffer.Append(receivedText);
+                                    _receiveBuffer.Append(receivedText.TrimStart());
 
                                     if (_responseTcs != null && !_responseTcs.Task.IsCompleted && _currentTerminator != null)
                                     {

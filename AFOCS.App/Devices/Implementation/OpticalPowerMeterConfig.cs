@@ -1,4 +1,4 @@
-﻿namespace AFOCS.App.Devices
+﻿namespace AFOCS.App.Devices.Implementation
 {
     public class OpticalPowerMeterConfigBase
     {

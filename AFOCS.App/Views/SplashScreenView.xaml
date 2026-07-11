@@ -5,21 +5,140 @@
                       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                       xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
                       mc:Ignorable="d"
-                      Title="SplashScreenView"
-                      Height="450" 
-                      Width="800" 
+                      Title="AFOCS - 自动化光纤连接器系统"
+                      Height="520" 
+                      Width="720" 
                       ResizeMode="NoResize"
-                      WindowStartupLocation="CenterOwner" UseNoneWindowStyle="True" Background="#e5edf5">
-    <ScrollViewer VerticalScrollBarVisibility="Visible">
+                      WindowStartupLocation="CenterScreen" 
+                      UseNoneWindowStyle="True"
+                      Background="#FFFFFF">
+    <Window.Resources>
+        <SolidColorBrush x:Key="PrimaryColor" Color="#3B82F6"/>
+        <SolidColorBrush x:Key="SuccessColor" Color="#10B981"/>
+        <SolidColorBrush x:Key="ErrorColor" Color="#EF4444"/>
+        <SolidColorBrush x:Key="WarningColor" Color="#F59E0B"/>
+        <SolidColorBrush x:Key="TextColor" Color="#374151"/>
+        <SolidColorBrush x:Key="SubTextColor" Color="#6B7280"/>
+        <SolidColorBrush x:Key="BorderColor" Color="#E5E7EB"/>
+    </Window.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="160"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="60"/>
+        </Grid.RowDefinitions>
+        
+        <Grid Grid.Row="0" Background="{StaticResource PrimaryColor}" ClipToBounds="True">
+            <Grid.OpacityMask>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Offset="0" Color="#FFFFFFFF"/>
+                    <GradientStop Offset="1" Color="#00FFFFFF"/>
+                </LinearGradientBrush>
+            </Grid.OpacityMask>
+            <Grid Background="{StaticResource PrimaryColor}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Vertical">
+                    <Grid Width="80" Height="80" Background="White"  Margin="0 0 0 16">
+                        <Path Data="M40 10 L70 35 L70 65 L40 90 L10 65 L10 35 Z" Fill="{StaticResource PrimaryColor}" Stretch="Uniform" Margin="15"/>
+                    </Grid>
+                    <TextBlock Text="AFOCS" FontSize="28" FontWeight="Bold" Foreground="White" Margin="0 0 0 4"/>
+                    <TextBlock Text="Automated Fiber Optic Connector System" FontSize="12" Foreground="#E0E7FF" Opacity="0.9"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
 
-        <ListBox ItemsSource="{Binding LogMessages}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding .}"/>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+        <Border Grid.Row="1" Margin="32 0" Background="White" CornerRadius="12" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" Padding="24">
+            <StackPanel Orientation="Vertical">
+                <TextBlock x:Name="StatusText" Text="{Binding CurrentStatus}" FontSize="14" Foreground="{StaticResource TextColor}" Margin="0 0 0 8"/>
+                <ProgressBar x:Name="ProgressBar" 
+                             Value="{Binding Progress}" 
+                             Maximum="100" 
+                             Height="6" 
+                             Background="#E5E7EB" 
+                             BorderThickness="0">
+                    <ProgressBar.Style>
+                        <Style TargetType="ProgressBar">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ProgressBar">
+                                        <Grid x:Name="TemplateRoot" Background="{TemplateBinding Background}" >
+                                            <Rectangle x:Name="PART_Track"/>
+                                            <Border x:Name="PART_Indicator" CornerRadius="3" HorizontalAlignment="Left" Background="{StaticResource PrimaryColor}">
+                                                <Border.Effect>
+                                                    <DropShadowEffect Color="#3B82F6" BlurRadius="8" Opacity="0.5"/>
+                                                </Border.Effect>
+                                                <Rectangle>
+                                                    <Rectangle.Fill>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                            <GradientStop Offset="0" Color="#60A5FA"/>
+                                                            <GradientStop Offset="1" Color="#3B82F6"/>
+                                                        </LinearGradientBrush>
+                                                    </Rectangle.Fill>
+                                                </Rectangle>
+                                            </Border>
+                                        </Grid>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ProgressBar.Style>
+                </ProgressBar>
+                <TextBlock x:Name="ProgressText" Text="{Binding ProgressText}" FontSize="12" Foreground="{StaticResource SubTextColor}" Margin="0 8 0 0" HorizontalAlignment="Right"/>
+            </StackPanel>
+        </Border>
 
-    </ScrollViewer>
+        <Border Grid.Row="2" Margin="32 0" Background="#F9FAFB" CornerRadius="8" BorderBrush="{StaticResource BorderColor}" BorderThickness="1">
+            <TextBlock Text="初始化日志" FontSize="12" FontWeight="Medium" Foreground="{StaticResource TextColor}" Margin="16"/>
+        </Border>
 
+        <ScrollViewer Grid.Row="3" Margin="32" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding LogMessages}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="0 4 0 0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Rectangle Grid.Column="0" Width="8" Height="8" Margin="0 6 8 0">
+                                <Rectangle.Style>
+                                    <Style TargetType="Rectangle">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Type}" Value="Success">
+                                                <Setter Property="Fill" Value="{StaticResource SuccessColor}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="Error">
+                                                <Setter Property="Fill" Value="{StaticResource ErrorColor}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="Warning">
+                                                <Setter Property="Fill" Value="{StaticResource WarningColor}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="Info">
+                                                <Setter Property="Fill" Value="{StaticResource PrimaryColor}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Rectangle.Style>
+                            </Rectangle>
+                            <TextBlock Grid.Column="1" Text="{Binding Time}" FontSize="11" Foreground="{StaticResource SubTextColor}" Margin="0 6 8 0"/>
+                            <TextBlock Grid.Column="2" Text="{Binding Message}" FontSize="12" Foreground="{StaticResource TextColor}" TextWrapping="Wrap"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <Border Grid.Row="4" Margin="32 0" Background="#F9FAFB" CornerRadius="8" BorderBrush="{StaticResource BorderColor}" BorderThickness="1">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <mah:ProgressRing IsActive="{Binding IsLoading}" Width="20" Height="20" Foreground="{StaticResource PrimaryColor}" Margin="0 0 12 0"/>
+                <TextBlock Text="{Binding LoadingText}" FontSize="12" Foreground="{StaticResource SubTextColor}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
 </mah:MetroWindow>

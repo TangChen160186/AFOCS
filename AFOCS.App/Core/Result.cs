@@ -1,5 +1,4 @@
-﻿
-namespace AFOCS.App.Core
+﻿namespace AFOCS.App.Core
 {
     public class Result
     {

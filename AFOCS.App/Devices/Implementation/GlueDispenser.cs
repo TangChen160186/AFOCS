@@ -1,12 +1,11 @@
 using AFOCS.App.Communication;
 using AFOCS.App.Core;
-using AFOCS.App.Shared;
 using AFOCS.App.Enums;
-using Caliburn.Micro;
+using AFOCS.App.Shared;
 using Microsoft.Extensions.Logging;
 using Result = AFOCS.App.Core.Result;
 
-namespace AFOCS.App.Devices
+namespace AFOCS.App.Devices.Implementation
 {
     public class GlueDispenser : IGlueDispenser
     {
@@ -18,24 +17,22 @@ namespace AFOCS.App.Devices
         private readonly IConfigService _configService;
         private readonly ILogger<GlueDispenser> _logger;
 
-
-        public GlueDispenser(WorkPos workPos)
+        public GlueDispenser(WorkPos workPos, ISerialPortClient serialPortClient, IConfigService configService, ILogger<GlueDispenser> logger)
         {
-            _serialPortClient = IoC.Get<ISerialPortClient>();
-            _configService = IoC.Get<IConfigService>();
-            _logger = IoC.Get<ILogger<GlueDispenser>>();
             WorkPos = workPos;
+            _serialPortClient = serialPortClient;
+            _configService = configService;
+            _logger = logger;
         }
+
         public void Dispose()
         {
             _serialPortClient.Dispose();
         }
 
-
         public async Task<Result> InitializeAsync(CancellationToken token = default)
         {
-            var config =
-                await _configService.LoadAsync<GlueDispenserConfig>();
+            var config = await _configService.LoadAsync<GlueDispenserConfig>();
             if (config == null)
             {
                 config = GlueDispenserConfig.Default;
@@ -87,7 +84,6 @@ namespace AFOCS.App.Devices
                 _logger.LogError($"发送指令失败:{e.Message}");
                 return Result.Fail(ResultCode.Fail, $"{e.Message}", e);
             }
-       
         }
     }
 }

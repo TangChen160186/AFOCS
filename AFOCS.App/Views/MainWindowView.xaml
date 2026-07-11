@@ -5,10 +5,175 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
              mc:Ignorable="d"
-             Title="MainWindowView" 
-             Height="450" 
-             Width="800">
-    <Grid>
+             Title="AFOCS - 自动化光纤连接器系统" 
+             Height="800" 
+             Width="1200"
+             WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <SolidColorBrush x:Key="PrimaryColor" Color="#3B82F6"/>
+        <SolidColorBrush x:Key="SuccessColor" Color="#10B981"/>
+        <SolidColorBrush x:Key="ErrorColor" Color="#EF4444"/>
+        <SolidColorBrush x:Key="TextColor" Color="#1F2937"/>
+        <SolidColorBrush x:Key="SubTextColor" Color="#6B7280"/>
+        <SolidColorBrush x:Key="BorderColor" Color="#E5E7EB"/>
+        <SolidColorBrush x:Key="HoverColor" Color="#F3F4F6"/>
+    </Window.Resources>
+    
+    <DockPanel>
+        <Border DockPanel.Dock="Left" Width="240" Background="#1F2937">
+            <StackPanel Orientation="Vertical">
+                <Border Height="80" Background="{StaticResource PrimaryColor}" Margin="0 0 0 24">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
+                        <Grid Width="40" Height="40" Background="White"  Margin="0 0 12 0">
+                            <Path Data="M20 5 L35 17 L35 32 L20 45 L5 32 L5 17 Z" Fill="{StaticResource PrimaryColor}" Stretch="Uniform" Margin="8"/>
+                        </Grid>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="AFOCS" FontSize="18" FontWeight="Bold" Foreground="White"/>
+                            <TextBlock Text="光纤连接器系统" FontSize="10" Foreground="#E0E7FF"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                
+                <StackPanel Orientation="Vertical" Margin="16">
+                    <Button  Margin="0 0 0 8" Height="44" Background="Transparent" 
+                            Foreground="#D1D5DB" BorderBrush="Transparent" 
+                            HorizontalContentAlignment="Left" Padding="16">
+                        <StackPanel Orientation="Horizontal">
+                            <Rectangle Width="20" Height="20" Fill="#D1D5DB" Margin="0 0 12 0"/>
+                            <TextBlock Text="设备监控"/>
+                        </StackPanel>
+                    </Button>
+                    <Button  Margin="0 0 0 8" Height="44" Background="Transparent" 
+                            Foreground="#D1D5DB" BorderBrush="Transparent" 
+                            HorizontalContentAlignment="Left" Padding="16">
+                        <StackPanel Orientation="Horizontal">
+                            <Rectangle Width="20" Height="20" Fill="#D1D5DB" Margin="0 0 12 0"/>
+                            <TextBlock Text="测试控制"/>
+                        </StackPanel>
+                    </Button>
+                    <Button  Margin="0 0 0 8" Height="44" Background="Transparent" 
+                            Foreground="#D1D5DB" BorderBrush="Transparent" 
+                            HorizontalContentAlignment="Left" Padding="16">
+                        <StackPanel Orientation="Horizontal">
+                            <Rectangle Width="20" Height="20" Fill="#D1D5DB" Margin="0 0 12 0"/>
+                            <TextBlock Text="数据管理"/>
+                        </StackPanel>
+                    </Button>
+                    <Button  Margin="0 0 0 8" Height="44" Background="Transparent" 
+                            Foreground="#D1D5DB" BorderBrush="Transparent" 
+                            HorizontalContentAlignment="Left" Padding="16">
+                        <StackPanel Orientation="Horizontal">
+                            <Rectangle Width="20" Height="20" Fill="#D1D5DB" Margin="0 0 12 0"/>
+                            <TextBlock Text="系统设置"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                
+                <Border Height="1" Background="#374151" Margin="16 0"/>
+                
+                <StackPanel Orientation="Vertical" Margin="16" VerticalAlignment="Bottom">
+                    <TextBlock Text="系统状态" FontSize="12" Foreground="#6B7280" Margin="0 0 0 12"/>
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 8">
+                        <Rectangle Width="8" Height="8" Fill="{StaticResource SuccessColor}"  Margin="0 4 8 0"/>
+                        <TextBlock Text="运行中" FontSize="12" Foreground="#D1D5DB"/>
+                    </StackPanel>
+                    <TextBlock Text="版本 1.0.0" FontSize="10" Foreground="#4B5563"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
         
-    </Grid>
+        <Border DockPanel.Dock="Top" Height="64" Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="0 0 0 1">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0 0 24 0">
+                <StackPanel Orientation="Horizontal" Margin="0 0 24 0">
+                    <TextBlock Text="左工位" FontSize="12" Foreground="{StaticResource SubTextColor}" Margin="0 0 8 0"/>
+                    <Rectangle Width="8" Height="8" Fill="{StaticResource ErrorColor}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0 0 24 0">
+                    <TextBlock Text="右工位" FontSize="12" Foreground="{StaticResource SubTextColor}" Margin="0 0 8 0"/>
+                    <Rectangle Width="8" Height="8" Fill="{StaticResource ErrorColor}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="系统时间" FontSize="12" Foreground="{StaticResource SubTextColor}" Margin="0 0 8 0"/>
+                    <TextBlock Text="14:30:00" FontSize="12" Foreground="{StaticResource TextColor}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+        
+        <Grid Background="#F9FAFB">
+            <StackPanel Orientation="Vertical" Margin="32">
+                <StackPanel Orientation="Horizontal" Margin="0 0 0 24">
+                    <TextBlock Text="设备监控" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextColor}"/>
+                    <TextBlock Text=" - 实时状态" FontSize="14" Foreground="{StaticResource SubTextColor}" Margin="8 8 0 0"/>
+                </StackPanel>
+                
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <Border Grid.Column="0" Background="White" CornerRadius="12" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" Margin="0 0 16 0">
+                        <StackPanel Margin="24">
+                            <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
+                                <TextBlock Text="左工位" FontSize="14" FontWeight="Medium" Foreground="{StaticResource TextColor}"/>
+                                <Rectangle Width="8" Height="8" Fill="{StaticResource ErrorColor}"  Margin="8 4 0 0"/>
+                            </StackPanel>
+                            
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" Margin="0 0 0 12">
+                                    <TextBlock Text="点胶机" FontSize="12" Foreground="{StaticResource SubTextColor}" Width="80"/>
+                                    <TextBlock Text="未连接" FontSize="12" Foreground="{StaticResource ErrorColor}"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0 0 0 12">
+                                    <TextBlock Text="光功率计" FontSize="12" Foreground="{StaticResource SubTextColor}" Width="80"/>
+                                    <TextBlock Text="未连接" FontSize="12" Foreground="{StaticResource ErrorColor}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    
+                    <Border Grid.Column="1" Background="White" CornerRadius="12" BorderBrush="{StaticResource BorderColor}" BorderThickness="1">
+                        <StackPanel Margin="24">
+                            <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
+                                <TextBlock Text="右工位" FontSize="14" FontWeight="Medium" Foreground="{StaticResource TextColor}"/>
+                                <Rectangle Width="8" Height="8" Fill="{StaticResource ErrorColor}"  Margin="8 4 0 0"/>
+                            </StackPanel>
+                            
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" Margin="0 0 0 12">
+                                    <TextBlock Text="点胶机" FontSize="12" Foreground="{StaticResource SubTextColor}" Width="80"/>
+                                    <TextBlock Text="未连接" FontSize="12" Foreground="{StaticResource ErrorColor}"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0 0 0 12">
+                                    <TextBlock Text="光功率计" FontSize="12" Foreground="{StaticResource SubTextColor}" Width="80"/>
+                                    <TextBlock Text="未连接" FontSize="12" Foreground="{StaticResource ErrorColor}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+                
+                <Border Margin="0 24 0 0" Background="White" CornerRadius="12" BorderBrush="{StaticResource BorderColor}" BorderThickness="1">
+                    <StackPanel Margin="24">
+                        <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
+                            <TextBlock Text="公共设备" FontSize="14" FontWeight="Medium" Foreground="{StaticResource TextColor}"/>
+                        </StackPanel>
+                        
+                        <StackPanel Orientation="Horizontal">
+                            <StackPanel Orientation="Vertical" Width="200">
+                                <StackPanel Orientation="Horizontal" Margin="0 0 0 12">
+                                    <TextBlock Text="可编程电源" FontSize="12" Foreground="{StaticResource SubTextColor}" Width="100"/>
+                                    <TextBlock Text="未连接" FontSize="12" Foreground="{StaticResource ErrorColor}"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="光开关" FontSize="12" Foreground="{StaticResource SubTextColor}" Width="100"/>
+                                    <TextBlock Text="未连接" FontSize="12" Foreground="{StaticResource ErrorColor}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </DockPanel>
 </mah:MetroWindow>
