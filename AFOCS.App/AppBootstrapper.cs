@@ -68,6 +68,7 @@ namespace AFOCS.App
             services.AddSingleton<ProgrammablePowerSupply>();
             services.AddSingleton<OpticalSwitch>();
             services.AddSingleton<CameraLight>();
+            services.AddSingleton<HeightGauge>();
 
             services.AddSingleton<IGlueDispenser>(sp => sp.GetService<GlueDispenserLeft>()!);
             services.AddSingleton<IGlueDispenser>(sp => sp.GetService<GlueDispenserRight>()!);
@@ -76,6 +77,7 @@ namespace AFOCS.App
             services.AddSingleton<IProgrammablePowerSupply>(sp => sp.GetService<ProgrammablePowerSupply>()!);
             services.AddSingleton<IOpticalSwitch>(sp => sp.GetService<OpticalSwitch>()!);
             services.AddSingleton<ICameraLight>(sp => sp.GetService<CameraLight>()!);
+            services.AddSingleton<IHeightGauge>(sp => sp.GetService<HeightGauge>()!);
 
             services.AddSingleton<IDevice>(sp => sp.GetService<GlueDispenserLeft>()!);
             services.AddSingleton<IDevice>(sp => sp.GetService<GlueDispenserRight>()!);
@@ -84,6 +86,7 @@ namespace AFOCS.App
             services.AddSingleton<IDevice>(sp => sp.GetService<ProgrammablePowerSupply>()!);
             services.AddSingleton<IDevice>(sp => sp.GetService<OpticalSwitch>()!);
             services.AddSingleton<IDevice>(sp => sp.GetService<CameraLight>()!);
+            services.AddSingleton<IDevice>(sp => sp.GetService<HeightGauge>()!);
 
         }
         protected override void OnStartup(object sender, StartupEventArgs e)

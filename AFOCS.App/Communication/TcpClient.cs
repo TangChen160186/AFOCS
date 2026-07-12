@@ -100,7 +100,7 @@ namespace AFOCS.App.Communication
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, $"连接 {config.IpAddress}:{config.Port} 失败");
+                _logger?.LogError(ex, $"连接 {config.IpAddress}:{config.Port} 失败，{ex.Message}");
                 ErrorOccurred?.Invoke(this, ex);
 
                 CleanupConnection();
