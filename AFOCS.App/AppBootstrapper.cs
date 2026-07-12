@@ -53,16 +53,16 @@ namespace AFOCS.App
             services.AddTransient<IConfigService, ConfigService>();
 
             // now use io write 
-            //services.AddKeyedSingleton<IGlueDispenser>(nameof(WorkPos.Left), 
-            //    (provider, o) => new GlueDispenser(WorkPos.Left, 
-            //        provider.GetRequiredService<ISerialPortClient>(),
-            //        provider.GetRequiredService<IConfigService>(),
-            //        provider.GetRequiredService<ILogger<GlueDispenser>>()));
-            //services.AddKeyedSingleton<IGlueDispenser>(nameof(WorkPos.Right), 
-            //    (provider, o) => new GlueDispenser(WorkPos.Right,
-            //        provider.GetRequiredService<ISerialPortClient>(),
-            //        provider.GetRequiredService<IConfigService>(),
-            //        provider.GetRequiredService<ILogger<GlueDispenser>>()));
+            services.AddKeyedSingleton<IGlueDispenser>(nameof(WorkPos.Left),
+                (provider, o) => new GlueDispenser(WorkPos.Left,
+                    provider.GetRequiredService<ISerialPortClient>(),
+                    provider.GetRequiredService<IConfigService>(),
+                    provider.GetRequiredService<ILogger<GlueDispenser>>()));
+            services.AddKeyedSingleton<IGlueDispenser>(nameof(WorkPos.Right),
+                (provider, o) => new GlueDispenser(WorkPos.Right,
+                    provider.GetRequiredService<ISerialPortClient>(),
+                    provider.GetRequiredService<IConfigService>(),
+                    provider.GetRequiredService<ILogger<GlueDispenser>>()));
 
             services.AddKeyedSingleton<IOpticalPowerMeter>(nameof(WorkPos.Left),
                 (provider, o) => new OpticalPowerMeter(WorkPos.Left,
@@ -75,7 +75,9 @@ namespace AFOCS.App
                     provider.GetRequiredService<ITcpClient>(),
                     provider.GetRequiredService<IConfigService>(),
                     provider.GetRequiredService<ILogger<OpticalPowerMeter>>()));
-
+            //services.AddSingleton<IIoController, IIoController>();
+            //services.AddSingleton<IMotionController, IIoController>();
+            services.AddSingleton<ICameraLight, CameraLight>();
             services.AddSingleton<IProgrammablePowerSupply, ProgrammablePowerSupply>();
             services.AddSingleton<IOpticalSwitch, OpticalSwitch>();
 

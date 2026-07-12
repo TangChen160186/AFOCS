@@ -2,14 +2,6 @@
 
 namespace AFOCS.App.Devices
 {
-
-    public enum OSType
-    {
-        DFB,
-        SLED,
-        FP,
-    }
-
     public interface IOpticalPowerMeter: IDevice
     {
 
@@ -17,9 +9,6 @@ namespace AFOCS.App.Devices
 
         Task<Result<bool>> GetOsReadyAsync(int slot);
 
-        Task<Result<(OSType, int)>> GetOsInformationAsync(int slot);
-
-        Task<Result> SetOsStatusAsync(int slot, int channel,bool status);
 
         Task<Result<bool>> GetOsStatusAsync(int slot, int channel);
 
@@ -27,8 +16,7 @@ namespace AFOCS.App.Devices
         Task<Result> SetOsPowerAsync(int slot,int channel,double power);
 
         Task<Result<double>> GetOsPowerAsync(int slot, int channel);
-        Task<Result<List<double>>> GetOsPowerAsync(int slot);
-        Task<Result<int>> GetOsWaveLengthAsync(int slot,int channel);
+        Task<Result<double[]>> GetOsPowerAsync(int slot);
 
         #endregion
 
@@ -37,12 +25,9 @@ namespace AFOCS.App.Devices
 
         Task<Result<bool>> GetOpmReadyAsync(int slot);
 
-        Task<Result<int>> GetOpmWaveLengthAsync(int slot, int channel);
-        Task<Result> SetOpmWaveLengthAsync(int slot, int channel, int waveLength);
-
         // dbm
         Task<Result<double>> GetOpmPowerAsync(int slot, int channel);
-        Task<Result<List<double>>> GetOpmPowerAsync(int slot);
+        Task<Result<double[]>> GetOpmPowerAsync(int slot);
 
         //dbm
         Task<Result> SetOpmOffsetAsync(int slot,int channel,double offset);

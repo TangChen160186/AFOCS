@@ -6,12 +6,6 @@ using NationalInstruments.Visa;
 
 namespace AFOCS.App.Devices.Implementation
 {
-    public enum ProgrammablePowerSupplyChannel
-    {
-        Channel1 = 1,
-        Channel2 = 2,
-    }
-
     public class ProgrammablePowerSupply : IProgrammablePowerSupply
     {
         public bool IsConnected { get; private set; }

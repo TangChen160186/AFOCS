@@ -2,7 +2,7 @@ using System.Text;
 using AFOCS.App.Communication;
 using AFOCS.App.Core;
 using AFOCS.App.Enums;
-using AFOCS.App.Shared;
+using AFOCS.App.Shared; 
 using Microsoft.Extensions.Logging;
 
 namespace AFOCS.App.Devices.Implementation
@@ -72,8 +72,6 @@ namespace AFOCS.App.Devices.Implementation
             try
             {
                 string command = $"SW {group:D2} {channel:D2}";
-                _logger.LogTrace($"发送指令:{command}");
-                
                 var result = await _tcpClient.SendAndReceiveAsync(command);
 
                 if(string.IsNullOrWhiteSpace(result))
@@ -81,15 +79,13 @@ namespace AFOCS.App.Devices.Implementation
                 var trimResult = result.Trim();
                 var split = trimResult.Split(" ");
 
-                if(split.Length!=3)
-                    return Result<bool>.Fail(ResultCode.Fail, $"返回数据未知格式:{result}");
 
-                if (!int.TryParse(split[1], out var g) || !int.TryParse(split[2], out var c))
+                if (split.Length != 3 || !int.TryParse(split[1], out var g) || !int.TryParse(split[2], out var c))
                     return Result<bool>.Fail(ResultCode.Fail, $"返回数据未知格式:{result}");
 
                 if(g == group && c == channel) 
                     return Result<bool>.Success(true, "切换通道成功");
-                return Result<bool>.Success(false, "切换通道失败");
+                return Result<bool>.Success(false, "切换通道失败,返回的数据和传入不一致");
             }
             catch (Exception e)
             {
@@ -118,7 +114,6 @@ namespace AFOCS.App.Devices.Implementation
                     int channel = channels[i];
                     command.Append($" {group:D2} {channel:D2}");
                 }
-                _logger.LogTrace($"发送指令:{command}");
                 var result = await _tcpClient.SendAndReceiveAsync(command.ToString());
                 if (string.IsNullOrWhiteSpace(result))
                     return Result<bool>.Fail(ResultCode.Fail, "返回的数据为空");
@@ -134,7 +129,7 @@ namespace AFOCS.App.Devices.Implementation
                     if (!int.TryParse(split[i*2+1], out var g) || !int.TryParse(split[i*2+2], out var c))
                         return Result<bool>.Fail(ResultCode.Fail, $"返回数据未知格式:{result}");
                     if(group!=g || channel!= c)
-                        return Result<bool>.Success(false, $"通道切换失败");
+                        return Result<bool>.Success(false, $"通道切换失败,返回的数据和传入不一致");
                 }
                 return Result<bool>.Success(true, "切换通道成功");
             }

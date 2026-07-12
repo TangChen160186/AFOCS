@@ -1,59 +1,56 @@
-using AFOCS.App.Communication;
+﻿using AFOCS.App.Communication;
 using AFOCS.App.Core;
+using AFOCS.App.Enums;
+using AFOCS.App.Extensions;
 using AFOCS.App.Shared;
 using Microsoft.Extensions.Logging;
-using Result = AFOCS.App.Core.Result;
 
 namespace AFOCS.App.Devices.Implementation
 {
-    public class GlueDispenser : IGlueDispenser
+    public class CameraLight: ICameraLight
     {
-        public bool IsConnected => _serialPortClient.IsOpen;
-        public EDeviceType Type => EDeviceType.GlueDispenser;
-
         private readonly ISerialPortClient _serialPortClient;
         private readonly IConfigService _configService;
         private readonly ILogger<GlueDispenser> _logger;
+        private readonly IIoController _ioController;
 
-        public GlueDispenser(ISerialPortClient serialPortClient, IConfigService configService, ILogger<GlueDispenser> logger)
+        public bool IsConnected => _serialPortClient.IsOpen;
+        public EDeviceType Type => EDeviceType.CameraLight;
+        public WorkPos WorkPos => WorkPos.Common;
+
+        private CameraLightConfig? _config;
+        public CameraLight(ISerialPortClient serialPortClient, IConfigService configService, ILogger<GlueDispenser> logger,IIoController ioController)
         {
             _serialPortClient = serialPortClient;
             _configService = configService;
             _logger = logger;
+            _ioController = ioController;
         }
-
-        public void Dispose()
-        {
-            _serialPortClient.Dispose();
-        }
-
         public async Task<Result> InitializeAsync(CancellationToken token = default)
         {
-            var config = await _configService.LoadAsync<GlueDispenserConfig>();
-            if (config == null)
+            _config = await _configService.LoadAsync<CameraLightConfig>();
+            if (_config == null)
             {
-                config = GlueDispenserConfig.Default;
-                await _configService.SaveAsync(config);
+                _config = CameraLightConfig.Default;
+                await _configService.SaveAsync(_config);
             }
 
             SerialPortConfig serialPortConfig = new SerialPortConfig
             {
-                PortName = config.PortName,
-                BaudRate = config.BaudRate,
+                PortName = _config.PortName,
+                BaudRate = _config.BaudRate,
             };
             var success = await _serialPortClient.OpenAsync(serialPortConfig, token);
 
             if (success)
-            {
-                return Result.Success("点胶机初始化成功");
-            }
+                return Result.Success("相机光源初始化成功");
+            
             return Result.Fail(ResultCode.Fail, "COM口不对");
         }
 
         public async Task<Result> StopAsync(CancellationToken token = default)
         {
-            if (!IsConnected) 
-                return Result.Fail(ResultCode.Fail, "未连接设备");
+            if (!IsConnected) return Result.Fail(ResultCode.Fail, "未连接设备");
             await _serialPortClient.CloseAsync();
             return Result.Success();
         }
@@ -64,13 +61,24 @@ namespace AFOCS.App.Devices.Implementation
             return await InitializeAsync(token);
         }
 
-        public async Task<Result> ShotAsync()
+
+        public Task<Result> OpenAsync(CameraAndLightPos pos)
         {
-            if (!IsConnected) 
+            // 利用IO打开
+            throw new NotImplementedException();
+        }
+
+        public async Task<Result> SetLightBrightnessAsync(CameraAndLightPos pos, uint brightness)
+        {
+            if (!IsConnected)
                 return Result.Fail(ResultCode.Fail, "未连接设备");
+            if (brightness >= 255)
+                brightness = 255;
+            
             try
             {
-                string command = "M,0000";
+                var channel = _config!.ChannelMap[pos].GetName();
+                string command = $"S{channel}{brightness:D4}#";
                 await _serialPortClient.WriteLineAsync(command);
                 return Result.Success();
             }
@@ -80,20 +88,9 @@ namespace AFOCS.App.Devices.Implementation
                 return Result.Fail(ResultCode.Fail, $"{e.Message}", e);
             }
         }
-    }
-
-
-    public class GlueDispenserLeft: GlueDispenser
-    {
-        public GlueDispenserLeft(ISerialPortClient serialPortClient, IConfigService configService, ILogger<GlueDispenser> logger) : base(serialPortClient, configService, logger)
+        public void Dispose()
         {
-        }
-    }
-
-    public class GlueDispenserLeftRight : GlueDispenser
-    {
-        public GlueDispenserLeftRight(ISerialPortClient serialPortClient, IConfigService configService, ILogger<GlueDispenser> logger) : base(serialPortClient, configService, logger)
-        {
+            _serialPortClient.Dispose();
         }
     }
 }

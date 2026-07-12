@@ -7,8 +7,6 @@ namespace AFOCS.App.Devices
     {
         bool IsConnected { get;}
         EDeviceType Type { get; }
-
-        WorkPos WorkPos { get; }
         Task<Result> InitializeAsync(CancellationToken token = default);
 
         Task<Result> StopAsync(CancellationToken token = default);

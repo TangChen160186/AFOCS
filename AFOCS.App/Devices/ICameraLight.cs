@@ -2,14 +2,25 @@
 
 namespace AFOCS.App.Devices
 {
-    public enum CameraLightPos
+    public enum CameraAndLightPos: byte
     {
-        LeftUp, RightUp, TopUp, BottomUp,
+        LeftUp, 
+        LeftDown, 
+        RightUp, 
+        RightDown,
+    }
+
+    public enum CameraLightChannel : byte
+    {
+        A,
+        B,
+        C,
+        D
     }
     public interface ICameraLight:IDevice
     {
-        Result Open(CameraLightPos pos);
+        Task<Result> OpenAsync(CameraAndLightPos pos);
 
-
+        Task<Result> SetLightBrightnessAsync(CameraAndLightPos pos,uint brightness);
     }
 }

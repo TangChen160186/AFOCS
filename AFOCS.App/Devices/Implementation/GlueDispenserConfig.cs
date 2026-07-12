@@ -1,28 +1,22 @@
 ﻿namespace AFOCS.App.Devices.Implementation
 {
-    public class GlueDispenserConfigBase
+    public class GlueDispenserConfig
     {
         public string PortName { get; set; }
-
         public int BaudRate { get; set; }
 
-
-        public static GlueDispenserConfigBase Default => new GlueDispenserConfigBase
+        public static GlueDispenserConfig Default => new GlueDispenserConfig
         {
             PortName = "COM100",
             BaudRate = 9600
         };
     }
 
-    public class GlueDispenserConfig
+    public class GlueDispenserConfigLeft: GlueDispenserConfig
     {
-        public GlueDispenserConfigBase LeftConfig { get; set; }
-        public GlueDispenserConfigBase RightConfig { get; set; }
+    }
 
-        public static GlueDispenserConfig Default => new GlueDispenserConfig
-        {
-            LeftConfig = GlueDispenserConfigBase.Default,
-            RightConfig = GlueDispenserConfigBase.Default
-        };
+    public class GlueDispenserConfigLeftRight: GlueDispenserConfig
+    {
     }
 }
