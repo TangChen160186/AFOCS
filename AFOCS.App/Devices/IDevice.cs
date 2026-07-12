@@ -6,7 +6,6 @@ namespace AFOCS.App.Devices
     public interface IDevice : IDisposable
     {
         bool IsConnected { get;}
-        EDeviceType Type { get; }
         Task<Result> InitializeAsync(CancellationToken token = default);
 
         Task<Result> StopAsync(CancellationToken token = default);

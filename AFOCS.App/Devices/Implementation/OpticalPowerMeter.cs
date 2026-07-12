@@ -5,16 +5,19 @@ using Microsoft.Extensions.Logging;
 
 namespace AFOCS.App.Devices.Implementation
 {
-    public class OpticalPowerMeter : IOpticalPowerMeter
+    public class OpticalPowerMeterConfig
     {
-        public EDeviceType Type => EDeviceType.OpticalPowerMeter;
-
+        public string Ip { get; set; } = "192.168.0.200";
+        public int Port { get; set; } = 3498;
+    }
+    public class OpticalPowerMeter<T> : IOpticalPowerMeter where T: OpticalPowerMeterConfig,new()
+    {
         private readonly ITcpClient _tcpClient;
         private readonly IConfigService _configService;
-        private readonly ILogger<OpticalPowerMeter> _logger;
+        private readonly ILogger<OpticalPowerMeter<T>> _logger;
         public bool IsConnected => _tcpClient.IsConnected;
 
-        public OpticalPowerMeter(ITcpClient tcpClient, IConfigService configService, ILogger<OpticalPowerMeter> logger)
+        public OpticalPowerMeter(ITcpClient tcpClient, IConfigService configService, ILogger<OpticalPowerMeter<T>> logger)
         {
             _tcpClient = tcpClient;
             _configService = configService;
@@ -23,10 +26,10 @@ namespace AFOCS.App.Devices.Implementation
 
         public async Task<Result> InitializeAsync(CancellationToken token = default)
         {
-            var config = await _configService.LoadAsync<OpticalPowerMeterConfig>();
+            var config = await _configService.LoadAsync<T>();
             if (config == null)
             {
-                config = OpticalPowerMeterConfig.Default;
+                config = new T();
                 await _configService.SaveAsync(config);
             }
 

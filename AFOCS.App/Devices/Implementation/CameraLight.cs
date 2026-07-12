@@ -1,44 +1,43 @@
 ﻿using AFOCS.App.Communication;
 using AFOCS.App.Core;
-using AFOCS.App.Enums;
 using AFOCS.App.Extensions;
 using AFOCS.App.Shared;
 using Microsoft.Extensions.Logging;
 
 namespace AFOCS.App.Devices.Implementation
 {
+    public class CameraLightConfig
+    {
+        public string PortName { get; set; } = "COM100";
+        public int BaudRate { get; set; } = 19200;
+    }
     public class CameraLight: ICameraLight
     {
         private readonly ISerialPortClient _serialPortClient;
         private readonly IConfigService _configService;
-        private readonly ILogger<GlueDispenser> _logger;
-        private readonly IIoController _ioController;
+        private readonly ILogger<CameraLight> _logger;
 
         public bool IsConnected => _serialPortClient.IsOpen;
-        public EDeviceType Type => EDeviceType.CameraLight;
-        public WorkPos WorkPos => WorkPos.Common;
 
-        private CameraLightConfig? _config;
-        public CameraLight(ISerialPortClient serialPortClient, IConfigService configService, ILogger<GlueDispenser> logger,IIoController ioController)
+        public CameraLight(ISerialPortClient serialPortClient, IConfigService configService, ILogger<CameraLight> logger)
         {
             _serialPortClient = serialPortClient;
             _configService = configService;
             _logger = logger;
-            _ioController = ioController;
         }
         public async Task<Result> InitializeAsync(CancellationToken token = default)
         {
-            _config = await _configService.LoadAsync<CameraLightConfig>();
-            if (_config == null)
+            var config = await _configService.LoadAsync<CameraLightConfig>();
+            if (config == null)
             {
-                _config = CameraLightConfig.Default;
-                await _configService.SaveAsync(_config);
+                config = new CameraLightConfig();
+                await _configService.SaveAsync(config);
             }
 
             SerialPortConfig serialPortConfig = new SerialPortConfig
             {
-                PortName = _config.PortName,
-                BaudRate = _config.BaudRate,
+                PortName = config.PortName,
+                BaudRate = config.BaudRate,
             };
             var success = await _serialPortClient.OpenAsync(serialPortConfig, token);
 
@@ -62,13 +61,7 @@ namespace AFOCS.App.Devices.Implementation
         }
 
 
-        public Task<Result> OpenAsync(CameraAndLightPos pos)
-        {
-            // 利用IO打开
-            throw new NotImplementedException();
-        }
-
-        public async Task<Result> SetLightBrightnessAsync(CameraAndLightPos pos, uint brightness)
+        public async Task<Result> SetLightBrightnessAsync(CameraLightChannel channel, uint brightness)
         {
             if (!IsConnected)
                 return Result.Fail(ResultCode.Fail, "未连接设备");
@@ -77,8 +70,7 @@ namespace AFOCS.App.Devices.Implementation
             
             try
             {
-                var channel = _config!.ChannelMap[pos].GetName();
-                string command = $"S{channel}{brightness:D4}#";
+                string command = $"S{channel.GetName()}{brightness:D4}#";
                 await _serialPortClient.WriteLineAsync(command);
                 return Result.Success();
             }

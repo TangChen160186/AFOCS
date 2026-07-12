@@ -1,11 +1,15 @@
 ﻿using AFOCS.App.Communication;
 using AFOCS.App.Core;
-using AFOCS.App.Enums;
 using AFOCS.App.Shared;
 using Microsoft.Extensions.Logging;
 
 namespace AFOCS.App.Devices.Implementation
 {
+    public class HeightGaugeConfig
+    {
+        public string Ip { get; set; } = "127.0.0.1";
+        public int Port { get; set; } = 1000;
+    }
     public class HeightGauge : IHeightGauge
     {
         private readonly ITcpClient _tcpClient;
@@ -13,7 +17,6 @@ namespace AFOCS.App.Devices.Implementation
         private readonly ILogger<OpticalSwitch> _logger;
 
         public bool IsConnected => _tcpClient.IsConnected;
-        public EDeviceType Type => EDeviceType.HeightGauge;
 
         public HeightGauge(ITcpClient tcpClient, IConfigService configService, ILogger<OpticalSwitch> logger)
         {
@@ -27,7 +30,7 @@ namespace AFOCS.App.Devices.Implementation
             var config = await _configService.LoadAsync<HeightGaugeConfig>();
             if (config == null)
             {
-                config = HeightGaugeConfig.Default;
+                config = new HeightGaugeConfig();
                 await _configService.SaveAsync(config);
             }
 

@@ -1,20 +1,22 @@
 using System.Text;
 using AFOCS.App.Communication;
 using AFOCS.App.Core;
-using AFOCS.App.Enums;
 using AFOCS.App.Shared; 
 using Microsoft.Extensions.Logging;
 
 namespace AFOCS.App.Devices.Implementation
 {
+    public class OpticalSwitchConfig
+    {
+        public string Ip { get; set; } = "192.168.1.188";
+
+        public int Port { get; set; } = 1000;
+    }
     public class OpticalSwitch:IOpticalSwitch
     {
         private readonly ITcpClient _tcpClient;
         private readonly IConfigService _configService;
         private readonly ILogger<OpticalSwitch> _logger;
-        public EDeviceType Type => EDeviceType.OpticalSwitch;
-        public WorkPos WorkPos => WorkPos.Common;
-
         public bool IsConnected => _tcpClient.IsConnected;
 
         public OpticalSwitch(ITcpClient tcpClient, IConfigService configService, ILogger<OpticalSwitch> logger)
@@ -29,7 +31,7 @@ namespace AFOCS.App.Devices.Implementation
             var config = await _configService.LoadAsync<OpticalSwitchConfig>();
             if (config == null)
             {
-                config = OpticalSwitchConfig.Default;
+                config = new OpticalSwitchConfig();
                 await _configService.SaveAsync(config);
             }
 

@@ -1,17 +1,18 @@
 using AFOCS.App.Core;
-using AFOCS.App.Enums;
 using AFOCS.App.Shared;
 using Microsoft.Extensions.Logging;
 using NationalInstruments.Visa;
 
 namespace AFOCS.App.Devices.Implementation
 {
+    public class ProgrammablePowerSupplyConfig
+    {
+        public string VisaAddress { get; set; } = "TCPIP0::127.0.0.1::inst0::INSTR";
+        public int TimeoutMs { get; set; } = 3000;
+    }
     public class ProgrammablePowerSupply : IProgrammablePowerSupply
     {
         public bool IsConnected { get; private set; }
-        public EDeviceType Type => EDeviceType.ProgrammablePowerSupply;
-        public WorkPos WorkPos => WorkPos.Common;
-
         private MessageBasedSession? _session;
         private ResourceManager? _resourceManager;
         private readonly IConfigService _configService;
@@ -29,7 +30,7 @@ namespace AFOCS.App.Devices.Implementation
             var config = await _configService.LoadAsync<ProgrammablePowerSupplyConfig>();
             if (config == null)
             {
-                config = ProgrammablePowerSupplyConfig.Default;
+                config = new ProgrammablePowerSupplyConfig();
                 await _configService.SaveAsync(config);
             }
 

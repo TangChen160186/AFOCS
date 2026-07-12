@@ -61,12 +61,14 @@ namespace AFOCS.App.ViewModels
 
         private readonly ILogger<SplashScreenViewModel> _logger;
         private readonly IConfigService _configService;
+        private readonly IEnumerable<IDevice> _devices;
         private readonly List<string> _errorMessages = new List<string>();
 
-        public SplashScreenViewModel(ILogger<SplashScreenViewModel> logger, IConfigService configService)
+        public SplashScreenViewModel(ILogger<SplashScreenViewModel> logger, IConfigService configService,IEnumerable<IDevice> devices)
         {
             _logger = logger;
             _configService = configService;
+            _devices = devices;
         }
 
         protected override Task OnActivatedAsync(CancellationToken cancellationToken)

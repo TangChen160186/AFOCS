@@ -6,8 +6,8 @@ using System.Windows.Threading;
 using AFOCS.App.Communication;
 using AFOCS.App.Devices;
 using AFOCS.App.Devices.Implementation;
-using AFOCS.App.Enums;
 using AFOCS.App.Shared;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 
@@ -52,38 +52,40 @@ namespace AFOCS.App
 
             services.AddTransient<IConfigService, ConfigService>();
 
-            // now use io write 
-            services.AddKeyedSingleton<IGlueDispenser>(nameof(WorkPos.Left),
-                (provider, o) => new GlueDispenser(WorkPos.Left,
-                    provider.GetRequiredService<ISerialPortClient>(),
-                    provider.GetRequiredService<IConfigService>(),
-                    provider.GetRequiredService<ILogger<GlueDispenser>>()));
-            services.AddKeyedSingleton<IGlueDispenser>(nameof(WorkPos.Right),
-                (provider, o) => new GlueDispenser(WorkPos.Right,
-                    provider.GetRequiredService<ISerialPortClient>(),
-                    provider.GetRequiredService<IConfigService>(),
-                    provider.GetRequiredService<ILogger<GlueDispenser>>()));
 
-            services.AddKeyedSingleton<IOpticalPowerMeter>(nameof(WorkPos.Left),
-                (provider, o) => new OpticalPowerMeter(WorkPos.Left,
-                    provider.GetRequiredService<ITcpClient>(),
-                    provider.GetRequiredService<IConfigService>(),
-                    provider.GetRequiredService<ILogger<OpticalPowerMeter>>()));
-
-            services.AddKeyedSingleton<IOpticalPowerMeter>(nameof(WorkPos.Right),
-                (provider, o) => new OpticalPowerMeter(WorkPos.Right,
-                    provider.GetRequiredService<ITcpClient>(),
-                    provider.GetRequiredService<IConfigService>(),
-                    provider.GetRequiredService<ILogger<OpticalPowerMeter>>()));
-            //services.AddSingleton<IIoController, IIoController>();
-            //services.AddSingleton<IMotionController, IIoController>();
-            services.AddSingleton<ICameraLight, CameraLight>();
-            services.AddSingleton<IProgrammablePowerSupply, ProgrammablePowerSupply>();
-            services.AddSingleton<IOpticalSwitch, OpticalSwitch>();
+            RegisterDevices(services);
 
             _serviceProvider = services.BuildServiceProvider();
         }
 
+
+        private void RegisterDevices(ServiceCollection services)
+        {
+            services.AddSingleton<GlueDispenserLeft>();
+            services.AddSingleton<GlueDispenserRight>();
+            services.AddSingleton<OpticalPowerMeterLeft>();
+            services.AddSingleton<OpticalPowerMeterRight>();
+            services.AddSingleton<ProgrammablePowerSupply>();
+            services.AddSingleton<OpticalSwitch>();
+            services.AddSingleton<CameraLight>();
+
+            services.AddSingleton<IGlueDispenser>(sp => sp.GetService<GlueDispenserLeft>()!);
+            services.AddSingleton<IGlueDispenser>(sp => sp.GetService<GlueDispenserRight>()!);
+            services.AddSingleton<IOpticalPowerMeter>(sp => sp.GetService<OpticalPowerMeterLeft>()!);
+            services.AddSingleton<IOpticalPowerMeter>(sp => sp.GetService<OpticalPowerMeterRight>()!);
+            services.AddSingleton<IProgrammablePowerSupply>(sp => sp.GetService<ProgrammablePowerSupply>()!);
+            services.AddSingleton<IOpticalSwitch>(sp => sp.GetService<OpticalSwitch>()!);
+            services.AddSingleton<ICameraLight>(sp => sp.GetService<CameraLight>()!);
+
+            services.AddSingleton<IDevice>(sp => sp.GetService<GlueDispenserLeft>()!);
+            services.AddSingleton<IDevice>(sp => sp.GetService<GlueDispenserRight>()!);
+            services.AddSingleton<IDevice>(sp => sp.GetService<OpticalPowerMeterLeft>()!);
+            services.AddSingleton<IDevice>(sp => sp.GetService<OpticalPowerMeterRight>()!);
+            services.AddSingleton<IDevice>(sp => sp.GetService<ProgrammablePowerSupply>()!);
+            services.AddSingleton<IDevice>(sp => sp.GetService<OpticalSwitch>()!);
+            services.AddSingleton<IDevice>(sp => sp.GetService<CameraLight>()!);
+
+        }
         protected override void OnStartup(object sender, StartupEventArgs e)
         {
             DisplayRootViewForAsync<SplashScreenViewModel>();

@@ -1,26 +1,15 @@
 ﻿using AFOCS.App.Core;
 
-namespace AFOCS.App.Devices
+namespace AFOCS.App.Devices;
+
+public enum CameraLightChannel : byte
 {
-    public enum CameraAndLightPos: byte
-    {
-        LeftUp, 
-        LeftDown, 
-        RightUp, 
-        RightDown,
-    }
-
-    public enum CameraLightChannel : byte
-    {
-        A,
-        B,
-        C,
-        D
-    }
-    public interface ICameraLight:IDevice
-    {
-        Task<Result> OpenAsync(CameraAndLightPos pos);
-
-        Task<Result> SetLightBrightnessAsync(CameraAndLightPos pos,uint brightness);
-    }
+    A,
+    B,
+    C,
+    D
+}
+public interface ICameraLight:IDevice
+{
+    Task<Result> SetLightBrightnessAsync(CameraLightChannel channel, uint brightness);
 }

@@ -6,16 +6,20 @@ using Result = AFOCS.App.Core.Result;
 
 namespace AFOCS.App.Devices.Implementation
 {
-    public class GlueDispenser : IGlueDispenser
+    public class GlueDispenserConfig
+    {
+        public string PortName { get; set; } = "COM100";
+        public int BaudRate { get; set; } = 9600;
+    }
+    public class GlueDispenser<T> : IGlueDispenser where T: GlueDispenserConfig, new()
     {
         public bool IsConnected => _serialPortClient.IsOpen;
-        public EDeviceType Type => EDeviceType.GlueDispenser;
 
         private readonly ISerialPortClient _serialPortClient;
         private readonly IConfigService _configService;
-        private readonly ILogger<GlueDispenser> _logger;
+        private readonly ILogger<GlueDispenser<T>> _logger;
 
-        public GlueDispenser(ISerialPortClient serialPortClient, IConfigService configService, ILogger<GlueDispenser> logger)
+        public GlueDispenser(ISerialPortClient serialPortClient, IConfigService configService, ILogger<GlueDispenser<T>> logger)
         {
             _serialPortClient = serialPortClient;
             _configService = configService;
@@ -29,10 +33,10 @@ namespace AFOCS.App.Devices.Implementation
 
         public async Task<Result> InitializeAsync(CancellationToken token = default)
         {
-            var config = await _configService.LoadAsync<GlueDispenserConfig>();
+            var config = await _configService.LoadAsync<T>();
             if (config == null)
             {
-                config = GlueDispenserConfig.Default;
+                config = new T();
                 await _configService.SaveAsync(config);
             }
 
@@ -83,17 +87,5 @@ namespace AFOCS.App.Devices.Implementation
     }
 
 
-    public class GlueDispenserLeft: GlueDispenser
-    {
-        public GlueDispenserLeft(ISerialPortClient serialPortClient, IConfigService configService, ILogger<GlueDispenser> logger) : base(serialPortClient, configService, logger)
-        {
-        }
-    }
 
-    public class GlueDispenserLeftRight : GlueDispenser
-    {
-        public GlueDispenserLeftRight(ISerialPortClient serialPortClient, IConfigService configService, ILogger<GlueDispenser> logger) : base(serialPortClient, configService, logger)
-        {
-        }
-    }
 }
