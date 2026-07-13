@@ -25,6 +25,16 @@
                 Exception = ex
             };
         }
+
+        public static Result Fail(string msg, Exception? ex = null)
+        {
+            return new Result
+            {
+                Code = ResultCode.Fail,
+                Message = msg,
+                Exception = ex
+            };
+        }
     }
 
     public class Result<T>

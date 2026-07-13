@@ -1,16 +1,24 @@
 ﻿using AFOCS.App.Core;
+using AFOCS.App.Devices.Implementation;
 
 namespace AFOCS.App.Devices
 {
     public interface ICamera: IDevice
     {
-        public int Height { get;}
+        public uint Height { get;}
 
-        public int Width { get; }
+        public uint Width { get; }
 
-        Task<Result> StartCamera();
+        public uint WidthStep { get; }
 
-        Task<Result> StopCamera();
+        public uint HeightStep { get; }
+
+        Task<Result> StartCameraAsync();
+
+        Task<Result> StopCameraAsync();
+
+        Task<Result> SoftwareTriggerOnce();
+        event EventHandler<ImagePreviewedEventArgs> ImageReceived;
 
     }
 }

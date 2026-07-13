@@ -52,6 +52,7 @@ namespace AFOCS.App.ViewModels
 
         protected override Task OnActivatedAsync(CancellationToken cancellationToken)
         {
+          
             InitializeDevices();
             return base.OnActivatedAsync(cancellationToken);
         }
@@ -61,8 +62,8 @@ namespace AFOCS.App.ViewModels
             try
             {
                 var deviceList = _devices.ToList();
+                //var s = CameraRightDown.GetAllCameraSerialNumbers(_logger);
                 UpdateStatus("正在初始化设备...");
-
                 for (int i = 0; i < deviceList.Count; i++)
                 {
                     var device = deviceList[i];
@@ -100,6 +101,11 @@ namespace AFOCS.App.ViewModels
             }
         }
 
+        private async void CameraLeftUpOnImageReceived(object? sender, ImagePreviewedEventArgs e)
+        {
+            Console.WriteLine(e.Width);
+        }
+
         private string GetDeviceName(IDevice device)
         {
             return device switch
@@ -112,6 +118,10 @@ namespace AFOCS.App.ViewModels
                 OpticalSwitch => "光开关",
                 CameraLight => "相机光源",
                 HeightGauge => "测高仪",
+                CameraLeftDown => "左下相机",
+                CameraRightDown => "右下相机",
+                CameraLeftUp => "左上相机",
+                CameraRightUp => "右上相机",
                 _ => device.GetType().Name
             };
         }

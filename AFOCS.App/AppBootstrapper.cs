@@ -7,7 +7,6 @@ using AFOCS.App.Communication;
 using AFOCS.App.Devices;
 using AFOCS.App.Devices.Implementation;
 using AFOCS.App.Shared;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 
@@ -69,6 +68,10 @@ namespace AFOCS.App
             services.AddSingleton<OpticalSwitch>();
             services.AddSingleton<CameraLight>();
             services.AddSingleton<HeightGauge>();
+            services.AddSingleton<CameraLeftUp>();
+            services.AddSingleton<CameraLeftDown>();
+            services.AddSingleton<CameraRightUp>();
+            services.AddSingleton<CameraRightDown>();
 
             services.AddSingleton<IGlueDispenser>(sp => sp.GetService<GlueDispenserLeft>()!);
             services.AddSingleton<IGlueDispenser>(sp => sp.GetService<GlueDispenserRight>()!);
@@ -78,6 +81,10 @@ namespace AFOCS.App
             services.AddSingleton<IOpticalSwitch>(sp => sp.GetService<OpticalSwitch>()!);
             services.AddSingleton<ICameraLight>(sp => sp.GetService<CameraLight>()!);
             services.AddSingleton<IHeightGauge>(sp => sp.GetService<HeightGauge>()!);
+            services.AddSingleton<ICamera>(sp => sp.GetService<CameraLeftUp>()!);
+            services.AddSingleton<ICamera>(sp => sp.GetService<CameraLeftDown>()!);
+            services.AddSingleton<ICamera>(sp => sp.GetService<CameraRightUp>()!);
+            services.AddSingleton<ICamera>(sp => sp.GetService<CameraRightDown>()!);
 
             services.AddSingleton<IDevice>(sp => sp.GetService<GlueDispenserLeft>()!);
             services.AddSingleton<IDevice>(sp => sp.GetService<GlueDispenserRight>()!);
@@ -87,6 +94,10 @@ namespace AFOCS.App
             services.AddSingleton<IDevice>(sp => sp.GetService<OpticalSwitch>()!);
             services.AddSingleton<IDevice>(sp => sp.GetService<CameraLight>()!);
             services.AddSingleton<IDevice>(sp => sp.GetService<HeightGauge>()!);
+            services.AddSingleton<IDevice>(sp => sp.GetService<CameraLeftUp>()!);
+            services.AddSingleton<IDevice>(sp => sp.GetService<CameraLeftDown>()!);
+            services.AddSingleton<IDevice>(sp => sp.GetService<CameraRightUp>()!);
+            services.AddSingleton<IDevice>(sp => sp.GetService<CameraRightDown>()!);
 
         }
         protected override void OnStartup(object sender, StartupEventArgs e)
@@ -133,7 +144,7 @@ namespace AFOCS.App
         
         private void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
         {
-            MessageBox.Show($"未观察到的任务异常: {e.Exception}", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+            //MessageBox.Show($"未观察到的任务异常: {e.Exception}", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
             e.SetObserved();
         }
     }
