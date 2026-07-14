@@ -64,5 +64,15 @@
                 Exception = ex
             };
         }
+
+        public static Result<T> Fail(string msg, Exception? ex = null)
+        {
+            return new Result<T>
+            {
+                Code = ResultCode.Fail,
+                Message = msg,
+                Exception = ex
+            };
+        }
     }
 }
