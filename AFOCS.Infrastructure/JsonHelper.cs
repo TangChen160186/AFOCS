@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace AFOCS.Infrastructure
@@ -28,6 +28,14 @@ namespace AFOCS.Infrastructure
             if (string.IsNullOrWhiteSpace(json))
                 throw new ArgumentNullException(nameof(json));
             return JsonSerializer.Deserialize<T>(json, JsonOptions)!;
+        }
+
+        /// <summary>JSON字符串转对象（非泛型）</summary>
+        public static object? Deserialize(string json, Type type)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+                throw new ArgumentNullException(nameof(json));
+            return JsonSerializer.Deserialize(json, type, JsonOptions);
         }
         #endregion
 

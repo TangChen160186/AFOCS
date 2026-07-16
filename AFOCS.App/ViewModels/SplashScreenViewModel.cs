@@ -120,15 +120,16 @@ namespace AFOCS.App.ViewModels
                 _programmablePowerSupply,
                 _opticalSwitch,
                 _heightGauge,
-                _leadShineMotionCard,
                 _glueDispenserLeft,
                 _glueDispenserRight,
+                _opticalPowerMeterLeft,
+                _opticalPowerMeterRight,
+
                 _cameraLeftUp,
                 _cameraLeftDown,
                 _cameraRightUp,
                 _cameraRightDown,
-                _opticalPowerMeterLeft,
-                _opticalPowerMeterRight
+                //_leadShineMotionCard,
             ];
             return devices;
         }

@@ -1,0 +1,212 @@
+<UserControl x:Class="AFOCS.App.Views.OpticalSwitchSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:cal="http://www.caliburnproject.org"
+             xmlns:viewModels="clr-namespace:AFOCS.App.ViewModels"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="460"
+             d:DataContext="{d:DesignInstance viewModels:OpticalSwitchSettingsViewModel}"
+             IsTabStop="False">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="ConnectedBrush" Color="#10B981" />
+        <SolidColorBrush x:Key="DisconnectedBrush" Color="#EF4444" />
+    </UserControl.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="0,5">
+            <!-- ========== 连接状态 ========== -->
+            <Border BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="0,0,0,8" Margin="0,0,0,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Ellipse Width="10" Height="10" Margin="0,0,6,0">
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Setter Property="Fill" Value="{StaticResource DisconnectedBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                            <Setter Property="Fill" Value="{StaticResource ConnectedBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
+                        <TextBlock Text="连接状态:" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center"
+                                   FontWeight="Bold" Margin="4,0,0,0" />
+                   
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                        <Button cal:Message.Attach="DisconnectAsync"
+                                Width="60" Padding="6,3" Margin="0,0,6,0">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="IsEnabled" Value="True" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsConnected}" Value="False">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            断开
+                        </Button>
+                        <Button cal:Message.Attach="ReconnectAsync"
+                                Width="60" Padding="6,3">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="IsEnabled" Value="True" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            重连
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <!-- 底部进度条 -->
+            <ProgressBar Height="6" IsIndeterminate="True" Margin="0,8,0,0">
+                <ProgressBar.Style>
+                    <Style TargetType="ProgressBar">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ProgressBar.Style>
+            </ProgressBar>
+            <!-- ========== 连接配置 ========== -->
+            <TextBlock Text="连接配置" FontWeight="Bold" Margin="0,0,0,6" />
+            <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                <Label Width="50" Content="IP:" VerticalAlignment="Center" />
+                <TextBox Width="140" Text="{Binding Ip, UpdateSourceTrigger=PropertyChanged}" />
+                <Label Width="50" Content="端口:" VerticalAlignment="Center" Margin="10,0,0,0" />
+                <TextBox Width="80" Text="{Binding Port, UpdateSourceTrigger=PropertyChanged}" />
+            </StackPanel>
+
+            <!-- ========== 设备信息 ========== -->
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <Label Width="50" Content="SN:" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding SN}" VerticalAlignment="Center"
+                           Foreground="{StaticResource ConnectedBrush}" />
+                <Label Width="50" Content="PN:" VerticalAlignment="Center" Margin="10,0,0,0" />
+                <TextBlock Text="{Binding PN}" VerticalAlignment="Center"
+                           Foreground="{StaticResource ConnectedBrush}" />
+            </StackPanel>
+
+            <!-- ========== 分组通道 ========== -->
+            <Border BorderBrush="#E5E7EB" BorderThickness="0,1,0,0" Margin="0,10,0,0" Padding="0,10,0,0">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="分组通道" FontWeight="Bold"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Content="读取全部" cal:Message.Attach="ReadAllAsync"
+                                Width="70" Padding="6,3">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding Groups}" Margin="0,6,0,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="#E5E7EB" BorderThickness="1"
+                                        CornerRadius="3" Padding="6,5" Margin="2">
+                                    <StackPanel>
+                                        <!-- 标题行 -->
+                                        <StackPanel Orientation="Horizontal"
+                                                    Margin="0,0,0,4">
+                                            <TextBlock Text="{Binding Number, StringFormat='G{0:D2}'}"
+                                                       FontWeight="Bold" FontSize="11" Margin="0,0,4,0" />
+                                            <TextBlock FontSize="10" Foreground="{StaticResource ConnectedBrush}">
+                                                <Run Text="→ CH" />
+                                                <Run Text="{Binding CurrentChannel, StringFormat={}{0:D2}}" />
+                                            </TextBlock>
+                                        </StackPanel>
+
+                                        <!-- 切换输入 -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                            <TextBox Width="30" FontSize="10"
+                                                     Text="{Binding TargetChannel, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBlock Text="CH" VerticalAlignment="Center"
+                                                       FontSize="9" Margin="2,0,0,0" />
+                                        </StackPanel>
+
+                                        <!-- 操作按钮 -->
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Content="切换" Width="38" Height="20"
+                                                    FontSize="10"
+                                                    cal:Message.Attach="SwitchGroupAsync($dataContext)">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                                <Setter Property="IsEnabled" Value="False" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                            <Button Content="刷新" Width="38" Height="20"
+                                                    FontSize="10" Margin="3,0,0,0"
+                                                    cal:Message.Attach="ReadGroupAsync($dataContext)">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                                <Setter Property="IsEnabled" Value="False" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+          
+
+            <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Foreground="{DynamicResource EnvironmentWindowText}"
+                       Opacity="0.7" FontSize="12">
+                修改后点击 OK 保存连接配置。保存后需通过重连按钮使新配置生效。
+            </TextBlock>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

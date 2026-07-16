@@ -3,6 +3,10 @@
     <Platform Name="Any CPU" />
     <Platform Name="x64" />
   </Configurations>
+  <Folder Name="/FrameWork/">
+    <Project Path="AFOCS.Framework.Test/AFOCS.Framework.Test.csproj" Id="93f01b83-267d-4e8b-a587-ace81ec908c0" />
+    <Project Path="AFOCS.Framework/AFOCS.Framework.csproj" Id="7c217ad7-cab3-4a88-b07b-0c733275051d" />
+  </Folder>
   <Project Path="AFOCS.App/AFOCS.App.csproj">
     <Platform Solution="*|x64" Project="x64" />
     <Build Solution="*|Any CPU" Project="false" />
@@ -10,8 +14,6 @@
   <Project Path="AFOCS.Communication/AFOCS.Communication.csproj" Id="02e6e202-31d8-4dc0-8d29-8ae3a100f36a" />
   <Project Path="AFOCS.Core/AFOCS.Core.csproj" Id="47b3f331-0581-4608-8a20-8ddc5ba23f07" />
   <Project Path="AFOCS.Devices/AFOCS.Devices.csproj" Id="5dccd00f-4730-437b-9c8a-837c05c1a33d" />
-  <Project Path="AFOCS.Framework.Test/AFOCS.Framework.Test.csproj" Id="93f01b83-267d-4e8b-a587-ace81ec908c0" />
-  <Project Path="AFOCS.Framework/AFOCS.Framework.csproj" Id="7c217ad7-cab3-4a88-b07b-0c733275051d" />
   <Project Path="AFOCS.Infrastructure/AFOCS.Infrastructure.csproj" Id="dbdfe530-1c5f-4896-8c7b-c45c7e9fdba3" />
   <Project Path="AFOCS.Shared/AFOCS.Shared.csproj" Id="f7ac908a-52b8-4921-8bf7-347ede2a9771" />
 </Solution>

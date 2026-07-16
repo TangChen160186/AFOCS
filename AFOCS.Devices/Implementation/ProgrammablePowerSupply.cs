@@ -91,15 +91,16 @@ namespace AFOCS.Devices.Implementation
             _resourceManager = null;
         }
 
-        public static string[] GetAvailableResources()
+        public static string[] GetAvailableResources(ILogger? logger = null)
         {
             try
             {
                 using var rm = new ResourceManager();
                 return rm.Find("?*INSTR").ToArray();
             }
-            catch
+            catch(Exception e)
             {
+                logger?.Error(e,e.Message);
                 return Array.Empty<string>();
             }
         }

@@ -1,0 +1,171 @@
+<UserControl x:Class="AFOCS.App.Views.GlueDispenserSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:cal="http://www.caliburnproject.org"
+             xmlns:viewModels="clr-namespace:AFOCS.App.ViewModels"
+             mc:Ignorable="d"
+             d:DesignHeight="460" d:DesignWidth="460"
+             d:DataContext="{d:DesignInstance viewModels:GlueDispenserSettingsViewModel}"
+             IsTabStop="False">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="ConnectedBrush" Color="#10B981" />
+        <SolidColorBrush x:Key="DisconnectedBrush" Color="#EF4444" />
+
+        <DataTemplate x:Key="SideTemplate" DataType="{x:Type viewModels:GlueDispenserSideInfo}">
+            <Border BorderBrush="#E5E7EB" BorderThickness="1"
+                    CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
+                <StackPanel>
+                    <!-- 标题 + 状态 -->
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="14"
+                                       VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <Ellipse Width="10" Height="10" Margin="0,0,4,0">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="{StaticResource DisconnectedBrush}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                                <Setter Property="Fill" Value="{StaticResource ConnectedBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                            <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center"
+                                       FontSize="11" Foreground="Gray" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                            <Button cal:Message.Attach="DisconnectAsync"
+                                    Width="50" Height="22" FontSize="10"
+                                    Padding="4,2" Margin="0,0,4,0">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsConnected}" Value="False">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                断开
+                            </Button>
+                            <Button cal:Message.Attach="ReconnectAsync"
+                                    Width="50" Height="22" FontSize="10"
+                                    Padding="4,2">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                重连
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- COM 配置 -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                        <Label Width="60" Content="串口号:" FontSize="11" VerticalAlignment="Center" />
+                        <Button Content="扫描" cal:Message.Attach="ScanPortsAsync"
+                                Width="44" Height="22" FontSize="10" Padding="4,2">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsScanning}" Value="True">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <ProgressBar Width="50" Height="10" IsIndeterminate="True" Margin="4,0,4,0">
+                            <ProgressBar.Style>
+                                <Style TargetType="ProgressBar">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsScanning}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ProgressBar.Style>
+                        </ProgressBar>
+                    </StackPanel>
+
+                    <ComboBox ItemsSource="{Binding AvailablePorts}"
+                              Text="{Binding PortName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              IsEditable="True"
+                              Margin="60,0,0,4" Width="130" Height="22" FontSize="11"
+                              HorizontalAlignment="Left" />
+
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,6">
+                        <Label Width="60" Content="波特率:" FontSize="11" VerticalAlignment="Center" />
+                        <TextBox Width="80" FontSize="11"
+                                 Text="{Binding BaudRate, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+
+                    <!-- 点胶 + 进度 -->
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="点胶测试" Width="80" Height="28"
+                                FontSize="12" FontWeight="Bold"
+                                cal:Message.Attach="ShotAsync">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <ProgressBar Width="100" Height="14" IsIndeterminate="True"
+                                     Margin="10,0,0,0">
+                            <ProgressBar.Style>
+                                <Style TargetType="ProgressBar">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ProgressBar.Style>
+                        </ProgressBar>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="0,5">
+            <ContentControl Content="{Binding Left}" ContentTemplate="{StaticResource SideTemplate}" />
+            <ContentControl Content="{Binding Right}" ContentTemplate="{StaticResource SideTemplate}" />
+
+            <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{DynamicResource EnvironmentWindowText}"
+                       Opacity="0.7" FontSize="12">
+                修改后点击 OK 保存连接配置。保存后需通过重连按钮使新配置生效。
+            </TextBlock>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
