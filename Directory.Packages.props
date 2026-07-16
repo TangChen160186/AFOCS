@@ -7,10 +7,13 @@
   </ItemGroup>
   <ItemGroup>
     <PackageVersion Include="Caliburn.Micro" Version="5.0.258" />
+    <PackageVersion Include="Dirkster.AvalonDock.Themes.VS2013" Version="4.74.1" />
+    <PackageVersion Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.129" />
     <PackageVersion Include="MahApps.Metro" Version="2.4.11" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.9" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.9" />
+    <PackageVersion Include="System.ComponentModel.Composition" Version="10.0.10" />
     <PackageVersion Include="System.IO.Ports" Version="10.0.9" />
     <PackageVersion Include="NationalInstruments.Visa" Version="25.5.0.13" />
   </ItemGroup>

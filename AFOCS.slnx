@@ -7,4 +7,6 @@
     <Platform Solution="*|x64" Project="x64" />
     <Build Solution="*|Any CPU" Project="false" />
   </Project>
+  <Project Path="AFOCS.Framework.Test/AFOCS.Framework.Test.csproj" Id="93f01b83-267d-4e8b-a587-ace81ec908c0" />
+  <Project Path="AFOCS.Framework/AFOCS.Framework.csproj" Id="7c217ad7-cab3-4a88-b07b-0c733275051d" />
 </Solution>

@@ -1,0 +1,17 @@
+﻿<Application x:Class="AFOCS.Framework.Test.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:AFOCS.Framework.Test"
+             xmlns:framework="clr-namespace:AFOCS.Framework;assembly=AFOCS.Framework">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary>
+                    <framework:AppBootstrapper x:Key="bootstrapper" />
+                    <!--Use this bootstrapper instead when you are testing the Demo under .NET5+ with PublishSingleFile-->
+                    <!--<local:DemoAppBootstrapper x:Key="bootstrapper" />-->
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

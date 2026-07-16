@@ -1,0 +1,14 @@
+﻿using System.Windows;
+using System.Windows.Controls;
+
+namespace AFOCS.Framework.Framework.Controls
+{
+    public class ExpanderEx : Expander
+    {
+        static ExpanderEx()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ExpanderEx),
+                new FrameworkPropertyMetadata(typeof(ExpanderEx)));
+        } 
+    }
+}
