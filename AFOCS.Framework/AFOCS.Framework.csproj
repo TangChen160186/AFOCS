@@ -8,11 +8,31 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Icons\FullScreen.png" />
+    <None Remove="Resources\Icons\Gemini-32.png" />
+    <None Remove="Resources\Icons\Open.png" />
+    <None Remove="Resources\Icons\Redo.png" />
+    <None Remove="Resources\Icons\Save.png" />
+    <None Remove="Resources\Icons\SaveAll.png" />
+    <None Remove="Resources\Icons\Undo.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Caliburn.Micro" />
     <PackageReference Include="Dirkster.AvalonDock.Themes.VS2013" />
     <PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" />
     <PackageReference Include="MahApps.Metro" />
     <PackageReference Include="System.ComponentModel.Composition" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Icons\FullScreen.png" />
+    <Resource Include="Resources\Icons\Gemini-32.png" />
+    <Resource Include="Resources\Icons\Open.png" />
+    <Resource Include="Resources\Icons\Redo.png" />
+    <Resource Include="Resources\Icons\Save.png" />
+    <Resource Include="Resources\Icons\SaveAll.png" />
+    <Resource Include="Resources\Icons\Undo.png" />
   </ItemGroup>
 
 </Project>
