@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AFOCS.Communication\AFOCS.Communication.csproj" />
+    <ProjectReference Include="..\AFOCS.Core\AFOCS.Core.csproj" />
+    <ProjectReference Include="..\AFOCS.Infrastructure\AFOCS.Infrastructure.csproj" />
+    <ProjectReference Include="..\AFOCS.Shared\AFOCS.Shared.csproj" />
+  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="NationalInstruments.Visa" />
+    </ItemGroup>
+    <ItemGroup>
+        <Reference Include="MvCameraControl.Net">
+            <HintPath>..\Vendor\Camera\win64\MvCameraControl.Net.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+</Project>

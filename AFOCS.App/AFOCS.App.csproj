@@ -34,17 +34,20 @@
   </ItemGroup>
     <ItemGroup>
         <ApplicationDefinition Remove="App.xaml" />
-       
         <PackageReference Include="Caliburn.Micro" />
         <PackageReference Include="MahApps.Metro" />
         <PackageReference Include="NationalInstruments.Visa" />
         <PackageReference Include="Serilog" />
         <PackageReference Include="Serilog.Sinks.Console" />
-        <PackageReference Include="System.IO.Ports" />
+
         <Page Include="App.xaml" />
     </ItemGroup>
     <ItemGroup>
+      <ProjectReference Include="..\AFOCS.Communication\AFOCS.Communication.csproj" />
+      <ProjectReference Include="..\AFOCS.Core\AFOCS.Core.csproj" />
+      <ProjectReference Include="..\AFOCS.Devices\AFOCS.Devices.csproj" />
       <ProjectReference Include="..\AFOCS.Framework\AFOCS.Framework.csproj" />
+        <ProjectReference Include="..\AFOCS.Infrastructure\AFOCS.Infrastructure.csproj" />
     </ItemGroup>
     <ItemGroup>
       <Reference Include="MvCameraControl.Net">

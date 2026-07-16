@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.Windows;
-using AFOCS.App.Devices;
-using AFOCS.App.Devices.Implementation;
+using AFOCS.Devices;
+using AFOCS.Devices.Implementation;
 using AFOCS.Framework.Framework.Services;
 using Caliburn.Micro;
 using Serilog;
@@ -27,7 +27,7 @@ namespace AFOCS.App.ViewModels
     internal class SplashScreenViewModel : Screen
     {
         public override string DisplayName { get; set; } = "AFOCS 初始化设备初始化界面";
-        public ObservableCollection<LogMessage> LogMessages { get; } = new ObservableCollection<LogMessage>();
+        public ObservableCollection<LogMessage> LogMessages { get; } = [];
 
         public string CurrentStatus
         {
@@ -118,17 +118,17 @@ namespace AFOCS.App.ViewModels
             List<IDevice> devices =
             [
                 _programmablePowerSupply,
-                //_opticalSwitch,
-                //_heightGauge,
-                //_leadShineMotionCard,
-                //_glueDispenserLeft,
-                //_glueDispenserRight,
-                //_cameraLeftUp,
-                //_cameraLeftDown,
-                //_cameraRightUp,
-                //_cameraRightDown,
-                //_opticalPowerMeterLeft,
-                //_opticalPowerMeterRight
+                _opticalSwitch,
+                _heightGauge,
+                _leadShineMotionCard,
+                _glueDispenserLeft,
+                _glueDispenserRight,
+                _cameraLeftUp,
+                _cameraLeftDown,
+                _cameraRightUp,
+                _cameraRightDown,
+                _opticalPowerMeterLeft,
+                _opticalPowerMeterRight
             ];
             return devices;
         }
