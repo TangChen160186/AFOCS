@@ -1,63 +1,44 @@
 ﻿using AFOCS.App.Core;
 using AFOCS.App.Shared;
-using Microsoft.Extensions.Logging;
 using MvCamCtrl.NET;
 using System.Runtime.InteropServices;
 using System.Windows.Media;
+using Serilog;
 using static MvCamCtrl.NET.MyCamera;
 
 namespace AFOCS.App.Devices.Implementation
 {
-    public class ImagePreviewedEventArgs(IntPtr data, int width, int height, PixelFormat pixelFormat)
-        : EventArgs
-    {
-        public IntPtr ImageData = data;
-
-        public int Width = width;
-
-        public int Height = height;
-
-        public PixelFormat PixelType = pixelFormat;
-    }
     public class HkCameraConfig
     {
         public string ChSerialNumber { get; set; } = "ChSerialNumber";
     }
-    public class HkCamera<T>: ICamera where T:HkCameraConfig,new()
+
+    public class Camera<T>(IConfigService configService, ILogger logger) : ICamera
+        where T : HkCameraConfig, new()
     {
         public uint Height { get; private set; }
         public uint Width { get; private set; }
         public uint WidthStep { get; private set; }
         public uint HeightStep { get; private set; }
 
-        private readonly MyCamera _camera;
+        private readonly MyCamera _camera = new();
         private cbOutputExdelegate _outputCallback;
 
-        private readonly IConfigService _configService;
-        private readonly ILogger<HkCamera<T>> _logger;
         public bool IsConnected => _camera.MV_CC_IsDeviceConnected_NET();
 
 
 
         public event EventHandler<ImagePreviewedEventArgs>? ImageReceived;
 
-        public HkCamera(IConfigService configService,ILogger<HkCamera<T>> logger)
-        {
-            _configService = configService;
-            _logger = logger;
-
-            _camera = new MyCamera();
-        }
-
         public async Task<Result> InitializeAsync(CancellationToken token = default)
         {
             try
             {
-                var config = await _configService.LoadAsync<T>();
+                var config = await configService.LoadAsync<T>();
                 if (config == null)
                 {
                     config = new T();
-                    await _configService.SaveAsync(config);
+                    await configService.SaveAsync(config);
                 }
 
                 var deviceInfo = FindCameraByChSerialNumber(config.ChSerialNumber);
@@ -130,7 +111,7 @@ namespace AFOCS.App.Devices.Implementation
             }
             catch (Exception ex)
             {
-                _logger.LogError($"{ex}");
+                logger.Error($"{ex}");
             }
         }
         private PixelFormat HkFormatToWpfFormat(MvGvspPixelType hkType)
@@ -163,7 +144,7 @@ namespace AFOCS.App.Devices.Implementation
             }
             catch (Exception e)
             {
-                _logger.LogError($"error:OpenDevice:{e.Message}");
+                logger.Error($"error:OpenDevice:{e.Message}");
                 return false;
             }
 
@@ -176,13 +157,13 @@ namespace AFOCS.App.Devices.Implementation
 
             if (ret != 0)
             {
-                _logger.LogError("枚举相机失败，错误码：{Code}", ret);
+                logger.Error("枚举相机失败，错误码：{Code}", ret);
                 return null;
             }
 
             if (deviceList.nDeviceNum == 0)
             {
-                _logger.LogInformation("未扫描到任何网口相机");
+                logger.Information("未扫描到任何网口相机");
                 return null;
             }
             for (int i = 0; i < deviceList.nDeviceNum; i++)
@@ -199,7 +180,7 @@ namespace AFOCS.App.Devices.Implementation
                         string sn = gigeInfo.chSerialNumber?.Trim() ?? string.Empty;
                         if (!string.IsNullOrEmpty(sn) && sn.Equals(ch))
                         {
-                            _logger.LogDebug("扫描到相机序列号：{SN}", sn);
+                            logger.Debug("扫描到相机序列号：{SN}", sn);
                             return device;
                             
                         }
@@ -223,13 +204,13 @@ namespace AFOCS.App.Devices.Implementation
 
             if (ret != 0)
             {
-                logger.LogError("枚举相机失败，错误码：{Code}", ret);
+                logger.Error("枚举相机失败，错误码：{Code}", ret);
                 return snList;
             }
 
             if (deviceList.nDeviceNum == 0)
             {
-                logger.LogInformation("未扫描到任何网口相机");
+                logger.Information("未扫描到任何网口相机");
                 return snList;
             }
 
@@ -249,7 +230,7 @@ namespace AFOCS.App.Devices.Implementation
                         if (!string.IsNullOrEmpty(sn))
                         {
                             snList.Add((sn,UIntToIpString(ip)));
-                            logger.LogDebug("扫描到相机序列号：{SN}", sn);
+                            logger.Debug("扫描到相机序列号：{SN}", sn);
                         }
                     }
                 }

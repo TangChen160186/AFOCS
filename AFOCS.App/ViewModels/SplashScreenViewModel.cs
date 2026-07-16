@@ -1,9 +1,10 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel.Composition;
 using System.Windows;
 using AFOCS.App.Devices;
 using AFOCS.App.Devices.Implementation;
 using Caliburn.Micro;
-using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace AFOCS.App.ViewModels
 {
@@ -21,38 +22,44 @@ namespace AFOCS.App.ViewModels
         public string Time { get; set; }
         public string Message { get; set; }
     }
-
+    [Export]
     internal class SplashScreenViewModel : Screen
     {
+        public override string DisplayName { get; set; } = "AFOCS 初始化设备初始化界面";
         public ObservableCollection<LogMessage> LogMessages { get; } = new ObservableCollection<LogMessage>();
 
-        private string _currentStatus = "正在初始化系统...";
         public string CurrentStatus
         {
-            get => _currentStatus;
-            set => Set(ref _currentStatus, value);
-        }
+            get;
+            set => Set(ref field, value);
+        } = "正在初始化系统...";
 
-        private bool _isLoading = true;
         public bool IsLoading
         {
-            get => _isLoading;
-            set => Set(ref _isLoading, value);
-        }
+            get;
+            set => Set(ref field, value);
+        } = true;
 
-        private readonly ILogger<SplashScreenViewModel> _logger;
-        private readonly IEnumerable<IDevice> _devices;
-        private readonly List<string> _errorMessages = new List<string>();
 
-        public SplashScreenViewModel(ILogger<SplashScreenViewModel> logger, IEnumerable<IDevice> devices)
-        {
-            _logger = logger;
-            _devices = devices;
-        }
+        private readonly List<string> _errorMessages = [];
 
+        [Import] private ILogger _logger = null!;
+
+        [Import] private ProgrammablePowerSupply _programmablePowerSupply = null!;
+        [Import] private OpticalSwitch _opticalSwitch = null!;
+        [Import] private HeightGauge _heightGauge = null!;
+        [Import] private LeadShineMotionCard _leadShineMotionCard = null!;
+
+        [Import] private GlueDispenserLeft _glueDispenserLeft = null!;
+        [Import] private GlueDispenserLeft _glueDispenserRight = null!;
+        [Import] private CameraLeftUp _cameraLeftUp = null!;
+        [Import] private CameraLeftDown _cameraLeftDown = null!;
+        [Import] private CameraRightUp _cameraRightUp = null!;
+        [Import] private CameraRightDown _cameraRightDown = null!;
+        [Import] private OpticalPowerMeterLeft _opticalPowerMeterLeft = null!;
+        [Import] private OpticalPowerMeterRight _opticalPowerMeterRight = null!;
         protected override Task OnActivatedAsync(CancellationToken cancellationToken)
         {
-          
             InitializeDevices();
             return base.OnActivatedAsync(cancellationToken);
         }
@@ -61,12 +68,10 @@ namespace AFOCS.App.ViewModels
         {
             try
             {
-                var deviceList = _devices.ToList();
-                //var s = CameraRightDown.GetAllCameraSerialNumbers(_logger);
                 UpdateStatus("正在初始化设备...");
-                for (int i = 0; i < deviceList.Count; i++)
+                List<IDevice> devices = GetAllDevices();
+                foreach (var device in devices)
                 {
-                    var device = deviceList[i];
                     var deviceName = GetDeviceName(device);
                     UpdateStatus($"正在初始化{deviceName}...");
 
@@ -95,16 +100,32 @@ namespace AFOCS.App.ViewModels
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "初始化过程发生异常");
+                _logger.Error(ex, "初始化过程发生异常");
                 AddLog(LogType.Error, $"系统初始化异常: {ex.Message}");
                 _errorMessages.Add($"系统初始化异常: {ex.Message}");
             }
         }
 
-        private async void CameraLeftUpOnImageReceived(object? sender, ImagePreviewedEventArgs e)
+        private List<IDevice> GetAllDevices()
         {
-            Console.WriteLine(e.Width);
+
+            List<IDevice> devices = new List<IDevice>();
+            devices.Add(_programmablePowerSupply);
+            devices.Add(_opticalSwitch);
+            devices.Add(_heightGauge);
+            devices.Add(_leadShineMotionCard);
+            devices.Add(_glueDispenserLeft);
+            devices.Add(_glueDispenserRight);
+            devices.Add(_cameraLeftUp);
+            devices.Add(_cameraLeftDown);
+            devices.Add(_cameraRightUp);
+            devices.Add(_cameraRightDown);
+            devices.Add(_opticalPowerMeterLeft);
+            devices.Add(_opticalPowerMeterRight);
+            return devices;
         }
+    
+
 
         private string GetDeviceName(IDevice device)
         {
@@ -122,6 +143,7 @@ namespace AFOCS.App.ViewModels
                 CameraRightDown => "右下相机",
                 CameraLeftUp => "左上相机",
                 CameraRightUp => "右上相机",
+                LeadShineMotionCard => "雷赛控制卡",
                 _ => device.GetType().Name
             };
         }
@@ -175,7 +197,7 @@ namespace AFOCS.App.ViewModels
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "打开主窗口失败");
+                _logger.Error(ex, "打开主窗口失败");
                 MessageBox.Show($"打开主窗口失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 Application.Current.Shutdown();
             }
@@ -195,7 +217,7 @@ namespace AFOCS.App.ViewModels
                 Message = message
             });
             
-            _logger.LogDebug($"[{type}] {message}");
+            _logger.Debug($"[{type}] {message}");
         }
     }
 }

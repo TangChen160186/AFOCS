@@ -1,7 +1,8 @@
+using System.ComponentModel.Composition;
 using AFOCS.App.Core;
 using AFOCS.App.Shared;
-using Microsoft.Extensions.Logging;
 using NationalInstruments.Visa;
+using Serilog;
 
 namespace AFOCS.App.Devices.Implementation
 {
@@ -10,28 +11,23 @@ namespace AFOCS.App.Devices.Implementation
         public string VisaAddress { get; set; } = "TCPIP0::127.0.0.1::inst0::INSTR";
         public int TimeoutMs { get; set; } = 3000;
     }
-    public class ProgrammablePowerSupply : IProgrammablePowerSupply
+
+    [Export]
+    [method: ImportingConstructor]
+    public class ProgrammablePowerSupply(IConfigService configService, ILogger logger) : IProgrammablePowerSupply
     {
         public bool IsConnected { get; private set; }
         private MessageBasedSession? _session;
         private ResourceManager? _resourceManager;
-        private readonly IConfigService _configService;
-        private readonly ILogger<ProgrammablePowerSupply> _logger;
         private readonly SemaphoreSlim _lock = new(1, 1);
-
-        public ProgrammablePowerSupply(IConfigService configService, ILogger<ProgrammablePowerSupply> logger)
-        {
-            _configService = configService;
-            _logger = logger;
-        }
 
         public async Task<Result> InitializeAsync(CancellationToken token = default)
         {
-            var config = await _configService.LoadAsync<ProgrammablePowerSupplyConfig>();
+            var config = await configService.LoadAsync<ProgrammablePowerSupplyConfig>();
             if (config == null)
             {
                 config = new ProgrammablePowerSupplyConfig();
-                await _configService.SaveAsync(config);
+                await configService.SaveAsync(config);
             }
 
             try
@@ -40,19 +36,19 @@ namespace AFOCS.App.Devices.Implementation
                 _session = (MessageBasedSession)_resourceManager.Open(config.VisaAddress);
                 _session.TimeoutMilliseconds = config.TimeoutMs;
                 IsConnected = true;
-                _logger.LogInformation($"可编程电源({config.VisaAddress})初始化成功");
+                logger.Information($"可编程电源({config.VisaAddress})初始化成功");
 
                 await SendCommandAsync("*CLS");
                 var errorResult = await GetErrorStatusAsync();
                 if (!errorResult.IsSuccess)
                 {
-                    _logger.LogWarning($"设备错误状态: {errorResult.Message}");
+                    logger.Warning($"设备错误状态: {errorResult.Message}");
                 }
                 return Result.Success($"可编程电源({config.VisaAddress})初始化成功");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"可编程电源初始化失败: {config.VisaAddress}");
+                logger.Error(ex, $"可编程电源初始化失败: {config.VisaAddress}");
                 CleanupConnection();
                 return Result.Fail(ResultCode.Fail, ex.Message, ex);
             }
@@ -65,12 +61,12 @@ namespace AFOCS.App.Devices.Implementation
             {
                 CleanupConnection();
                 IsConnected = false;
-                _logger.LogInformation("可编程电源已停止");
+                logger.Information("可编程电源已停止");
                 return Result.Success();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "停止可编程电源失败");
+                logger.Error(ex, "停止可编程电源失败");
                 return Result.Fail(ResultCode.Fail, ex.Message, ex);
             }
         }
@@ -167,15 +163,15 @@ namespace AFOCS.App.Devices.Implementation
                 }
 
                 command += Environment.NewLine;
-                _logger.LogTrace($"发送查询指令:{command}");
+                logger.Verbose($"发送查询指令:{command}");
                 _session.RawIO.Write(command);
                 var response = _session.RawIO.ReadString().Trim();
-                _logger.LogTrace($"收到响应:{response}");
+                logger.Verbose($"收到响应:{response}");
                 return Result<string>.Success(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"发送查询指令失败:{command}");
+                logger.Error(ex, $"发送查询指令失败:{command}");
                 HandleConnectionError();
                 return Result<string>.Fail(ResultCode.Fail, ex.Message, ex);
             }
@@ -196,13 +192,13 @@ namespace AFOCS.App.Devices.Implementation
                 }
 
                 command += Environment.NewLine;
-                _logger.LogTrace($"发送指令:{command}");
+                logger.Verbose($"发送指令:{command}");
                 _session.RawIO.Write(command);
                 return Result.Success();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"发送指令失败:{command}");
+                logger.Error(ex, $"发送指令失败:{command}");
                 HandleConnectionError();
                 return Result.Fail(ResultCode.Fail, ex.Message, ex);
             }

@@ -1,14 +1,16 @@
-﻿using AFOCS.App.Communication;
+﻿using System.ComponentModel.Composition;
+using AFOCS.App.Communication;
 using AFOCS.App.Shared;
-using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace AFOCS.App.Devices.Implementation
 {
     public class OpticalPowerMeterConfigLeft : OpticalPowerMeterConfig;
-
+    [Export]
+    [method:ImportingConstructor]
     public class OpticalPowerMeterLeft(
         ITcpClient tcpClient,
         IConfigService configService,
-        ILogger<OpticalPowerMeterLeft> logger)
+        ILogger logger)
         : OpticalPowerMeter<OpticalPowerMeterConfigLeft>(tcpClient, configService, logger);
 }

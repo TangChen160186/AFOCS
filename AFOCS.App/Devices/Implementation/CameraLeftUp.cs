@@ -1,10 +1,13 @@
-﻿using AFOCS.App.Shared;
-using Microsoft.Extensions.Logging;
+﻿using System.ComponentModel.Composition;
+using AFOCS.App.Shared;
+using Serilog;
 
 namespace AFOCS.App.Devices.Implementation
 {
     public class CameraConfigLeftUp : HkCameraConfig;
-    public class CameraLeftUp(IConfigService configService, ILogger<HkCamera<CameraConfigLeftUp>> logger)
-        : HkCamera<CameraConfigLeftUp>(configService, logger);
+    [Export]
+    [method: ImportingConstructor]
+    public class CameraLeftUp(IConfigService configService, ILogger logger)
+        : Camera<CameraConfigLeftUp>(configService, logger);
 
 }

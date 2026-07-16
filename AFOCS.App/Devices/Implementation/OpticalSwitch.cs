@@ -1,8 +1,9 @@
+using System.ComponentModel.Composition;
 using System.Text;
 using AFOCS.App.Communication;
 using AFOCS.App.Core;
-using AFOCS.App.Shared; 
-using Microsoft.Extensions.Logging;
+using AFOCS.App.Shared;
+using Serilog;
 
 namespace AFOCS.App.Devices.Implementation
 {
@@ -12,27 +13,20 @@ namespace AFOCS.App.Devices.Implementation
 
         public int Port { get; set; } = 1000;
     }
-    public class OpticalSwitch:IOpticalSwitch
+    [Export]
+    [method: ImportingConstructor]
+    public class OpticalSwitch(ITcpClient tcpClient, IConfigService configService, ILogger logger)
+        : IOpticalSwitch
     {
-        private readonly ITcpClient _tcpClient;
-        private readonly IConfigService _configService;
-        private readonly ILogger<OpticalSwitch> _logger;
-        public bool IsConnected => _tcpClient.IsConnected;
-
-        public OpticalSwitch(ITcpClient tcpClient, IConfigService configService, ILogger<OpticalSwitch> logger)
-        {
-            _tcpClient = tcpClient;
-            _configService = configService;
-            _logger = logger;
-        }
+        public bool IsConnected => tcpClient.IsConnected;
 
         public async Task<Result> InitializeAsync(CancellationToken token = default)
         {
-            var config = await _configService.LoadAsync<OpticalSwitchConfig>();
+            var config = await configService.LoadAsync<OpticalSwitchConfig>();
             if (config == null)
             {
                 config = new OpticalSwitchConfig();
-                await _configService.SaveAsync(config);
+                await configService.SaveAsync(config);
             }
 
             TcpClientConfig tcpClientConfig = new TcpClientConfig
@@ -40,7 +34,7 @@ namespace AFOCS.App.Devices.Implementation
                 IpAddress = config.Ip,
                 Port = config.Port,
             };
-            var success = await _tcpClient.ConnectAsync(tcpClientConfig);
+            var success = await tcpClient.ConnectAsync(tcpClientConfig);
             if (success)
                 return Result.Success("光开关初始化成功");
 
@@ -51,19 +45,19 @@ namespace AFOCS.App.Devices.Implementation
         {
             if (!IsConnected) 
                 return Result.Fail(ResultCode.Fail, "未连接设备");
-            await _tcpClient.DisconnectAsync();
+            await tcpClient.DisconnectAsync();
             return Result.Success();
         }
 
         public async Task<Result> ReConnectAsync(CancellationToken token = default)
         {
-            await _tcpClient.DisconnectAsync();
+            await tcpClient.DisconnectAsync();
             return await InitializeAsync(token);
         }
 
         public void Dispose()
         {
-            _tcpClient.Dispose();
+            tcpClient.Dispose();
         }
 
 
@@ -74,7 +68,7 @@ namespace AFOCS.App.Devices.Implementation
             try
             {
                 string command = $"SW {group:D2} {channel:D2}";
-                var result = await _tcpClient.SendAndReceiveAsync(command);
+                var result = await tcpClient.SendAndReceiveAsync(command);
 
                 if(string.IsNullOrWhiteSpace(result))
                     return Result<bool>.Fail(ResultCode.Fail, "返回的数据为空");
@@ -91,7 +85,7 @@ namespace AFOCS.App.Devices.Implementation
             }
             catch (Exception e)
             {
-                _logger.LogError(e.Message);
+                logger.Error(e.Message);
                 return Result<bool>.Fail(ResultCode.Fail, e.Message, e);
             }
             
@@ -116,7 +110,7 @@ namespace AFOCS.App.Devices.Implementation
                     int channel = channels[i];
                     command.Append($" {group:D2} {channel:D2}");
                 }
-                var result = await _tcpClient.SendAndReceiveAsync(command.ToString());
+                var result = await tcpClient.SendAndReceiveAsync(command.ToString());
                 if (string.IsNullOrWhiteSpace(result))
                     return Result<bool>.Fail(ResultCode.Fail, "返回的数据为空");
 
@@ -137,7 +131,7 @@ namespace AFOCS.App.Devices.Implementation
             }
             catch (Exception e)
             {
-                _logger.LogError(e.Message);
+                logger.Error(e.Message);
                 return Result<bool>.Fail(ResultCode.Fail, e.Message, e);
             }
             
@@ -151,8 +145,8 @@ namespace AFOCS.App.Devices.Implementation
             try
             {
                 string command = new string("SW ?");
-                _logger.LogTrace($"发送指令:{command}");
-                var result = await _tcpClient.SendAndReceiveAsync(command);
+                logger.Verbose($"发送指令:{command}");
+                var result = await tcpClient.SendAndReceiveAsync(command);
 
                 if (string.IsNullOrWhiteSpace(result))
                     return Result<Dictionary<int, int>>.Fail(ResultCode.Fail, "返回的数据为空");
@@ -175,7 +169,7 @@ namespace AFOCS.App.Devices.Implementation
             }
             catch (Exception e)
             {
-                _logger.LogError(e.Message);
+                logger.Error(e.Message);
                 return Result<Dictionary<int, int>>.Fail(ResultCode.Fail, e.Message, e);
             }
            
@@ -188,13 +182,13 @@ namespace AFOCS.App.Devices.Implementation
             try
             {
                 string command = new string("SN ?");
-                _logger.LogTrace($"发送指令:{command}");
-                var result = await _tcpClient.SendAndReceiveAsync(command);
+                logger.Verbose($"发送指令:{command}");
+                var result = await tcpClient.SendAndReceiveAsync(command);
                 return Result<string>.Success(result);
             }
             catch (Exception e)
             {
-                _logger.LogError(e.Message);
+                logger.Error(e.Message);
                 return Result<string>.Fail(ResultCode.Fail, e.Message, e);
             }
         }
@@ -206,13 +200,13 @@ namespace AFOCS.App.Devices.Implementation
             try
             {
                 string command = new string("PN ?");
-                _logger.LogTrace($"发送指令:{command}");
-                var result = await _tcpClient.SendAndReceiveAsync(command);
+                logger.Verbose($"发送指令:{command}");
+                var result = await tcpClient.SendAndReceiveAsync(command);
                 return Result<string>.Success(result);
             }
             catch (Exception e)
             {
-                _logger.LogError(e.Message);
+                logger.Error(e.Message);
                 return Result<string>.Fail(ResultCode.Fail, e.Message, e);
             }
         }

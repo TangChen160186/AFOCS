@@ -1,12 +1,14 @@
+using System.ComponentModel.Composition;
 using System.IO.Ports;
 using System.Text;
-using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace AFOCS.App.Communication
 {
-    public class SerialPortClient : ISerialPortClient, IDisposable
+    [Export(typeof(ISerialPortClient))]
+    [method: ImportingConstructor]
+    public class SerialPortClient(ILogger logger) : ISerialPortClient, IDisposable
     {
-        private readonly ILogger<SerialPortClient>? _logger;
         private SerialPort? _serialPort;
         private readonly SemaphoreSlim _lock = new(1, 1);
         private readonly CancellationTokenSource _readCts = new();
@@ -27,11 +29,6 @@ namespace AFOCS.App.Communication
         public event EventHandler? PortClosed;
         public event EventHandler? PortOpened;
 
-        public SerialPortClient(ILogger<SerialPortClient>? logger = null)
-        {
-            _logger = logger;
-        }
-
         public async Task<bool> OpenAsync(SerialPortConfig config, CancellationToken cancellationToken = default)
         {
             await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -39,7 +36,7 @@ namespace AFOCS.App.Communication
             {
                 if (IsOpen)
                 {
-                    _logger?.LogWarning("串口已经打开，请先关闭当前连接");
+                    logger?.Warning("串口已经打开，请先关闭当前连接");
                     return false;
                 }
 
@@ -72,14 +69,14 @@ namespace AFOCS.App.Communication
 
                 _continuousReadTask = ContinuousReadAsync(_readCts.Token);
 
-                _logger?.LogInformation($"串口 {config.PortName} 打开成功，结束符: {EscapeLineEnding(LineEnding)}");
+                logger?.Information($"串口 {config.PortName} 打开成功，结束符: {EscapeLineEnding(LineEnding)}");
                 PortOpened?.Invoke(this, EventArgs.Empty);
 
                 return true;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, $"打开串口 {config.PortName} 失败");
+                logger?.Error(ex, $"打开串口 {config.PortName} 失败");
                 ErrorOccurred?.Invoke(this, ex);
                 _serialPort?.Dispose();
                 _serialPort = null;
@@ -109,12 +106,12 @@ namespace AFOCS.App.Communication
                 _serialPort?.Dispose();
                 _serialPort = null;
 
-                _logger?.LogInformation("串口已关闭");
+                logger?.Information("串口已关闭");
                 PortClosed?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "关闭串口时发生错误");
+                logger?.Error(ex, "关闭串口时发生错误");
                 ErrorOccurred?.Invoke(this, ex);
             }
             finally
@@ -156,7 +153,7 @@ namespace AFOCS.App.Communication
                                     }
                                 }
 
-                                _logger?.LogDebug($"接收到数据: {bytesRead} 字节 - {EscapeText(receivedText)}");
+                                logger?.Debug($"接收到数据: {bytesRead} 字节 - {EscapeText(receivedText)}");
                                 DataReceived?.Invoke(this, receivedText);
                             }
                         }
@@ -171,7 +168,7 @@ namespace AFOCS.App.Communication
                     }
                     catch (Exception ex)
                     {
-                        _logger?.LogError(ex, "读取数据时发生错误");
+                        logger?.Error(ex, "读取数据时发生错误");
                         ErrorOccurred?.Invoke(this, ex);
                         await Task.Delay(100, cancellationToken).ConfigureAwait(false);
                     }
@@ -182,7 +179,7 @@ namespace AFOCS.App.Communication
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "连续读取任务发生严重错误");
+                logger?.Error(ex, "连续读取任务发生严重错误");
                 ErrorOccurred?.Invoke(this, ex);
             }
         }
@@ -201,12 +198,12 @@ namespace AFOCS.App.Communication
                 await _serialPort!.BaseStream.WriteAsync(data, 0, data.Length, cancellationToken).ConfigureAwait(false);
                 await _serialPort.BaseStream.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-                _logger?.LogDebug($"发送数据: {data.Length} 字节 - {EscapeText(text)}");
+                logger?.Debug($"发送数据: {data.Length} 字节 - {EscapeText(text)}");
                 return data.Length;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "发送数据失败");
+                logger?.Error(ex, "发送数据失败");
                 ErrorOccurred?.Invoke(this, ex);
                 throw;
             }
@@ -248,12 +245,12 @@ namespace AFOCS.App.Communication
                 try
                 {
                     var response = await _responseTcs.Task.ConfigureAwait(false);
-                    _logger?.LogDebug($"接收到响应: {response.Length} 字符 - {EscapeText(response)}");
+                    logger?.Debug($"接收到响应: {response.Length} 字符 - {EscapeText(response)}");
                     return response;
                 }
                 catch (OperationCanceledException)
                 {
-                    _logger?.LogWarning($"等待响应超时 ({timeoutMs}ms)");
+                    logger?.Warning($"等待响应超时 ({timeoutMs}ms)");
                     throw new TimeoutException($"在 {timeoutMs}ms 内未收到以 {EscapeLineEnding(terminator)} 结尾的响应");
                 }
             }
@@ -307,7 +304,7 @@ namespace AFOCS.App.Communication
                     _receiveBuffer.Clear();
                 }
 
-                _logger?.LogDebug("串口缓冲区已清空");
+                logger?.Debug("串口缓冲区已清空");
             }
             finally
             {

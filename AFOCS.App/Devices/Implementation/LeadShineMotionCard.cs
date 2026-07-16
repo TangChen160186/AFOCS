@@ -1,9 +1,10 @@
-﻿using System.IO;
+﻿using System.ComponentModel.Composition;
+using System.IO;
 using System.Text;
 using AFOCS.App.Core;
 using AFOCS.App.Shared;
 using csLTDMC;
-using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace AFOCS.App.Devices.Implementation;
 
@@ -12,10 +13,11 @@ public class LeadShineMotionCardConfig
     public string EniPath { get; set; } = "";
     public string IniPath { get; set; } = "";
 }
-public class LeadShineMotionCard : IMotionControlCard
+
+[Export]
+[method: ImportingConstructor]
+public class LeadShineMotionCard(IConfigService configService, ILogger logger) : IMotionControlCard
 {
-    private readonly IConfigService _configService;
-    private readonly ILogger<LeadShineMotionCard> _logger;
     public bool IsConnected { get; private set; }
 
     private ushort _cardNo = 0;
@@ -23,22 +25,16 @@ public class LeadShineMotionCard : IMotionControlCard
     private const ushort ConfigFileType = 201;
     private const ushort EthercatPort = 2;
 
-    public LeadShineMotionCard(IConfigService configService, ILogger<LeadShineMotionCard> logger)
-    {
-        _configService = configService;
-        _logger = logger;
-    }
-
     public async Task<Result> InitializeAsync(CancellationToken token = default)
     {
         try
         {
             // 1. 加载配置
-            var config = await _configService.LoadAsync<LeadShineMotionCardConfig>();
+            var config = await configService.LoadAsync<LeadShineMotionCardConfig>();
             if (config == null)
             {
                 config = new LeadShineMotionCardConfig();
-                await _configService.SaveAsync(config);
+                await configService.SaveAsync(config);
             }
 
             // 2. 板卡初始化
@@ -56,7 +52,7 @@ public class LeadShineMotionCard : IMotionControlCard
             if (ret != 0)
                 return Result.Fail($"调用API失败:{nameof(LTDMC.dmc_get_CardInfList)}, error code: {ret}");
             _cardNo = cardList[0];
-            _logger.LogInformation($"当前板卡号为: {_cardNo}");
+            logger.Information($"当前板卡号为: {_cardNo}");
 
             // 4. 设置从站输出保持（建议在ENI下载前设置）
             ret = LTDMC.nmc_set_slave_output_retain(_cardNo, 1);
@@ -76,19 +72,19 @@ public class LeadShineMotionCard : IMotionControlCard
                     return Result.Fail($"调用API失败:{nameof(LTDMC.nmc_set_cycletime)}, error code: {ret}");
 
                 // 6.2 下载ENI文件
-                _logger.LogInformation("下载ENI总线配置文件");
+                logger.Information("下载ENI总线配置文件");
                 var eniResult = DownloadFile(_cardNo, config.EniPath,EniFileType);
                 if (!eniResult.IsSuccess)
                     return eniResult;
 
                 // 6.3 热复位（让ENI生效）
-                _logger.LogInformation("执行热复位...");
+                logger.Information("执行热复位...");
                 var resetResult = await HotResetAsync();
                 if (!resetResult.IsSuccess)
                     return resetResult;
 
                 // 6.4 轮询等待总线恢复
-                _logger.LogInformation("等待总线恢复...");
+                logger.Information("等待总线恢复...");
                 int timeout = 0;
                 while (timeout < 5000)
                 {
@@ -102,7 +98,7 @@ public class LeadShineMotionCard : IMotionControlCard
                 }
                 if (nmcErr != 0)
                     return Result.Fail($"总线热复位后仍未恢复，错误码: 0x{nmcErr:X4}");
-                _logger.LogInformation("总线恢复成功");
+                logger.Information("总线恢复成功");
             }
             else if (nmcErr != 0)
             {
@@ -112,7 +108,7 @@ public class LeadShineMotionCard : IMotionControlCard
             // 7. 下载轴参数配置文件（INI）
             if (!string.IsNullOrWhiteSpace(config.IniPath) && File.Exists(config.IniPath))
             {
-                _logger.LogInformation("下载轴参数配置文件");
+                logger.Information("下载轴参数配置文件");
                 var iniResult = DownloadFile(_cardNo, config.IniPath,ConfigFileType);
                 if (!iniResult.IsSuccess)
                     return iniResult;
@@ -126,13 +122,13 @@ public class LeadShineMotionCard : IMotionControlCard
             LTDMC.nmc_set_axis_enable(_cardNo, 255);// 使能所有轴
 
 
-            _logger.LogInformation("雷赛板卡初始化成功");
+            logger.Information("雷赛板卡初始化成功");
             IsConnected = true;
             return Result.Success();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "板卡初始化异常");
+            logger.Error(ex, "板卡初始化异常");
             return Result.Fail($"初始化异常: {ex.Message}");
         }
     }
@@ -269,7 +265,7 @@ public class LeadShineMotionCard : IMotionControlCard
 
             if (stateMachine != 4)
             {
-                _logger.LogWarning($"轴 {axis} 未使能（状态机={stateMachine}），尝试自动使能...");
+                logger.Warning($"轴 {axis} 未使能（状态机={stateMachine}），尝试自动使能...");
 
                 // 调用使能函数
                 var enableResult = await EnableAxisAsync(axis);
@@ -299,27 +295,27 @@ public class LeadShineMotionCard : IMotionControlCard
             ret = LTDMC.dmc_set_equiv(_cardNo, axis, equiv);
             if (ret != 0)
                 return Result.Fail($"设置脉冲当量失败, error code: {ret}");
-            _logger.LogInformation($"轴 {axis} 脉冲当量已设为: {equiv} pulse/unit");
+            logger.Information($"轴 {axis} 脉冲当量已设为: {equiv} pulse/unit");
 
             // ========== 第6步：设置速度曲线 ==========
             ret = LTDMC.dmc_set_profile_unit(_cardNo, axis, minVel, maxVel, tacc, tdec, stopVel);
             if (ret != 0)
                 return Result.Fail($"设置速度曲线失败, error code: {ret}");
-            _logger.LogInformation($"轴 {axis} 速度曲线: 起始={minVel}, 最大={maxVel}, 加减速={tacc}/{tdec}");
+            logger.Information($"轴 {axis} 速度曲线: 起始={minVel}, 最大={maxVel}, 加减速={tacc}/{tdec}");
 
             // ========== 第7步：设置S段曲线（可选） ==========
             if (sPara > 0)
             {
                 ret = LTDMC.dmc_set_s_profile(_cardNo, axis, 0, sPara);
                 if (ret != 0)
-                    _logger.LogWarning($"轴 {axis} 设置S段失败, error code: {ret}，将使用梯形曲线");
+                    logger.Warning($"轴 {axis} 设置S段失败, error code: {ret}，将使用梯形曲线");
             }
 
             // ========== 第8步：读取当前位置（用于日志记录） ==========
             double currentPos = 0;
             LTDMC.dmc_get_position_unit(_cardNo, axis, ref currentPos);
             string modeStr = posiMode == 0 ? "相对" : "绝对";
-            _logger.LogInformation($"轴 {axis} 定长运动启动，模式={modeStr}，目标={distance}，当前坐标={currentPos}");
+            logger.Information($"轴 {axis} 定长运动启动，模式={modeStr}，目标={distance}，当前坐标={currentPos}");
 
             // ========== 第9步：启动定长运动 ==========
             ret = LTDMC.dmc_pmove_unit(_cardNo, axis, distance, posiMode);
@@ -344,13 +340,13 @@ public class LeadShineMotionCard : IMotionControlCard
             // ========== 第11步：读取最终位置（用于确认） ==========
             double finalPos = 0;
             LTDMC.dmc_get_position_unit(_cardNo, axis, ref finalPos);
-            _logger.LogInformation($"轴 {axis} 定长运动完成，当前坐标={finalPos}");
+            logger.Information($"轴 {axis} 定长运动完成，当前坐标={finalPos}");
 
             return Result.Success();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"轴 {axis} 定长运动异常");
+            logger.Error(ex, $"轴 {axis} 定长运动异常");
             return Result.Fail($"运动异常: {ex.Message}");
         }
     }
@@ -375,7 +371,7 @@ public class LeadShineMotionCard : IMotionControlCard
             LTDMC.nmc_get_axis_state_machine(_cardNo, axis, ref stateMachine);
             if (stateMachine == 4)
             {
-                _logger.LogInformation($"轴 {axis} 使能成功");
+                logger.Information($"轴 {axis} 使能成功");
                 return Result.Success();
             }
             await Task.Delay(interval);
@@ -394,7 +390,7 @@ public class LeadShineMotionCard : IMotionControlCard
         if (ret != 0)
             return Result.Fail($"失能轴 {axis} 失败, error code: {ret}");
 
-        _logger.LogInformation($"轴 {axis} 已失能");
+        logger.Information($"轴 {axis} 已失能");
         return Result.Success();
     }
     /// <summary>
@@ -451,7 +447,7 @@ public class LeadShineMotionCard : IMotionControlCard
 
                 if (stateMachine != 4)
                 {
-                    _logger.LogWarning($"轴 {axisList[i]} 未使能（状态机={stateMachine}），尝试自动使能...");
+                    logger.Warning($"轴 {axisList[i]} 未使能（状态机={stateMachine}），尝试自动使能...");
                     var enableResult = await EnableAxisAsync(axisList[i]);
                     if (!enableResult.IsSuccess)
                         return Result.Fail($"轴 {axisList[i]} 自动使能失败: {enableResult.Message}");
@@ -470,7 +466,7 @@ public class LeadShineMotionCard : IMotionControlCard
                 if (ret != 0)
                     return Result.Fail($"设置轴 {axisList[i]} 脉冲当量失败, error code: {ret}");
             }
-            _logger.LogInformation($"插补轴脉冲当量设置完成");
+            logger.Information($"插补轴脉冲当量设置完成");
 
             // ========== 第5步：检查各轴硬限位 ==========
             for (int i = 0; i < axisCount; i++)
@@ -488,20 +484,20 @@ public class LeadShineMotionCard : IMotionControlCard
             var ret2 = LTDMC.dmc_set_vector_profile_unit(_cardNo, crd, minVel, maxVel, tacc, tdec, stopVel);
             if (ret2 != 0)
                 return Result.Fail($"设置插补速度曲线失败, error code: {ret2}");
-            _logger.LogInformation($"坐标系 {crd} 矢量速度: 起始={minVel}, 最大={maxVel}");
+            logger.Information($"坐标系 {crd} 矢量速度: 起始={minVel}, 最大={maxVel}");
 
             // ========== 第7步：设置S段曲线（可选） ==========
             if (sPara > 0)
             {
                 ret2 = LTDMC.dmc_set_vector_s_profile(_cardNo, crd, 0, sPara);
                 if (ret2 != 0)
-                    _logger.LogWarning($"坐标系 {crd} 设置S段失败, error code: {ret2}");
+                    logger.Warning($"坐标系 {crd} 设置S段失败, error code: {ret2}");
             }
 
             // ========== 第8步：记录当前位置 ==========
             string posStr = string.Join(", ", targetPositions);
             string modeStr = posiMode == 0 ? "相对" : "绝对";
-            _logger.LogInformation($"坐标系 {crd} 直线插补启动，模式={modeStr}，目标=[{posStr}]");
+            logger.Information($"坐标系 {crd} 直线插补启动，模式={modeStr}，目标=[{posStr}]");
 
             // ========== 第9步：启动直线插补 ==========
             var ret3 = LTDMC.dmc_line_unit(_cardNo, crd, (ushort)axisCount, axisList, targetPositions, posiMode);
@@ -522,12 +518,12 @@ public class LeadShineMotionCard : IMotionControlCard
                 elapsed += interval;
             }
 
-            _logger.LogInformation($"坐标系 {crd} 直线插补完成");
+            logger.Information($"坐标系 {crd} 直线插补完成");
             return Result.Success();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"坐标系 {crd} 直线插补异常");
+            logger.Error(ex, $"坐标系 {crd} 直线插补异常");
             return Result.Fail($"插补异常: {ex.Message}");
         }
     }
@@ -570,7 +566,7 @@ public class LeadShineMotionCard : IMotionControlCard
 
             if (stateMachine != 4)
             {
-                _logger.LogWarning($"轴 {axis} 未使能（状态机={stateMachine}），尝试自动使能...");
+                logger.Warning($"轴 {axis} 未使能（状态机={stateMachine}），尝试自动使能...");
                 var enableResult = await EnableAxisAsync(axis);
                 if (!enableResult.IsSuccess)
                     return Result.Fail($"轴 {axis} 自动使能失败: {enableResult.Message}");
@@ -593,7 +589,7 @@ public class LeadShineMotionCard : IMotionControlCard
             if (isPositiveLimit && isNegativeLimit)
                 return Result.Fail("正负限位同时触发，请检查限位传感器");
 
-            _logger.LogInformation($"轴 {axis} 回零前状态: 正限位={isPositiveLimit}, 负限位={isNegativeLimit}");
+            logger.Information($"轴 {axis} 回零前状态: 正限位={isPositiveLimit}, 负限位={isNegativeLimit}");
 
             // ========== 第5步：设置脉冲当量 ==========
             ret = LTDMC.dmc_set_equiv(_cardNo, axis, equiv);
@@ -606,14 +602,14 @@ public class LeadShineMotionCard : IMotionControlCard
             if (ret != 0)
                 return Result.Fail($"设置回零参数失败, error code: {ret}");
 
-            _logger.LogInformation($"轴 {axis} 回零参数: 模式={homeMode}, 低速={lowVel}, 高速={highVel}, 偏移={offsetPos}");
+            logger.Information($"轴 {axis} 回零参数: 模式={homeMode}, 低速={lowVel}, 高速={highVel}, 偏移={offsetPos}");
 
             // ========== 第7步：启动回零 ==========
             ret = LTDMC.nmc_home_move(_cardNo, axis);
             if (ret != 0)
                 return Result.Fail($"启动回零失败, error code: {ret}");
 
-            _logger.LogInformation($"轴 {axis} 回零已启动，等待完成...");
+            logger.Information($"轴 {axis} 回零已启动，等待完成...");
 
             // ========== 第8步：等待回零完成（带超时） ==========
             int elapsed = 0;
@@ -663,7 +659,7 @@ public class LeadShineMotionCard : IMotionControlCard
                 // 回零成功，读取当前位置确认
                 double currentPos = 0;
                 LTDMC.dmc_get_position_unit(_cardNo, axis, ref currentPos);
-                _logger.LogInformation($"轴 {axis} 回零成功！当前位置: {currentPos} unit");
+                logger.Information($"轴 {axis} 回零成功！当前位置: {currentPos} unit");
                 return Result.Success();
             }
             else
@@ -671,13 +667,13 @@ public class LeadShineMotionCard : IMotionControlCard
                 // 回零失败，读取停止原因帮助排查
                 int stopReason = 0;
                 LTDMC.dmc_get_stop_reason(_cardNo, axis, ref stopReason);
-                _logger.LogWarning($"轴 {axis} 回零失败，停止原因码: {stopReason}");
+                logger.Warning($"轴 {axis} 回零失败，停止原因码: {stopReason}");
                 return Result.Fail($"轴 {axis} 回零失败，停止原因: {GetStopReasonDescription(stopReason)}");
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"轴 {axis} 回零异常");
+            logger.Error(ex, $"轴 {axis} 回零异常");
             return Result.Fail($"回零异常: {ex.Message}");
         }
     }

@@ -1,5 +1,6 @@
-﻿using System.IO;
-using Microsoft.Extensions.Logging;
+﻿using System.ComponentModel.Composition;
+using System.IO;
+using Serilog;
 
 namespace AFOCS.App.Shared
 {
@@ -8,17 +9,13 @@ namespace AFOCS.App.Shared
         Task<bool> SaveAsync<T>(T config) where T: class;
 
         Task<T?> LoadAsync<T>() where T : class;
-
     }
-    public class ConfigService : IConfigService
+
+    [Export(typeof(IConfigService))]
+    [method: ImportingConstructor]
+    public class ConfigService(ILogger logger) : IConfigService
     {
-        private readonly ILogger<ConfigService> _logger;
-        public  string ConfigBasePath;
-        public ConfigService(ILogger<ConfigService> logger)
-        {
-            ConfigBasePath = Path.Combine(AppContext.BaseDirectory, "Configs");
-            _logger = logger;
-        }
+        public  string ConfigBasePath = Path.Combine(AppContext.BaseDirectory, "Configs");
 
 
         public async Task<bool> SaveAsync<T>(T config) where T : class
@@ -28,12 +25,12 @@ namespace AFOCS.App.Shared
                 ArgumentException.ThrowIfNullOrEmpty(nameof(config));
                 var path = Path.Combine(ConfigBasePath, config!.GetType().Name + ".json") ;
                 await JsonHelper.WriteToFileAsync(path, config);
-                _logger.LogDebug( $"{nameof(SaveAsync)} {typeof(T)} success!! path:{path}");
+                logger.Debug( $"{nameof(SaveAsync)} {typeof(T)} success!! path:{path}");
                 return true;
             }
             catch (Exception e)
             {
-                _logger.LogError(e,$"{nameof(SaveAsync)} {typeof(T)} failure!");
+                logger.Error(e,$"{nameof(SaveAsync)} {typeof(T)} failure!");
                 return false;
             }
             
@@ -45,12 +42,12 @@ namespace AFOCS.App.Shared
             {
                 var path = Path.Combine(ConfigBasePath, typeof(T).Name + ".json");
                 var res =await JsonHelper.ReadFromFileAsync<T>(path);
-                _logger.LogDebug($"{nameof(LoadAsync)} {typeof(T)} success!! path:{path}");
+                logger.Debug($"{nameof(LoadAsync)} {typeof(T)} success!! path:{path}");
                 return res;
             }
             catch (Exception e)
             {
-                _logger.LogError(e, $"{nameof(LoadAsync)} {typeof(T)} failure!");
+                logger.Error(e, $"{nameof(LoadAsync)} {typeof(T)} failure!");
                 return null;
             }
         }

@@ -1,7 +1,8 @@
-﻿using AFOCS.App.Communication;
+﻿using System.ComponentModel.Composition;
+using AFOCS.App.Communication;
 using AFOCS.App.Core;
 using AFOCS.App.Shared;
-using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace AFOCS.App.Devices.Implementation
 {
@@ -10,27 +11,20 @@ namespace AFOCS.App.Devices.Implementation
         public string Ip { get; set; } = "192.168.0.200";
         public int Port { get; set; } = 3498;
     }
-    public class OpticalPowerMeter<T> : IOpticalPowerMeter where T: OpticalPowerMeterConfig,new()
-    {
-        private readonly ITcpClient _tcpClient;
-        private readonly IConfigService _configService;
-        private readonly ILogger<OpticalPowerMeter<T>> _logger;
-        public bool IsConnected => _tcpClient.IsConnected;
 
-        public OpticalPowerMeter(ITcpClient tcpClient, IConfigService configService, ILogger<OpticalPowerMeter<T>> logger)
-        {
-            _tcpClient = tcpClient;
-            _configService = configService;
-            _logger = logger;
-        }
+    public class OpticalPowerMeter<T>(ITcpClient tcpClient, IConfigService configService, ILogger logger)
+        : IOpticalPowerMeter
+        where T : OpticalPowerMeterConfig, new()
+    {
+        public bool IsConnected => tcpClient.IsConnected;
 
         public async Task<Result> InitializeAsync(CancellationToken token = default)
         {
-            var config = await _configService.LoadAsync<T>();
+            var config = await configService.LoadAsync<T>();
             if (config == null)
             {
                 config = new T();
-                await _configService.SaveAsync(config);
+                await configService.SaveAsync(config);
             }
 
             TcpClientConfig tcpClientConfig = new TcpClientConfig
@@ -38,7 +32,7 @@ namespace AFOCS.App.Devices.Implementation
                 IpAddress = config.Ip,
                 Port = config.Port,
             };
-            var success = await _tcpClient.ConnectAsync(tcpClientConfig);
+            var success = await tcpClient.ConnectAsync(tcpClientConfig);
             if (success)
                 return Result.Success("光功率计机箱初始化成功");
             
@@ -50,19 +44,19 @@ namespace AFOCS.App.Devices.Implementation
         {
             if (!IsConnected) 
                 return Result.Fail(ResultCode.Fail, "未连接设备");
-            await _tcpClient.DisconnectAsync();
+            await tcpClient.DisconnectAsync();
             return Result.Success();
         }
 
         public async Task<Result> ReConnectAsync(CancellationToken token = default)
         {
-            await _tcpClient.DisconnectAsync();
+            await tcpClient.DisconnectAsync();
             return await InitializeAsync(token);
         }
 
         public void Dispose()
         {
-            _tcpClient.Dispose();
+            tcpClient.Dispose();
         }
 
         #region OS光源
@@ -73,7 +67,7 @@ namespace AFOCS.App.Devices.Implementation
             try
             {
                 string command = $":SLOT{slot}:READY?";
-                var res = await _tcpClient.SendAndReceiveAsync(command);
+                var res = await tcpClient.SendAndReceiveAsync(command);
 
                 if(string.IsNullOrWhiteSpace(res) || !res.Equals("1") || !res.Equals("0"))
                     return Result<bool>.Fail(ResultCode.Fail, $"未知返回数据:{res}");
@@ -81,7 +75,7 @@ namespace AFOCS.App.Devices.Implementation
             }
             catch (Exception e)
             {
-                _logger.LogError(e.Message);
+                logger.Error(e.Message);
                 return Result<bool>.Fail(ResultCode.Fail, e.Message, e);
             }
         }
@@ -93,14 +87,14 @@ namespace AFOCS.App.Devices.Implementation
             try
             {
                 string command = $":SLOT{slot}:CHANnel{channel}:STATus?";
-                var res = await _tcpClient.SendAndReceiveAsync(command);
+                var res = await tcpClient.SendAndReceiveAsync(command);
                 if (string.IsNullOrWhiteSpace(res) || !res.Equals("1") || !res.Equals("0"))
                     return Result<bool>.Fail(ResultCode.Fail, $"未知返回数据:{res}");
                 return Result<bool>.Success(res.Equals("1"));
             }
             catch (Exception e)
             {
-                _logger.LogError(e.Message);
+                logger.Error(e.Message);
                 return Result<bool>.Fail(ResultCode.Fail, e.Message, e);
             }
         }
@@ -112,13 +106,13 @@ namespace AFOCS.App.Devices.Implementation
             try
             {
                 string command = $":SLOT{slot}:CHANnel{channel}:POWer {power:F3}";
-                _logger.LogTrace($"发送指令:{command}");
-                await _tcpClient.WriteLineAsync(command);
+                logger.Verbose($"发送指令:{command}");
+                await tcpClient.WriteLineAsync(command);
                 return Result.Success();
             }
             catch (Exception e)
             {
-                _logger.LogError(e.Message);
+                logger.Error(e.Message);
                 return Result.Fail(ResultCode.Fail, e.Message, e);
             }
         }
@@ -130,14 +124,14 @@ namespace AFOCS.App.Devices.Implementation
             try
             {
                 string command = $":SLOT{slot}:CHANnel{channel}:POWer?";
-                var res = await _tcpClient.SendAndReceiveAsync(command);
+                var res = await tcpClient.SendAndReceiveAsync(command);
                 if (double.TryParse(res, out var power))
                     return Result<double>.Success(power);
                 return Result<double>.Fail(ResultCode.Fail, $"未知返回数据:{res}");
             }
             catch (Exception e)
             {
-                _logger.LogError(e.Message);
+                logger.Error(e.Message);
                 return Result<double>.Fail(ResultCode.Fail, e.Message, e);
             }
         }
@@ -150,7 +144,7 @@ namespace AFOCS.App.Devices.Implementation
             try
             {
                 string command = $":SLOT{slot}:POWer?";
-                var res = await _tcpClient.SendAndReceiveAsync(command);
+                var res = await tcpClient.SendAndReceiveAsync(command);
                 var splits = res.Split(",");
                 if (splits.Length < 1)
                     return Result<double[]>.Fail(ResultCode.Fail, $"未知返回数据:{res}");
@@ -165,7 +159,7 @@ namespace AFOCS.App.Devices.Implementation
             }
             catch (Exception e)
             {
-                _logger.LogError(e.Message);
+                logger.Error(e.Message);
                 return Result<double[]>.Fail(ResultCode.Fail, e.Message, e);
             }
         }
@@ -189,12 +183,12 @@ namespace AFOCS.App.Devices.Implementation
             try
             {
                 string command = $":SLOT{slot}:CHANnel{channel}:OFFSET {offset:F3}";
-                await _tcpClient.WriteLineAsync(command);
+                await tcpClient.WriteLineAsync(command);
                 return Result.Success();
             }
             catch (Exception e)
             {
-                _logger.LogError(e.Message);
+                logger.Error(e.Message);
                 return Result.Fail(ResultCode.Fail, e.Message, e);
             }
         }
@@ -206,14 +200,14 @@ namespace AFOCS.App.Devices.Implementation
             try
             {
                 string command = $":SLOT{slot}:CHANnel{channel}:OFFSET?";
-                var res = await _tcpClient.SendAndReceiveAsync(command);
+                var res = await tcpClient.SendAndReceiveAsync(command);
                 if (double.TryParse(res, out var offset))
                     return Result<double>.Success(offset);
                 return Result<double>.Fail(ResultCode.Fail, $"未知返回数据:{res}");
             }
             catch (Exception e)
             {
-                _logger.LogError(e.Message);
+                logger.Error(e.Message);
                 return Result<double>.Fail(ResultCode.Fail, e.Message, e);
             }
         }

@@ -1,7 +1,8 @@
+using System.ComponentModel.Composition;
 using AFOCS.App.Communication;
 using AFOCS.App.Core;
 using AFOCS.App.Shared;
-using Microsoft.Extensions.Logging;
+using Serilog;
 using Result = AFOCS.App.Core.Result;
 
 namespace AFOCS.App.Devices.Implementation
@@ -11,33 +12,25 @@ namespace AFOCS.App.Devices.Implementation
         public string PortName { get; set; } = "COM100";
         public int BaudRate { get; set; } = 9600;
     }
-    public class GlueDispenser<T> : IGlueDispenser where T: GlueDispenserConfig, new()
+
+    public class GlueDispenser<T>(ISerialPortClient serialPortClient, IConfigService configService, ILogger logger)
+        : IGlueDispenser
+        where T : GlueDispenserConfig, new()
     {
-        public bool IsConnected => _serialPortClient.IsOpen;
-
-        private readonly ISerialPortClient _serialPortClient;
-        private readonly IConfigService _configService;
-        private readonly ILogger<GlueDispenser<T>> _logger;
-
-        public GlueDispenser(ISerialPortClient serialPortClient, IConfigService configService, ILogger<GlueDispenser<T>> logger)
-        {
-            _serialPortClient = serialPortClient;
-            _configService = configService;
-            _logger = logger;
-        }
+        public bool IsConnected => serialPortClient.IsOpen;
 
         public void Dispose()
         {
-            _serialPortClient.Dispose();
+            serialPortClient.Dispose();
         }
 
         public async Task<Result> InitializeAsync(CancellationToken token = default)
         {
-            var config = await _configService.LoadAsync<T>();
+            var config = await configService.LoadAsync<T>();
             if (config == null)
             {
                 config = new T();
-                await _configService.SaveAsync(config);
+                await configService.SaveAsync(config);
             }
 
             SerialPortConfig serialPortConfig = new SerialPortConfig
@@ -45,7 +38,7 @@ namespace AFOCS.App.Devices.Implementation
                 PortName = config.PortName,
                 BaudRate = config.BaudRate,
             };
-            var success = await _serialPortClient.OpenAsync(serialPortConfig, token);
+            var success = await serialPortClient.OpenAsync(serialPortConfig, token);
 
             if (success)
             {
@@ -58,13 +51,13 @@ namespace AFOCS.App.Devices.Implementation
         {
             if (!IsConnected) 
                 return Result.Fail(ResultCode.Fail, "未连接设备");
-            await _serialPortClient.CloseAsync();
+            await serialPortClient.CloseAsync();
             return Result.Success();
         }
 
         public async Task<Result> ReConnectAsync(CancellationToken token = default)
         {
-            await _serialPortClient.CloseAsync();
+            await serialPortClient.CloseAsync();
             return await InitializeAsync(token);
         }
 
@@ -75,12 +68,12 @@ namespace AFOCS.App.Devices.Implementation
             try
             {
                 string command = "M,0000";
-                await _serialPortClient.WriteLineAsync(command);
+                await serialPortClient.WriteLineAsync(command);
                 return Result.Success();
             }
             catch (Exception e)
             {
-                _logger.LogError($"发送指令失败:{e.Message}");
+                logger.Error($"发送指令失败:{e.Message}");
                 return Result.Fail(ResultCode.Fail, $"{e.Message}", e);
             }
         }

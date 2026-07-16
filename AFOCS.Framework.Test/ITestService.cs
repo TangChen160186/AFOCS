@@ -11,7 +11,7 @@ namespace AFOCS.Framework.Test
         void To();
     }
 
-    [Export(typeof(ITestService))]
+    [Export]
     [Export(typeof(ITestService1))]
     public class ITest1 : ITestService
     {

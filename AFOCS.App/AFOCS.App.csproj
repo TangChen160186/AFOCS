@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -11,20 +11,35 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Advance\" />
-    <Folder Include="Converters\" />
-    <Folder Include="ViewModels\Test\" />
-    <Folder Include="Views\DeviceConfig\" />
-    <Folder Include="Views\Test\" />
+    <Compile Remove="Advance\**" />
+    <Compile Remove="Converters\**" />
+    <Compile Remove="ViewModels\Test\**" />
+    <Compile Remove="Views\DeviceConfig\**" />
+    <Compile Remove="Views\Test\**" />
+    <EmbeddedResource Remove="Advance\**" />
+    <EmbeddedResource Remove="Converters\**" />
+    <EmbeddedResource Remove="ViewModels\Test\**" />
+    <EmbeddedResource Remove="Views\DeviceConfig\**" />
+    <EmbeddedResource Remove="Views\Test\**" />
+    <None Remove="Advance\**" />
+    <None Remove="Converters\**" />
+    <None Remove="ViewModels\Test\**" />
+    <None Remove="Views\DeviceConfig\**" />
+    <None Remove="Views\Test\**" />
+    <Page Remove="Advance\**" />
+    <Page Remove="Converters\**" />
+    <Page Remove="ViewModels\Test\**" />
+    <Page Remove="Views\DeviceConfig\**" />
+    <Page Remove="Views\Test\**" />
   </ItemGroup>
     <ItemGroup>
         <ApplicationDefinition Remove="App.xaml" />
+       
         <PackageReference Include="Caliburn.Micro" />
         <PackageReference Include="MahApps.Metro" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-        <PackageReference Include="Microsoft.Extensions.Logging" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Console" />
         <PackageReference Include="NationalInstruments.Visa" />
+        <PackageReference Include="Serilog" />
+        <PackageReference Include="Serilog.Sinks.Console" />
         <PackageReference Include="System.IO.Ports" />
         <Page Include="App.xaml" />
     </ItemGroup>

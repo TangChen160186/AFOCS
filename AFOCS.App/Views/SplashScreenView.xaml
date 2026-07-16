@@ -5,12 +5,9 @@
                       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                       xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
                       mc:Ignorable="d"
-                      Title="AFOCS - 系统初始化"
-                      Height="400" 
-                      Width="500" 
+                      Height="600" 
+                      Width="800" 
                       ResizeMode="NoResize"
-                      WindowStartupLocation="CenterScreen" 
-                      UseNoneWindowStyle="True"
                       Background="#F8F9FA">
     <Window.Resources>
         <SolidColorBrush x:Key="PrimaryColor" Color="#3B82F6"/>
@@ -28,13 +25,13 @@
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0" 
-                   Text="AFOCS - 系统初始化" 
+                   Text="{Binding DisplayName}" 
                    FontSize="20" 
                    FontWeight="Bold" 
                    Foreground="{StaticResource TextColor}" 
                    Margin="0 0 0 16"/>
 
-        <ScrollViewer Grid.Row="1" Margin="0 0 0 16" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="1" Margin="0 0 0 16" VerticalScrollBarVisibility="Hidden">
             <ItemsControl ItemsSource="{Binding LogMessages}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>

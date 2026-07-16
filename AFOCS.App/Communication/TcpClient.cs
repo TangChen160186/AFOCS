@@ -1,13 +1,15 @@
+using System.ComponentModel.Composition;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
-using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace AFOCS.App.Communication
 {
-    public class TcpClient : ITcpClient, IDisposable
+    [Export(typeof(ITcpClient))]
+    [method: ImportingConstructor]
+    public class TcpClient(ILogger logger) : ITcpClient, IDisposable
     {
-        private readonly ILogger<TcpClient>? _logger;
         private System.Net.Sockets.TcpClient? _tcpClient;
         private NetworkStream? _networkStream;
         private readonly SemaphoreSlim _lock = new(1, 1);
@@ -37,11 +39,6 @@ namespace AFOCS.App.Communication
         public event EventHandler? Connected;
         public event EventHandler<int>? Reconnecting;
 
-        public TcpClient(ILogger<TcpClient>? logger = null)
-        {
-            _logger = logger;
-        }
-
         public async Task<bool> ConnectAsync(TcpClientConfig config, CancellationToken cancellationToken = default)
         {
             await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -49,7 +46,7 @@ namespace AFOCS.App.Communication
             {
                 if (IsConnected)
                 {
-                    _logger?.LogWarning("TCP 客户端已连接，请先断开当前连接");
+                    logger?.Warning("TCP 客户端已连接，请先断开当前连接");
                     return false;
                 }
 
@@ -75,7 +72,7 @@ namespace AFOCS.App.Communication
                     _tcpClient?.Dispose();
                     _tcpClient = null;
 
-                    _logger?.LogError($"连接 {config.IpAddress}:{config.Port} 超时");
+                    logger?.Error($"连接 {config.IpAddress}:{config.Port} 超时");
                     throw new TimeoutException($"连接超时 ({config.ConnectTimeout}ms)");
                 }
 
@@ -93,14 +90,14 @@ namespace AFOCS.App.Communication
 
                 _continuousReadTask = ContinuousReadAsync(_readCts.Token);
 
-                _logger?.LogInformation($"已连接到 {config.IpAddress}:{config.Port}，结束符: {EscapeLineEnding(LineEnding)}");
+                logger?.Information($"已连接到 {config.IpAddress}:{config.Port}，结束符: {EscapeLineEnding(LineEnding)}");
                 Connected?.Invoke(this, EventArgs.Empty);
 
                 return true;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, $"连接 {config.IpAddress}:{config.Port} 失败，{ex.Message}");
+                logger?.Error(ex, $"连接 {config.IpAddress}:{config.Port} 失败，{ex.Message}");
                 ErrorOccurred?.Invoke(this, ex);
 
                 CleanupConnection();
@@ -125,12 +122,12 @@ namespace AFOCS.App.Communication
 
                 CleanupConnection();
 
-                _logger?.LogInformation("TCP 连接已断开");
+                logger?.Information("TCP 连接已断开");
                 Disconnected?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "断开连接时发生错误");
+                logger?.Error(ex, "断开连接时发生错误");
                 ErrorOccurred?.Invoke(this, ex);
             }
             finally
@@ -187,7 +184,7 @@ namespace AFOCS.App.Communication
 
                             if (bytesRead == 0)
                             {
-                                _logger?.LogWarning("连接已关闭（接收到 0 字节）");
+                                logger?.Warning("连接已关闭（接收到 0 字节）");
                                 await HandleDisconnectionAsync().ConfigureAwait(false);
                                 break;
                             }
@@ -210,7 +207,7 @@ namespace AFOCS.App.Communication
                                 }
                             }
 
-                            _logger?.LogDebug($"接收到数据: {bytesRead} 字节 - {EscapeText(receivedText)}");
+                            logger?.Debug($"接收到数据: {bytesRead} 字节 - {EscapeText(receivedText)}");
                             DataReceived?.Invoke(this, receivedText);
                         }
                         else
@@ -220,13 +217,13 @@ namespace AFOCS.App.Communication
                     }
                     catch (IOException ex)
                     {
-                        _logger?.LogWarning(ex, "网络流读取异常，连接可能已断开");
+                        logger?.Warning(ex, "网络流读取异常，连接可能已断开");
                         await HandleDisconnectionAsync().ConfigureAwait(false);
                         break;
                     }
                     catch (SocketException ex)
                     {
-                        _logger?.LogError(ex, "Socket 异常");
+                        logger?.Error(ex, "Socket 异常");
                         await HandleDisconnectionAsync().ConfigureAwait(false);
                         break;
                     }
@@ -236,7 +233,7 @@ namespace AFOCS.App.Communication
                     }
                     catch (Exception ex)
                     {
-                        _logger?.LogError(ex, "读取数据时发生错误");
+                        logger?.Error(ex, "读取数据时发生错误");
                         ErrorOccurred?.Invoke(this, ex);
                         await Task.Delay(100, cancellationToken).ConfigureAwait(false);
                     }
@@ -247,7 +244,7 @@ namespace AFOCS.App.Communication
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "连续读取任务发生严重错误");
+                logger?.Error(ex, "连续读取任务发生严重错误");
                 ErrorOccurred?.Invoke(this, ex);
             }
         }
@@ -281,7 +278,7 @@ namespace AFOCS.App.Communication
             {
                 if (_reconnectAttempts >= _config!.MaxReconnectAttempts)
                 {
-                    _logger?.LogError($"自动重连失败，已达到最大尝试次数 ({_config.MaxReconnectAttempts})");
+                    logger?.Error($"自动重连失败，已达到最大尝试次数 ({_config.MaxReconnectAttempts})");
                     ErrorOccurred?.Invoke(this, new Exception($"自动重连失败，已尝试 {_reconnectAttempts} 次"));
                     break;
                 }
@@ -289,7 +286,7 @@ namespace AFOCS.App.Communication
                 _reconnectAttempts++;
                 Reconnecting?.Invoke(this, _reconnectAttempts);
 
-                _logger?.LogInformation($"尝试自动重连 (第 {_reconnectAttempts} 次)...");
+                logger?.Information($"尝试自动重连 (第 {_reconnectAttempts} 次)...");
 
                 await Task.Delay(_config!.ReconnectInterval).ConfigureAwait(false);
 
@@ -297,13 +294,13 @@ namespace AFOCS.App.Communication
                 {
                     if (await ConnectAsync(_config).ConfigureAwait(false))
                     {
-                        _logger?.LogInformation("自动重连成功");
+                        logger?.Information("自动重连成功");
                         return;
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogWarning(ex, $"自动重连失败 (第 {_reconnectAttempts} 次)");
+                    logger?.Warning(ex, $"自动重连失败 (第 {_reconnectAttempts} 次)");
                 }
             }
         }
@@ -322,12 +319,12 @@ namespace AFOCS.App.Communication
                 await _networkStream.WriteAsync(data, 0, data.Length, cancellationToken).ConfigureAwait(false);
                 await _networkStream.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-                _logger?.LogDebug($"发送数据: {data.Length} 字节 - {EscapeText(text)}");
+                logger?.Debug($"发送数据: {data.Length} 字节 - {EscapeText(text)}");
                 return data.Length;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "发送数据失败");
+                logger?.Error(ex, "发送数据失败");
                 ErrorOccurred?.Invoke(this, ex);
 
                 if (ex is IOException || ex is SocketException)
@@ -375,12 +372,12 @@ namespace AFOCS.App.Communication
                 try
                 {
                     var response = await _responseTcs.Task.ConfigureAwait(false);
-                    _logger?.LogDebug($"接收到响应: {response.Length} 字符 - {EscapeText(response)}");
+                    logger?.Debug($"接收到响应: {response.Length} 字符 - {EscapeText(response)}");
                     return response;
                 }
                 catch (OperationCanceledException)
                 {
-                    _logger?.LogWarning($"等待响应超时 ({timeoutMs}ms)");
+                    logger?.Warning($"等待响应超时 ({timeoutMs}ms)");
                     throw new TimeoutException($"在 {timeoutMs}ms 内未收到以 {EscapeLineEnding(terminator)} 结尾的响应");
                 }
             }
@@ -431,7 +428,7 @@ namespace AFOCS.App.Communication
                     _receiveBuffer.Clear();
                 }
 
-                _logger?.LogDebug("接收缓冲区已清空");
+                logger?.Debug("接收缓冲区已清空");
             }
             finally
             {

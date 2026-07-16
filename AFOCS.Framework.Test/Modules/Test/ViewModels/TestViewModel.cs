@@ -11,7 +11,7 @@ namespace AFOCS.Framework.Test.Modules.Test.ViewModels
     {
 
 
-        [Import] private ITestService _testService;
+
         [Import]  private ITestService1 _testService1;
 
         public string Text => "fafa";
