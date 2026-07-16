@@ -10,8 +10,8 @@
         <Setter Property="TitleForeground" Value="{DynamicResource MainWindowCaptionActiveText}" />
         <Setter Property="NonActiveWindowTitleBrush" Value="{DynamicResource MainWindowCaptionInactiveBackground}" />
         <Setter Property="TitleCharacterCasing" Value="Normal" />
-        <Setter Property="GlowBrush" Value="{DynamicResource MainWindowActiveBorder}" />
-        <Setter Property="NonActiveGlowBrush" Value="{DynamicResource MainWindowInactiveBorder}" />
+        <!--<Setter Property="GlowColor" Value="{DynamicResource MainWindowActiveBorder}" />-->
+        <Setter Property="NonActiveBorderBrush" Value="{DynamicResource MainWindowInactiveBorder}" />
 
         <Style.Triggers>
             <Trigger Property="IsActive" Value="False">

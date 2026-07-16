@@ -29,6 +29,9 @@
         <Page Include="App.xaml" />
     </ItemGroup>
     <ItemGroup>
+      <ProjectReference Include="..\AFOCS.Framework\AFOCS.Framework.csproj" />
+    </ItemGroup>
+    <ItemGroup>
       <Reference Include="MvCameraControl.Net">
         <HintPath>..\Vendor\Camera\win64\MvCameraControl.Net.dll</HintPath>
       </Reference>

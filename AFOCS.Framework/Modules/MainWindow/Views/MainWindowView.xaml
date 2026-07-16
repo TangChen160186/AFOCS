@@ -15,7 +15,7 @@
                      Style="{DynamicResource MainWindowStyle}">
     <mahapps:MetroWindow.LeftWindowCommands>
         <mahapps:WindowCommands>
-            <ContentControl cal:View.Model="{Binding MainMenu}" />
+            <ContentControl cal:View.Model="{Binding MainMenu}" VerticalAlignment="Center" />
         </mahapps:WindowCommands>
     </mahapps:MetroWindow.LeftWindowCommands>
     <Window.Resources>
