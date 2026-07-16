@@ -1,11 +1,12 @@
-using System.ComponentModel.Composition;
-using System.Windows;
-using System.Windows.Media;
 using AFOCS.Framework.Framework.Commands;
 using AFOCS.Framework.Framework.Services;
+using AFOCS.Framework.Framework.Themes;
 using AFOCS.Framework.Modules.MainMenu;
 using AFOCS.Framework.Properties;
 using Caliburn.Micro;
+using System.ComponentModel.Composition;
+using System.Windows;
+using System.Windows.Media;
 
 namespace AFOCS.Framework.Modules.MainWindow.ViewModels
 {
@@ -88,8 +89,9 @@ namespace AFOCS.Framework.Modules.MainWindow.ViewModels
         {
             get { return _shell; }
         }
+        [Import]
+        private IThemeManager _themeManager;
 
-        
         void IPartImportsSatisfiedNotification.OnImportsSatisfied()
         {
             if (_icon == null)
@@ -101,6 +103,21 @@ namespace AFOCS.Framework.Modules.MainWindow.ViewModels
         {
             _commandKeyGestureService.BindKeyGestures((UIElement) view);
             base.OnViewLoaded(view);
+            Application.Current.MainWindow = (Window)this.GetView();
+            // If after initialization no theme was loaded, load the default one
+            if (_themeManager.CurrentTheme == null)
+            {
+                if (!_themeManager.SetCurrentTheme(Properties.Settings.Default.ThemeName))
+                {
+                    Properties.Settings.Default.ThemeName = (string)Properties.Settings.Default.Properties["ThemeName"].DefaultValue;
+                    Properties.Settings.Default.Save();
+                    if (!_themeManager.SetCurrentTheme(Properties.Settings.Default.ThemeName))
+                    {
+                        throw new InvalidOperationException("unable to load application theme");
+                    }
+                }
+            }
         }
+
     }
 }

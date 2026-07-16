@@ -1,15 +1,12 @@
 ﻿<Application x:Class="AFOCS.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:AFOCS.App"
-             xmlns:framework="clr-namespace:AFOCS.Framework;assembly=AFOCS.Framework">
+             xmlns:local="clr-namespace:AFOCS.App">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary>
                     <local:Bootstrapper x:Key="bootstrapper" />
-                    <!--Use this bootstrapper instead when you are testing the Demo under .NET5+ with PublishSingleFile-->
-                    <!--<local:DemoAppBootstrapper x:Key="bootstrapper" />-->
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

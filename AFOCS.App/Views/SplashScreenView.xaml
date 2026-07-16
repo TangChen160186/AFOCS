@@ -9,14 +9,18 @@
                       Width="800" 
                       ResizeMode="NoResize"
                       Background="#F8F9FA">
+
     <Window.Resources>
-        <SolidColorBrush x:Key="PrimaryColor" Color="#3B82F6"/>
-        <SolidColorBrush x:Key="SuccessColor" Color="#10B981"/>
-        <SolidColorBrush x:Key="ErrorColor" Color="#EF4444"/>
-        <SolidColorBrush x:Key="TextColor" Color="#374151"/>
-        <SolidColorBrush x:Key="SubTextColor" Color="#6B7280"/>
+        <ResourceDictionary>
+            <SolidColorBrush x:Key="PrimaryColor" Color="#3B82F6"/>
+            <SolidColorBrush x:Key="SuccessColor" Color="#10B981"/>
+            <SolidColorBrush x:Key="ErrorColor" Color="#EF4444"/>
+            <SolidColorBrush x:Key="TextColor" Color="#374151"/>
+            <SolidColorBrush x:Key="SubTextColor" Color="#6B7280"/>
+        </ResourceDictionary>
+
     </Window.Resources>
-    
+  
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

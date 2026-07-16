@@ -3,6 +3,7 @@ using System.ComponentModel.Composition.Hosting;
 using AFOCS.Framework;
 using System.Windows;
 using AFOCS.App.ViewModels;
+using AFOCS.Framework.Framework.Services;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 

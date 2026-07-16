@@ -24,9 +24,6 @@ namespace AFOCS.Framework.Modules.Shell.ViewModels
         private IEnumerable<IModule> _modules;
 
         [Import]
-        private IThemeManager _themeManager;
-
-        [Import]
         private IMenu _mainMenu;
 
         [Import]
@@ -106,19 +103,7 @@ namespace AFOCS.Framework.Modules.Shell.ViewModels
             foreach (var module in _modules)
                 module.Initialize();
 
-            // If after initialization no theme was loaded, load the default one
-            if (_themeManager.CurrentTheme == null)
-            {
-                if (!_themeManager.SetCurrentTheme(Properties.Settings.Default.ThemeName))
-                {
-                    Properties.Settings.Default.ThemeName = (string)Properties.Settings.Default.Properties["ThemeName"].DefaultValue;
-                    Properties.Settings.Default.Save();
-                    if (!_themeManager.SetCurrentTheme(Properties.Settings.Default.ThemeName))
-                    {
-                        throw new InvalidOperationException("unable to load application theme");
-                    }
-                }
-            }
+          
 
             _shellView = (IShellView)view;
 

@@ -3,6 +3,7 @@ using System.ComponentModel.Composition;
 using System.Windows;
 using AFOCS.App.Devices;
 using AFOCS.App.Devices.Implementation;
+using AFOCS.Framework.Framework.Services;
 using Caliburn.Micro;
 using Serilog;
 
@@ -58,6 +59,11 @@ namespace AFOCS.App.ViewModels
         [Import] private CameraRightDown _cameraRightDown = null!;
         [Import] private OpticalPowerMeterLeft _opticalPowerMeterLeft = null!;
         [Import] private OpticalPowerMeterRight _opticalPowerMeterRight = null!;
+
+
+        [Import] private IWindowManager _windowManager = null!;
+
+        [Import] private IMainWindow _mainWindow = null!;
         protected override Task OnActivatedAsync(CancellationToken cancellationToken)
         {
             InitializeDevices();
@@ -109,19 +115,21 @@ namespace AFOCS.App.ViewModels
         private List<IDevice> GetAllDevices()
         {
 
-            List<IDevice> devices = new List<IDevice>();
-            devices.Add(_programmablePowerSupply);
-            devices.Add(_opticalSwitch);
-            devices.Add(_heightGauge);
-            devices.Add(_leadShineMotionCard);
-            devices.Add(_glueDispenserLeft);
-            devices.Add(_glueDispenserRight);
-            devices.Add(_cameraLeftUp);
-            devices.Add(_cameraLeftDown);
-            devices.Add(_cameraRightUp);
-            devices.Add(_cameraRightDown);
-            devices.Add(_opticalPowerMeterLeft);
-            devices.Add(_opticalPowerMeterRight);
+            List<IDevice> devices =
+            [
+                _programmablePowerSupply,
+                //_opticalSwitch,
+                //_heightGauge,
+                //_leadShineMotionCard,
+                //_glueDispenserLeft,
+                //_glueDispenserRight,
+                //_cameraLeftUp,
+                //_cameraLeftDown,
+                //_cameraRightUp,
+                //_cameraRightDown,
+                //_opticalPowerMeterLeft,
+                //_opticalPowerMeterRight
+            ];
             return devices;
         }
     
@@ -189,9 +197,8 @@ namespace AFOCS.App.ViewModels
             {
                 Application.Current.Dispatcher.Invoke(async () =>
                 {
-                    var windowManager = IoC.Get<IWindowManager>();
-                    var mainViewModel = IoC.Get<MainWindowViewModel>();
-                    await windowManager.ShowWindowAsync(mainViewModel);
+                    _mainWindow.Title = "DEMISION AFOCS";
+                    await _windowManager.ShowWindowAsync(_mainWindow);
                     await TryCloseAsync();
                 });
             }
