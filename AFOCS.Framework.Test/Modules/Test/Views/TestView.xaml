@@ -9,5 +9,6 @@
 
     <Grid>
         <TextBlock Text="{Binding Text}"/>
+        <Button x:Name="Test"></Button>
     </Grid>
 </UserControl>
