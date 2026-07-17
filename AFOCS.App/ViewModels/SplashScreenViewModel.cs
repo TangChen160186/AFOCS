@@ -52,7 +52,8 @@ namespace AFOCS.App.ViewModels
         [Import] private LeadShineMotionCard _leadShineMotionCard = null!;
 
         [Import] private GlueDispenserLeft _glueDispenserLeft = null!;
-        [Import] private GlueDispenserLeft _glueDispenserRight = null!;
+        [Import] private GlueDispenserRight _glueDispenserRight = null!;
+        [Import] private CameraLight _cameraLight = null!;
         [Import] private CameraLeftUp _cameraLeftUp = null!;
         [Import] private CameraLeftDown _cameraLeftDown = null!;
         [Import] private CameraRightUp _cameraRightUp = null!;
@@ -124,6 +125,7 @@ namespace AFOCS.App.ViewModels
                 _glueDispenserRight,
                 _opticalPowerMeterLeft,
                 _opticalPowerMeterRight,
+                _cameraLight,
 
                 _cameraLeftUp,
                 _cameraLeftDown,

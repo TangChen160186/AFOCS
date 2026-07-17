@@ -20,10 +20,10 @@ namespace AFOCS.App.ViewModels
         private HkCameraConfig _config = new();
 
         private string _serialNumber = string.Empty;
-        private ObservableCollection<(string Sn, string Ip)> _availableCameras = [];
+        private ObservableCollection<(string, string)> _availableCameras = [];
         private bool _isScanning;
-        private bool _isBusy;
         private string _statusMessage = string.Empty;
+        private bool _isBusy;
         private uint _width;
         private uint _height;
         private bool _isGrabbing;
@@ -107,7 +107,7 @@ namespace AFOCS.App.ViewModels
 
         // ========== 扫描 ==========
 
-        public ObservableCollection<(string Sn, string Ip)> AvailableCameras
+        public ObservableCollection<(string,string)> AvailableCameras
         {
             get => _availableCameras;
             set { _availableCameras = value; NotifyOfPropertyChange(); }
@@ -125,7 +125,12 @@ namespace AFOCS.App.ViewModels
             try
             {
                 var cameras = await Task.Run(() => Camera<HkCameraConfig>.GetAllCameraSerialNumbers(Serilog.Log.Logger));
-                AvailableCameras = new ObservableCollection<(string, string)>(cameras);
+                AvailableCameras.Clear();
+                foreach (var item in cameras)
+                {
+                    AvailableCameras.Add((item.Item1,item.Item2));
+                }
+  
             }
             finally { IsScanning = false; }
         }
