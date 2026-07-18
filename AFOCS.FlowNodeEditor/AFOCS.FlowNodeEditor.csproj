@@ -14,6 +14,7 @@
     <PackageReference Include="Nodify" />
     <PackageReference Include="Caliburn.Micro" />
     <PackageReference Include="Serilog" />
+    <PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" />
   </ItemGroup>
 
   <ItemGroup>

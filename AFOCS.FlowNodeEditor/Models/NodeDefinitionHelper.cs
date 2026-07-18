@@ -1,0 +1,125 @@
+using System.Collections.Generic;
+using System.Reflection;
+using AFOCS.FlowNodeEditor.Services;
+
+namespace AFOCS.FlowNodeEditor.Models
+{
+    public static class NodeDefinitionHelper
+    {
+        public static NodeDefinitionAttribute? GetDefinitionAttribute(INodeDefinition definition)
+        {
+            return definition.GetType().GetCustomAttribute<NodeDefinitionAttribute>();
+        }
+
+        public static string GetTypeId(INodeDefinition definition)
+        {
+            var attr = GetDefinitionAttribute(definition);
+            return attr?.TypeId ?? definition.GetType().FullName ?? definition.GetType().Name;
+        }
+
+        public static string GetDisplayName(INodeDefinition definition)
+        {
+            var attr = GetDefinitionAttribute(definition);
+            return attr?.DisplayName ?? definition.GetType().Name;
+        }
+
+        public static string GetCategory(INodeDefinition definition)
+        {
+            var attr = GetDefinitionAttribute(definition);
+            return attr?.Category ?? "未分类";
+        }
+
+        public static Uri? GetIconSource(INodeDefinition definition)
+        {
+            var attr = GetDefinitionAttribute(definition);
+            return attr?.IconSource != null ? new Uri(attr.IconSource) : null;
+        }
+
+        public static bool HasExecutionInput(INodeDefinition definition)
+        {
+            var attr = GetDefinitionAttribute(definition);
+            return attr?.HasExecutionInput ?? typeof(IExecutableNode).IsAssignableFrom(definition.GetType());
+        }
+
+        public static bool HasExecutionOutput(INodeDefinition definition)
+        {
+            var attr = GetDefinitionAttribute(definition);
+            return attr?.HasExecutionOutput ?? typeof(IExecutableNode).IsAssignableFrom(definition.GetType());
+        }
+
+        public static bool HasExecutionFlow(INodeDefinition definition)
+        {
+            return HasExecutionInput(definition) || HasExecutionOutput(definition);
+        }
+
+        public static IReadOnlyList<INodePortDefinition> GetInputPorts(INodeDefinition definition)
+        {
+            var ports = new List<INodePortDefinition>();
+            var type = definition.GetType();
+
+            foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                var portAttr = prop.GetCustomAttribute<NodePortAttribute>();
+                if (portAttr != null && portAttr.IsInput)
+                {
+                    ports.Add(new RuntimePortDefinition(portAttr.Name, portAttr.DisplayName, portAttr.PortType));
+                }
+            }
+
+            if (HasExecutionInput(definition))
+            {
+                ports.Add(new RuntimePortDefinition("In", "输入", NodePortType.Execution));
+            }
+
+            return ports;
+        }
+
+        public static IReadOnlyList<INodePortDefinition> GetOutputPorts(INodeDefinition definition)
+        {
+            var ports = new List<INodePortDefinition>();
+            var type = definition.GetType();
+
+            foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                var portAttr = prop.GetCustomAttribute<NodePortAttribute>();
+                if (portAttr != null && !portAttr.IsInput)
+                {
+                    ports.Add(new RuntimePortDefinition(portAttr.Name, portAttr.DisplayName, portAttr.PortType));
+                }
+            }
+
+            if (HasExecutionOutput(definition))
+            {
+                ports.Add(new RuntimePortDefinition("Out", "输出", NodePortType.Execution));
+            }
+
+            return ports;
+        }
+
+        public static bool IsInputPortProperty(INodeDefinition definition, string propertyName)
+        {
+            var prop = definition.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
+            if (prop == null) return false;
+            var portAttr = prop.GetCustomAttribute<NodePortAttribute>();
+            return portAttr != null && portAttr.IsInput;
+        }
+
+        public static bool IsOutputPortProperty(INodeDefinition definition, string propertyName)
+        {
+            var prop = definition.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
+            if (prop == null) return false;
+            var portAttr = prop.GetCustomAttribute<NodePortAttribute>();
+            return portAttr != null && !portAttr.IsInput;
+        }
+
+        public static bool AllowPropertyEdit(INodeDefinition definition, string propertyName)
+        {
+            var prop = definition.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
+            if (prop == null) return true;
+            var portAttr = prop.GetCustomAttribute<NodePortAttribute>();
+            return portAttr == null || portAttr.AllowPropertyEdit;
+        }
+
+        private record RuntimePortDefinition(string Name, string DisplayName, NodePortType PortType) : INodePortDefinition;
+    }
+}

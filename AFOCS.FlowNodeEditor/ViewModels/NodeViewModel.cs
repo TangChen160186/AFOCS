@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -6,9 +5,6 @@ using AFOCS.FlowNodeEditor.Models;
 
 namespace AFOCS.FlowNodeEditor.ViewModels
 {
-    /// <summary>
-    /// 节点 ViewModel —— NodifyEditor.ItemsSource 中的每一项都对应一个 NodeViewModel
-    /// </summary>
     public class NodeViewModel : INotifyPropertyChanged
     {
         private Point _location;
@@ -44,29 +40,17 @@ namespace AFOCS.FlowNodeEditor.ViewModels
         public List<ConnectorViewModel> Inputs { get; } = [];
         public List<ConnectorViewModel> Outputs { get; } = [];
 
-        /// <summary>节点属性值（属性名 -> 实际值）</summary>
-        public Dictionary<string, object?> PropertyValues { get; } = [];
-
-        /// <summary>属性面板可编辑属性列表</summary>
-        public ObservableCollection<PropertyItemViewModel> PropertyItems { get; } = [];
-
         public NodeViewModel(INodeDefinition definition, Guid? instanceId = null)
         {
             Definition = definition;
             InstanceId = instanceId ?? Guid.NewGuid();
-            Title = definition.DisplayName;
+            Title = NodeDefinitionHelper.GetDisplayName(definition);
 
-            foreach (var port in definition.InputPorts)
+            foreach (var port in NodeDefinitionHelper.GetInputPorts(definition))
                 Inputs.Add(new ConnectorViewModel(this, port, true));
 
-            foreach (var port in definition.OutputPorts)
+            foreach (var port in NodeDefinitionHelper.GetOutputPorts(definition))
                 Outputs.Add(new ConnectorViewModel(this, port, false));
-
-            foreach (var prop in definition.Properties)
-            {
-                PropertyValues[prop.Name] = prop.DefaultValue;
-                PropertyItems.Add(new PropertyItemViewModel(this, prop));
-            }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

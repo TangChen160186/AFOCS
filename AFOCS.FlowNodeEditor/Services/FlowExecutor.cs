@@ -1,18 +1,13 @@
+using System.Reflection;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.ViewModels;
 
 namespace AFOCS.FlowNodeEditor.Services
 {
-    /// <summary>
-    /// 流程执行引擎 —— 支持三种节点类型：
-    ///   1. 流程节点：有 Execution 端口，按 Execution 链顺序执行
-    ///   2. 数据节点：无 Execution 端口，被动/按需计算，为流程节点提供数据
-    ///   3. 入口节点：有 Exec 输出但无 Exec 输入，创建共享上下文，沿执行链传递
-    /// </summary>
     public class FlowExecutor
     {
         private readonly INodeRegistry _registry;
-        private readonly HashSet<Guid> _executing = []; // 循环检测
+        private readonly HashSet<Guid> _executing = [];
 
         public FlowExecutor(INodeRegistry registry)
         {
@@ -26,26 +21,20 @@ namespace AFOCS.FlowNodeEditor.Services
             var results = new Dictionary<Guid, Dictionary<string, object?>>();
             var context = new Dictionary<string, object?>();
 
-            // 1. 找到入口节点（有 Execution 输出但没有 Execution 输入）
             var entryNode = nodes.FirstOrDefault(n =>
                 n.Outputs.Any(o => o.PortType == NodePortType.Execution) &&
                 !n.Inputs.Any(i => i.PortType == NodePortType.Execution));
 
             if (entryNode != null)
             {
-                // 入口节点的属性作为初始上下文
-                foreach (var kv in entryNode.PropertyValues)
+                foreach (var kv in GetNodeProperties(entryNode))
                     context[kv.Key] = kv.Value;
 
-                // 执行入口节点，其输出也放入上下文
                 await ExecuteNodeWithDeps(entryNode, nodes, connections, results, context);
-
-                // 沿 Execution 链递归执行
                 await FollowExecutionChain(entryNode, nodes, connections, results, context);
             }
             else
             {
-                // 无入口节点 = 纯数据图：按拓扑排序执行所有数据节点
                 var order = GetTopologicalOrder(nodes, connections);
                 foreach (var nodeId in order)
                 {
@@ -59,9 +48,31 @@ namespace AFOCS.FlowNodeEditor.Services
             return results;
         }
 
-        /// <summary>
-        /// 沿 Execution 端口链递归执行下游节点
-        /// </summary>
+        private static Dictionary<string, object?> GetNodeProperties(NodeViewModel node)
+        {
+            var properties = new Dictionary<string, object?>();
+            var type = node.Definition.GetType();
+            
+            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var field in fields)
+            {
+                if (!NodeDefinitionHelper.AllowPropertyEdit(node.Definition, field.Name))
+                    continue;
+                properties[field.Name] = field.GetValue(node.Definition);
+            }
+            
+            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var prop in props)
+            {
+                if (!prop.CanRead || prop.GetIndexParameters().Length > 0) continue;
+                if (!NodeDefinitionHelper.AllowPropertyEdit(node.Definition, prop.Name))
+                    continue;
+                properties[prop.Name] = prop.GetValue(node.Definition);
+            }
+            
+            return properties;
+        }
+
         private async Task FollowExecutionChain(
             NodeViewModel fromNode,
             IReadOnlyList<NodeViewModel> nodes,
@@ -83,9 +94,6 @@ namespace AFOCS.FlowNodeEditor.Services
             }
         }
 
-        /// <summary>
-        /// 执行单个节点，递归解析其所有数据输入依赖
-        /// </summary>
         private async Task ExecuteNodeWithDeps(
             NodeViewModel node,
             IReadOnlyList<NodeViewModel> nodes,
@@ -93,10 +101,8 @@ namespace AFOCS.FlowNodeEditor.Services
             Dictionary<Guid, Dictionary<string, object?>> results,
             Dictionary<string, object?> context)
         {
-            // 已执行过则跳过
             if (results.ContainsKey(node.InstanceId)) return;
 
-            // 循环检测
             if (!_executing.Add(node.InstanceId))
             {
                 System.Diagnostics.Debug.WriteLine(
@@ -106,8 +112,6 @@ namespace AFOCS.FlowNodeEditor.Services
 
             try
             {
-                // 收集输入值（递归解析数据依赖）
-                var inputs = new Dictionary<string, object?>();
                 foreach (var input in node.Inputs)
                 {
                     if (input.PortType == NodePortType.Execution)
@@ -123,20 +127,18 @@ namespace AFOCS.FlowNodeEditor.Services
                             if (results.TryGetValue(sourceNode.InstanceId, out var srcOutputs) &&
                                 srcOutputs.TryGetValue(conn.Output.Name, out var val))
                             {
-                                inputs[input.Name] = val;
+                                SetInputPortValue(node.Definition, input.Name, val);
                             }
                         }
                     }
                 }
 
-                // 执行节点
-                var def = _registry.GetDefinition(node.Definition.TypeId);
+                var def = _registry.GetDefinition(NodeDefinitionHelper.GetTypeId(node.Definition));
                 if (def is IExecutableNode execNode)
                 {
-                    var outputs = await execNode.ExecuteAsync(inputs, node.PropertyValues, context);
+                    var outputs = await execNode.ExecuteAsync(context);
                     results[node.InstanceId] = outputs;
 
-                    // 流程节点/入口节点的输出合并到上下文（供下游节点使用）
                     if (node.Outputs.Any(o => o.PortType == NodePortType.Execution))
                     {
                         foreach (var kv in outputs)
@@ -164,9 +166,22 @@ namespace AFOCS.FlowNodeEditor.Services
             }
         }
 
-        /// <summary>
-        /// 纯数据图的拓扑排序（所有连接参与）
-        /// </summary>
+        private static void SetInputPortValue(INodeDefinition definition, string portName, object? value)
+        {
+            var type = definition.GetType();
+            var prop = type.GetProperty(portName, BindingFlags.Public | BindingFlags.Instance);
+            if (prop != null && prop.CanWrite)
+            {
+                prop.SetValue(definition, value);
+                return;
+            }
+            var field = type.GetField(portName, BindingFlags.Public | BindingFlags.Instance);
+            if (field != null)
+            {
+                field.SetValue(definition, value);
+            }
+        }
+
         private static List<Guid> GetTopologicalOrder(
             IReadOnlyList<NodeViewModel> nodes,
             IReadOnlyList<ConnectionViewModel> connections)

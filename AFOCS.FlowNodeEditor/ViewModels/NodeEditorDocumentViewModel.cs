@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Reflection;
 using System.Text.Json;
 using System.Windows.Input;
 using AFOCS.FlowNodeEditor.Models;
@@ -290,21 +291,22 @@ namespace AFOCS.FlowNodeEditor.ViewModels
 
             var nodeMap = new Dictionary<Guid, NodeViewModel>();
             foreach (var nd in graph.Nodes)
-            {
-                var def = _nodeRegistry.GetDefinition(nd.TypeId);
-                if (def == null) continue;
-                var vm = new NodeViewModel(def, nd.InstanceId)
                 {
-                    Location = new System.Windows.Point(nd.X, nd.Y)
-                };
-                foreach (var (key, val) in nd.Properties)
-                {
-                    if (vm.PropertyValues.ContainsKey(key))
-                        vm.PropertyValues[key] = val;
+                    var def = _nodeRegistry.GetDefinition(nd.TypeId);
+                    if (def == null) continue;
+                    var vm = new NodeViewModel(def, nd.InstanceId)
+                    {
+                        Location = new System.Windows.Point(nd.X, nd.Y)
+                    };
+                    foreach (var (key, val) in nd.Properties)
+                    {
+                        var field = def.GetType().GetField(key, BindingFlags.Public | BindingFlags.Instance);
+                        if (field != null)
+                            field.SetValue(def, val);
+                    }
+                    Nodes.Add(vm);
+                    nodeMap[nd.InstanceId] = vm;
                 }
-                Nodes.Add(vm);
-                nodeMap[nd.InstanceId] = vm;
-            }
 
             foreach (var cd in graph.Connections)
             {
@@ -326,13 +328,26 @@ namespace AFOCS.FlowNodeEditor.ViewModels
 
             foreach (var node in Nodes)
             {
+                var properties = new Dictionary<string, object?>();
+                var type = node.Definition.GetType();
+                var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+                foreach (var field in fields)
+                {
+                    properties[field.Name] = field.GetValue(node.Definition);
+                }
+                var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                foreach (var prop in props)
+                {
+                    if (!prop.CanRead || prop.GetIndexParameters().Length > 0) continue;
+                    properties[prop.Name] = prop.GetValue(node.Definition);
+                }
                 graph.Nodes.Add(new FlowNodeData
                 {
                     InstanceId = node.InstanceId,
-                    TypeId = node.Definition.TypeId,
+                    TypeId = NodeDefinitionHelper.GetTypeId(node.Definition),
                     X = node.Location.X,
                     Y = node.Location.Y,
-                    Properties = new Dictionary<string, object?>(node.PropertyValues)
+                    Properties = properties
                 });
             }
 

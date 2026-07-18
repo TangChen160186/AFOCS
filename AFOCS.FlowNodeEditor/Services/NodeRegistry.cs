@@ -3,9 +3,6 @@ using AFOCS.FlowNodeEditor.Models;
 
 namespace AFOCS.FlowNodeEditor.Services
 {
-    /// <summary>
-    /// 节点注册中心，通过 MEF 发现所有导出的 INodeDefinition
-    /// </summary>
     public interface INodeRegistry
     {
         IReadOnlyList<INodeDefinition> AllDefinitions { get; }
@@ -23,7 +20,7 @@ namespace AFOCS.FlowNodeEditor.Services
         public NodeRegistry([ImportMany] IEnumerable<INodeDefinition> definitions)
         {
             _definitions = definitions.ToList();
-            _lookup = _definitions.ToDictionary(d => d.TypeId);
+            _lookup = _definitions.ToDictionary(d => NodeDefinitionHelper.GetTypeId(d));
         }
 
         public IReadOnlyList<INodeDefinition> AllDefinitions => _definitions;
@@ -32,6 +29,6 @@ namespace AFOCS.FlowNodeEditor.Services
             _lookup.TryGetValue(typeId, out var def) ? def : null;
 
         public IReadOnlyList<IGrouping<string, INodeDefinition>> DefinitionsByCategory =>
-            _definitions.GroupBy(d => d.Category).ToList();
+            _definitions.GroupBy(d => NodeDefinitionHelper.GetCategory(d)).ToList();
     }
 }

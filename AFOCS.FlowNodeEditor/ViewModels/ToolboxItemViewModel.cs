@@ -2,9 +2,6 @@ using AFOCS.FlowNodeEditor.Models;
 
 namespace AFOCS.FlowNodeEditor.ViewModels
 {
-    /// <summary>
-    /// 工具箱条目 ViewModel
-    /// </summary>
     public class ToolboxItemViewModel
     {
         public string Category { get; }
@@ -16,10 +13,10 @@ namespace AFOCS.FlowNodeEditor.ViewModels
         public ToolboxItemViewModel(INodeDefinition definition)
         {
             Definition = definition;
-            Category = definition.Category;
-            DisplayName = definition.DisplayName;
-            TypeId = definition.TypeId;
-            IconSource = definition.IconSource;
+            Category = NodeDefinitionHelper.GetCategory(definition);
+            DisplayName = NodeDefinitionHelper.GetDisplayName(definition);
+            TypeId = NodeDefinitionHelper.GetTypeId(definition);
+            IconSource = NodeDefinitionHelper.GetIconSource(definition);
         }
 
         public NodeViewModel CreateNodeViewModel() => new(Definition);
