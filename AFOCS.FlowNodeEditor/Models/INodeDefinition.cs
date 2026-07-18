@@ -2,6 +2,7 @@ namespace AFOCS.FlowNodeEditor.Models
 {
     /// <summary>
     /// 节点数据端口的定义（由 INodeDefinition 描述）
+    /// 新节点类型通过在任意 MEF 程序集中导出 INodeDefinition 来注册
     /// </summary>
     public interface INodePortDefinition
     {
@@ -12,9 +13,7 @@ namespace AFOCS.FlowNodeEditor.Models
 
     /// <summary>
     /// MEF 可导出的节点定义接口。
-    /// 实现此接口并加上 [Export(typeof(INodeDefinition))] 即可自动被发现。
-    /// 端口和属性通过 [NodeInput]/[NodeOutput]/[NodeProperty] 自定义 Attribute 声明，
-    /// 框架通过 NodeDefinitionScanner 反射自动发现，无需手动实现列表属性。
+    /// 新成员创建新工程，实现此接口并加上 [Export(typeof(INodeDefinition))] 即可自动被发现。
     /// </summary>
     public interface INodeDefinition
     {
@@ -29,6 +28,15 @@ namespace AFOCS.FlowNodeEditor.Models
 
         /// <summary>工具箱图标（可选，null 则不显示图标）</summary>
         Uri? IconSource => null;
+
+        /// <summary>输入端口定义</summary>
+        IReadOnlyList<INodePortDefinition> InputPorts { get; }
+
+        /// <summary>输出端口定义</summary>
+        IReadOnlyList<INodePortDefinition> OutputPorts { get; }
+
+        /// <summary>节点可编辑属性定义</summary>
+        IReadOnlyList<INodePropertyDefinition> Properties { get; }
     }
 
     /// <summary>

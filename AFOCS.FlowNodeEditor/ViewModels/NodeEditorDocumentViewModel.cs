@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Reflection;
 using System.Text.Json;
 using System.Windows.Input;
 using AFOCS.FlowNodeEditor.Models;
@@ -142,6 +141,7 @@ namespace AFOCS.FlowNodeEditor.ViewModels
                 IsDirty = true;
             });
 
+            // Nodify 连接完成命令 —— 参数为 (object Source, object? Target) 元组
             ConnectionCompletedCommand = new RelayCommand(param =>
             {
                 if (param is not ValueTuple<object, object?> tuple) return;
@@ -151,12 +151,14 @@ namespace AFOCS.FlowNodeEditor.ViewModels
                 AddConnection(source, target);
             });
 
+            // Nodify 断开连接器命令 —— 参数为连接器自身
             DisconnectConnectorCommand = new RelayCommand(param =>
             {
                 if (param is ConnectorViewModel connector)
                     DisconnectConnector(connector);
             });
 
+            // Nodify 移除连接命令 —— 参数为连接的 DataContext
             RemoveConnectionCommand = new RelayCommand(param =>
             {
                 if (param is ConnectionViewModel conn)
@@ -168,6 +170,7 @@ namespace AFOCS.FlowNodeEditor.ViewModels
                 }
             });
 
+            // 执行流程图
             ExecuteCommand = new RelayCommand(_ =>
             {
                 _ = ExecuteFlowAsync();
@@ -192,24 +195,27 @@ namespace AFOCS.FlowNodeEditor.ViewModels
         }
 
         // ========== 从工具箱添加节点 ==========
-        public NodeViewModel AddNodeFromToolbox(ToolboxItemViewModel item, System.Windows.Point? location = null)
+        public void AddNodeFromToolbox(ToolboxItemViewModel item)
         {
-            if (item == null) throw new ArgumentNullException(nameof(item));
-            var vm = item.CreateNodeViewModel(_nodeRegistry);
-            vm.Location = location ?? new System.Windows.Point(300, 300);
+            if (item == null) return;
+            var vm = item.CreateNodeViewModel();
+            vm.Location = new System.Windows.Point(300, 300);
             Nodes.Add(vm);
             SelectedNode = vm;
             IsDirty = true;
-            return vm;
         }
 
         // ========== 连接操作 ==========
         public bool CanConnect(ConnectorViewModel source, ConnectorViewModel target)
         {
+            // 必须一输一出
             if (source.IsInput == target.IsInput) return false;
+            // 不能自连
             if (source.ParentInstanceId == target.ParentInstanceId) return false;
+            // 已连接的端口不能再连
             if (source.IsConnected || target.IsConnected) return false;
 
+            // 端口类型校验
             var output = source.IsInput ? target : source;
             var input = source.IsInput ? source : target;
 
@@ -219,16 +225,21 @@ namespace AFOCS.FlowNodeEditor.ViewModels
             return true;
         }
 
+        /// <summary>检查输出端口类型是否兼容输入端口类型</summary>
         private static bool IsPortTypeCompatible(NodePortType output, NodePortType input)
         {
+            // Execution 只能连 Execution
             if (output == NodePortType.Execution || input == NodePortType.Execution)
                 return output == NodePortType.Execution && input == NodePortType.Execution;
 
+            // Any 输入接受任何类型，Any 输出可以连任何输入
             if (input == NodePortType.Any || output == NodePortType.Any)
                 return true;
 
+            // 同类型兼容
             if (output == input) return true;
 
+            // Int 可连 Double（自动扩展）
             if (output == NodePortType.Int && input == NodePortType.Double) return true;
 
             return false;
@@ -280,18 +291,17 @@ namespace AFOCS.FlowNodeEditor.ViewModels
             var nodeMap = new Dictionary<Guid, NodeViewModel>();
             foreach (var nd in graph.Nodes)
             {
-                var instance = _nodeRegistry.CreateInstance(nd.TypeId);
-                var vm = new NodeViewModel(instance, nd.InstanceId)
+                var def = _nodeRegistry.GetDefinition(nd.TypeId);
+                if (def == null) continue;
+                var vm = new NodeViewModel(def, nd.InstanceId)
                 {
                     Location = new System.Windows.Point(nd.X, nd.Y)
                 };
-
-                // 将反序列化的属性值写回实例的 C# 属性
                 foreach (var (key, val) in nd.Properties)
                 {
-                    SetInstanceProperty(instance, key, val);
+                    if (vm.PropertyValues.ContainsKey(key))
+                        vm.PropertyValues[key] = val;
                 }
-
                 Nodes.Add(vm);
                 nodeMap[nd.InstanceId] = vm;
             }
@@ -316,33 +326,13 @@ namespace AFOCS.FlowNodeEditor.ViewModels
 
             foreach (var node in Nodes)
             {
-                var instance = node.Definition;
-                var defType = instance.GetType();
-
-                // 扫描实例上的 [NodeProperty] 属性，读取当前值用于序列化
-                var props = new Dictionary<string, object?>();
-                foreach (var propDef in NodeDefinitionScanner.ScanProperties(defType, instance))
-                {
-                    var propInfo = defType.GetProperty(propDef.Name);
-                    if (propInfo != null)
-                    {
-                        props[propDef.Name] = propInfo.GetValue(instance);
-                        continue;
-                    }
-                    var fieldInfo = defType.GetField(propDef.Name);
-                    if (fieldInfo != null)
-                    {
-                        props[propDef.Name] = fieldInfo.GetValue(instance);
-                    }
-                }
-
                 graph.Nodes.Add(new FlowNodeData
                 {
                     InstanceId = node.InstanceId,
-                    TypeId = instance.TypeId,
+                    TypeId = node.Definition.TypeId,
                     X = node.Location.X,
                     Y = node.Location.Y,
-                    Properties = props
+                    Properties = new Dictionary<string, object?>(node.PropertyValues)
                 });
             }
 
@@ -361,23 +351,6 @@ namespace AFOCS.FlowNodeEditor.ViewModels
             await File.WriteAllTextAsync(filePath, json);
         }
 
-        /// <summary>通过反射将值写入实例的 C# 属性/字段</summary>
-        private static void SetInstanceProperty(object instance, string name, object? value)
-        {
-            var prop = instance.GetType().GetProperty(name);
-            if (prop != null && prop.CanWrite)
-            {
-                prop.SetValue(instance, value);
-                return;
-            }
-
-            var field = instance.GetType().GetField(name);
-            if (field != null)
-            {
-                field.SetValue(instance, value);
-            }
-        }
-
         // ========== 流程执行 ==========
         public async Task ExecuteFlowAsync()
         {
@@ -390,7 +363,7 @@ namespace AFOCS.FlowNodeEditor.ViewModels
             ExecutionStatus = "正在执行...";
             try
             {
-                var executor = new FlowExecutor();
+                var executor = new FlowExecutor(_nodeRegistry);
                 var results = await executor.ExecuteAsync(Nodes.ToList(), Connections.ToList());
                 ExecutionStatus = $"执行完成，共 {results.Count} 个节点";
             }

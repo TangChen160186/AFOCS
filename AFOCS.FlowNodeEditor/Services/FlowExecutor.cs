@@ -1,16 +1,23 @@
-using System.Reflection;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.ViewModels;
 
 namespace AFOCS.FlowNodeEditor.Services
 {
     /// <summary>
-    /// 流程执行引擎。
-    /// 输入 → 框架自动写入实例的 [NodeInput] 属性 → ExecuteAsync(context) → 框架自动读取实例的 [NodeOutput] 属性 → 输出
+    /// 流程执行引擎 —— 支持三种节点类型：
+    ///   1. 流程节点：有 Execution 端口，按 Execution 链顺序执行
+    ///   2. 数据节点：无 Execution 端口，被动/按需计算，为流程节点提供数据
+    ///   3. 入口节点：有 Exec 输出但无 Exec 输入，创建共享上下文，沿执行链传递
     /// </summary>
     public class FlowExecutor
     {
-        private readonly HashSet<Guid> _executing = [];
+        private readonly INodeRegistry _registry;
+        private readonly HashSet<Guid> _executing = []; // 循环检测
+
+        public FlowExecutor(INodeRegistry registry)
+        {
+            _registry = registry;
+        }
 
         public async Task<Dictionary<Guid, Dictionary<string, object?>>> ExecuteAsync(
             IReadOnlyList<NodeViewModel> nodes,
@@ -19,17 +26,26 @@ namespace AFOCS.FlowNodeEditor.Services
             var results = new Dictionary<Guid, Dictionary<string, object?>>();
             var context = new Dictionary<string, object?>();
 
+            // 1. 找到入口节点（有 Execution 输出但没有 Execution 输入）
             var entryNode = nodes.FirstOrDefault(n =>
                 n.Outputs.Any(o => o.PortType == NodePortType.Execution) &&
                 !n.Inputs.Any(i => i.PortType == NodePortType.Execution));
 
             if (entryNode != null)
             {
+                // 入口节点的属性作为初始上下文
+                foreach (var kv in entryNode.PropertyValues)
+                    context[kv.Key] = kv.Value;
+
+                // 执行入口节点，其输出也放入上下文
                 await ExecuteNodeWithDeps(entryNode, nodes, connections, results, context);
+
+                // 沿 Execution 链递归执行
                 await FollowExecutionChain(entryNode, nodes, connections, results, context);
             }
             else
             {
+                // 无入口节点 = 纯数据图：按拓扑排序执行所有数据节点
                 var order = GetTopologicalOrder(nodes, connections);
                 foreach (var nodeId in order)
                 {
@@ -43,6 +59,9 @@ namespace AFOCS.FlowNodeEditor.Services
             return results;
         }
 
+        /// <summary>
+        /// 沿 Execution 端口链递归执行下游节点
+        /// </summary>
         private async Task FollowExecutionChain(
             NodeViewModel fromNode,
             IReadOnlyList<NodeViewModel> nodes,
@@ -64,6 +83,9 @@ namespace AFOCS.FlowNodeEditor.Services
             }
         }
 
+        /// <summary>
+        /// 执行单个节点，递归解析其所有数据输入依赖
+        /// </summary>
         private async Task ExecuteNodeWithDeps(
             NodeViewModel node,
             IReadOnlyList<NodeViewModel> nodes,
@@ -71,8 +93,10 @@ namespace AFOCS.FlowNodeEditor.Services
             Dictionary<Guid, Dictionary<string, object?>> results,
             Dictionary<string, object?> context)
         {
+            // 已执行过则跳过
             if (results.ContainsKey(node.InstanceId)) return;
 
+            // 循环检测
             if (!_executing.Add(node.InstanceId))
             {
                 System.Diagnostics.Debug.WriteLine(
@@ -82,12 +106,8 @@ namespace AFOCS.FlowNodeEditor.Services
 
             try
             {
-                var instance = node.Definition;
-                var defType = instance.GetType();
-                var inputPropMap = NodeDefinitionScanner.GetInputPropertyMap(defType);
-                var outputPropMap = NodeDefinitionScanner.GetOutputPropertyMap(defType);
-
-                // 1. 将连接的输入值写入实例属性
+                // 收集输入值（递归解析数据依赖）
+                var inputs = new Dictionary<string, object?>();
                 foreach (var input in node.Inputs)
                 {
                     if (input.PortType == NodePortType.Execution)
@@ -103,32 +123,20 @@ namespace AFOCS.FlowNodeEditor.Services
                             if (results.TryGetValue(sourceNode.InstanceId, out var srcOutputs) &&
                                 srcOutputs.TryGetValue(conn.Output.Name, out var val))
                             {
-                                // 如果有关联的属性，写入实例属性（带类型转换）
-                                if (inputPropMap.TryGetValue(input.Name, out var prop) && prop != null && prop.CanWrite)
-                                    prop.SetValue(instance, ConvertValue(val, prop.PropertyType));
+                                inputs[input.Name] = val;
                             }
                         }
                     }
                 }
 
-                // 2. 执行节点
-                if (instance is IExecutableNode execNode)
+                // 执行节点
+                var def = _registry.GetDefinition(node.Definition.TypeId);
+                if (def is IExecutableNode execNode)
                 {
-                    await execNode.ExecuteAsync(context);
-
-                    // 3. 从实例属性读取输出值
-                    var outputs = new Dictionary<string, object?>();
-                    foreach (var output in node.Outputs)
-                    {
-                        if (output.PortType == NodePortType.Execution)
-                            continue;
-
-                        if (outputPropMap.TryGetValue(output.Name, out var prop) && prop != null)
-                            outputs[output.Name] = prop.GetValue(instance);
-                    }
-
+                    var outputs = await execNode.ExecuteAsync(inputs, node.PropertyValues, context);
                     results[node.InstanceId] = outputs;
 
+                    // 流程节点/入口节点的输出合并到上下文（供下游节点使用）
                     if (node.Outputs.Any(o => o.PortType == NodePortType.Execution))
                     {
                         foreach (var kv in outputs)
@@ -156,6 +164,9 @@ namespace AFOCS.FlowNodeEditor.Services
             }
         }
 
+        /// <summary>
+        /// 纯数据图的拓扑排序（所有连接参与）
+        /// </summary>
         private static List<Guid> GetTopologicalOrder(
             IReadOnlyList<NodeViewModel> nodes,
             IReadOnlyList<ConnectionViewModel> connections)
@@ -188,24 +199,6 @@ namespace AFOCS.FlowNodeEditor.Services
             }
 
             return result;
-        }
-
-        /// <summary>将值安全转换为目标属性类型（如 string→int, int→double 等）</summary>
-        private static object? ConvertValue(object? value, Type targetType)
-        {
-            if (value == null) return null;
-            if (targetType.IsInstanceOfType(value)) return value;
-
-            var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
-
-            try
-            {
-                return Convert.ChangeType(value, underlyingType);
-            }
-            catch
-            {
-                return value;
-            }
         }
     }
 }

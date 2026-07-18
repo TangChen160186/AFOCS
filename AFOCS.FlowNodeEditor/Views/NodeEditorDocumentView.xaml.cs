@@ -65,6 +65,7 @@ namespace AFOCS.FlowNodeEditor.Views
             _editor = sender as Nodify.NodifyEditor;
             if (_editor == null) return;
 
+            // 备选：监听 SelectedItems 的集合变更（如果 Nodify 版本支持的话）
             if (_editor.SelectedItems is INotifyCollectionChanged selectedItems)
             {
                 selectedItems.CollectionChanged += (_, _) =>
@@ -76,6 +77,7 @@ namespace AFOCS.FlowNodeEditor.Views
                 };
             }
 
+            // 键盘快捷键
             _editor.PreviewKeyDown += (_, e2) =>
             {
                 if (_viewModel == null) return;
@@ -102,8 +104,12 @@ namespace AFOCS.FlowNodeEditor.Views
                 var item = e.Data.GetData("ToolboxItem") as ToolboxItemViewModel;
                 if (item == null) return;
 
+                // 使用 Nodify 内置坐标转换（处理平移和缩放）
                 var graphPos = _editor.GetLocationInsideEditor(e);
-                _viewModel.AddNodeFromToolbox(item, graphPos);
+                var node = item.CreateNodeViewModel();
+                node.Location = graphPos;
+                _viewModel.Nodes.Add(node);
+                _viewModel.IsDirty = true;
             }
         }
     }

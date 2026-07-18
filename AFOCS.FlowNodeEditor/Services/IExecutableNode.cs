@@ -1,15 +1,20 @@
 namespace AFOCS.FlowNodeEditor.Services
 {
     /// <summary>
-    /// 可执行节点接口。输入来自属性级 [NodeInput]（框架自动赋值），
-    /// 输出写到属性级 [NodeOutput]（框架自动读取），ExecuteAsync 只需处理业务逻辑。
+    /// 可执行节点接口。节点定义实现此接口即可在流程中执行。
     /// </summary>
     public interface IExecutableNode
     {
         /// <summary>
-        /// 执行节点逻辑。输入值已由框架自动写入实例属性，输出值直接写实例属性即可。
+        /// 执行节点逻辑。
         /// </summary>
-        /// <param name="context">流程图共享上下文</param>
-        Task ExecuteAsync(Dictionary<string, object?> context);
+        /// <param name="inputs">输入端口名称 -> 输入值</param>
+        /// <param name="properties">属性名称 -> 属性值</param>
+        /// <param name="context">流程图共享上下文（入口节点创建，沿 Execution 链传递）</param>
+        /// <returns>输出端口名称 -> 输出值</returns>
+        Task<Dictionary<string, object?>> ExecuteAsync(
+            Dictionary<string, object?> inputs,
+            Dictionary<string, object?> properties,
+            Dictionary<string, object?> context);
     }
 }

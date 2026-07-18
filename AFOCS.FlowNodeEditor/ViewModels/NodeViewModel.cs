@@ -1,15 +1,13 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using AFOCS.FlowNodeEditor.Models;
-using AFOCS.FlowNodeEditor.Services;
 
 namespace AFOCS.FlowNodeEditor.ViewModels
 {
     /// <summary>
-    /// 节点 ViewModel —— 每个节点拥有独立实例，属性值存在 C# 属性上。
+    /// 节点 ViewModel —— NodifyEditor.ItemsSource 中的每一项都对应一个 NodeViewModel
     /// </summary>
     public class NodeViewModel : INotifyPropertyChanged
     {
@@ -45,38 +43,29 @@ namespace AFOCS.FlowNodeEditor.ViewModels
 
         public List<ConnectorViewModel> Inputs { get; } = [];
         public List<ConnectorViewModel> Outputs { get; } = [];
+
+        /// <summary>节点属性值（属性名 -> 实际值）</summary>
+        public Dictionary<string, object?> PropertyValues { get; } = [];
+
+        /// <summary>属性面板可编辑属性列表</summary>
         public ObservableCollection<PropertyItemViewModel> PropertyItems { get; } = [];
 
-        public NodeViewModel(INodeDefinition instance, Guid? instanceId = null)
+        public NodeViewModel(INodeDefinition definition, Guid? instanceId = null)
         {
-            Definition = instance;
+            Definition = definition;
             InstanceId = instanceId ?? Guid.NewGuid();
-            Title = instance.DisplayName;
+            Title = definition.DisplayName;
 
-            var defType = instance.GetType();
-
-            // 端口：类级 + 属性级 Attribute 合并发现
-            foreach (var port in NodeDefinitionScanner.ScanInputPorts(defType))
+            foreach (var port in definition.InputPorts)
                 Inputs.Add(new ConnectorViewModel(this, port, true));
 
-            foreach (var port in NodeDefinitionScanner.ScanOutputPorts(defType))
+            foreach (var port in definition.OutputPorts)
                 Outputs.Add(new ConnectorViewModel(this, port, false));
 
-            // 属性：扫描 [NodeProperty]，ValueType 自动推断，DefaultValue 从实例读取
-            foreach (var propDef in NodeDefinitionScanner.ScanProperties(defType, instance))
+            foreach (var prop in definition.Properties)
             {
-                var propInfo = defType.GetProperty(propDef.Name);
-                if (propInfo != null)
-                {
-                    PropertyItems.Add(new PropertyItemViewModel(instance, propInfo, propDef));
-                    continue;
-                }
-
-                var fieldInfo = defType.GetField(propDef.Name);
-                if (fieldInfo != null)
-                {
-                    PropertyItems.Add(new PropertyItemViewModel(instance, fieldInfo, propDef));
-                }
+                PropertyValues[prop.Name] = prop.DefaultValue;
+                PropertyItems.Add(new PropertyItemViewModel(this, prop));
             }
         }
 
