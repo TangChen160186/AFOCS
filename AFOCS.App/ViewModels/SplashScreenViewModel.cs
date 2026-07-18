@@ -119,18 +119,18 @@ namespace AFOCS.App.ViewModels
             List<IDevice> devices =
             [
                 _programmablePowerSupply,
-                _opticalSwitch,
-                _heightGauge,
-                _glueDispenserLeft,
-                _glueDispenserRight,
-                _opticalPowerMeterLeft,
-                _opticalPowerMeterRight,
-                _cameraLight,
+                //_opticalSwitch,
+                //_heightGauge,
+                //_glueDispenserLeft,
+                //_glueDispenserRight,
+                //_opticalPowerMeterLeft,
+                //_opticalPowerMeterRight,
+                //_cameraLight,
 
-                _cameraLeftUp,
-                _cameraLeftDown,
-                _cameraRightUp,
-                _cameraRightDown,
+                //_cameraLeftUp,
+                //_cameraLeftDown,
+                //_cameraRightUp,
+                //_cameraRightDown,
                 //_leadShineMotionCard,
             ];
             return devices;

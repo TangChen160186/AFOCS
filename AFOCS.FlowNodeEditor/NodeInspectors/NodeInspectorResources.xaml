@@ -1,0 +1,112 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:vm="clr-namespace:AFOCS.FlowNodeEditor.ViewModels"
+                    xmlns:views="clr-namespace:AFOCS.FlowNodeEditor.Views"
+                    xmlns:ni="clr-namespace:AFOCS.FlowNodeEditor.NodeInspectors">
+
+    <!-- ================================================================
+         NodeInspectorResources.xaml
+         参照 AFOCS.Framework.Inspector/Resources/Resources.xaml 架构，
+         提供属性面板所需的所有模板和编辑器选择器。
+         ================================================================ -->
+
+    <!-- ==================== 属性编辑器模板选择器 ==================== -->
+    <views:PropertyEditorSelector x:Key="PropertyEditorSelector">
+        <!-- String 编辑器 -->
+        <views:PropertyEditorSelector.StringTemplate>
+            <DataTemplate DataType="{x:Type vm:PropertyItemViewModel}">
+                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" />
+            </DataTemplate>
+        </views:PropertyEditorSelector.StringTemplate>
+
+        <!-- Int 编辑器（只允许整数输入） -->
+        <views:PropertyEditorSelector.IntTemplate>
+            <DataTemplate DataType="{x:Type vm:PropertyItemViewModel}">
+                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                         ni:NumericTextBoxHelper.IsIntegerOnly="True" />
+            </DataTemplate>
+        </views:PropertyEditorSelector.IntTemplate>
+
+        <!-- Double 编辑器（只允许小数输入） -->
+        <views:PropertyEditorSelector.DoubleTemplate>
+            <DataTemplate DataType="{x:Type vm:PropertyItemViewModel}">
+                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                         ni:NumericTextBoxHelper.IsDecimalOnly="True" />
+            </DataTemplate>
+        </views:PropertyEditorSelector.DoubleTemplate>
+
+        <!-- Bool 编辑器 -->
+        <views:PropertyEditorSelector.BoolTemplate>
+            <DataTemplate DataType="{x:Type vm:PropertyItemViewModel}">
+                <CheckBox IsChecked="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                          VerticalAlignment="Center"
+                          Foreground="{DynamicResource EnvironmentToolWindowText}" />
+            </DataTemplate>
+        </views:PropertyEditorSelector.BoolTemplate>
+
+        <!-- Enum 编辑器 -->
+        <views:PropertyEditorSelector.EnumTemplate>
+            <DataTemplate DataType="{x:Type vm:PropertyItemViewModel}">
+                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" />
+            </DataTemplate>
+        </views:PropertyEditorSelector.EnumTemplate>
+    </views:PropertyEditorSelector>
+
+    <!-- ==================== Inspector 风格属性行模板 ====================
+         布局：标签列 | 分割线 | 编辑器列
+         参照 AFOCS.Framework.Inspector 的 LabelledTemplate 设计
+         ================================================================ -->
+    <DataTemplate x:Key="LabelledInspectorTemplate" DataType="{x:Type vm:PropertyItemViewModel}">
+        <Grid Margin="0,2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" MinWidth="50" MaxWidth="140" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="1.5*" MinWidth="50" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 属性名称标签 -->
+            <TextBlock Grid.Column="0"
+                       Text="{Binding DisplayName}"
+                       TextTrimming="CharacterEllipsis"
+                       Foreground="{DynamicResource EnvironmentToolWindowText}"
+                       VerticalAlignment="Center"
+                       Margin="0,0,4,0" />
+
+            <!-- 列分割线（参照 Inspector 框架的 SimpleGridSplitter 位置） -->
+            <Border Grid.Column="1"
+                    Width="1"
+                    Background="{DynamicResource FlowNode.Border}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Stretch"
+                    SnapsToDevicePixels="True" />
+
+            <!-- 编辑器（通过 PropertyEditorSelector 动态选择类型对应编辑器） -->
+            <ContentPresenter Grid.Column="2"
+                              Content="{Binding}"
+                              ContentTemplateSelector="{StaticResource PropertyEditorSelector}"
+                              VerticalAlignment="Center" />
+        </Grid>
+    </DataTemplate>
+
+    <!-- ==================== 连接器信息行模板（只读） ==================== -->
+    <DataTemplate x:Key="ConnectorInfoTemplate" DataType="{x:Type vm:ConnectorViewModel}">
+        <Grid Margin="0,1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       Text="{Binding DisplayName}"
+                       TextTrimming="CharacterEllipsis"
+                       Foreground="{DynamicResource EnvironmentToolWindowText}"
+                       VerticalAlignment="Center" />
+            <TextBlock Grid.Column="1"
+                       Text="{Binding PortType}"
+                       Foreground="{DynamicResource FlowNode.SubtleText}"
+                       FontSize="11"
+                       VerticalAlignment="Center"
+                       Margin="8,0,0,0" />
+        </Grid>
+    </DataTemplate>
+
+</ResourceDictionary>

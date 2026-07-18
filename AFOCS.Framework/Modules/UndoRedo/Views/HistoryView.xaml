@@ -3,9 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:design="clr-namespace:AFOCS.Framework.Modules.UndoRedo.Design"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
-			 d:DataContext="{d:DesignInstance dd:DesignTimeHistoryViewModel, IsDesignTimeCreatable=True}">
+			 d:DataContext="{d:DesignInstance design:DesignTimeHistoryViewModel, IsDesignTimeCreatable=True}">
     <Grid>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <Grid VerticalAlignment="Top">
