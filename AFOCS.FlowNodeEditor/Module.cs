@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.Composition;
 using AFOCS.Framework.Framework;
-using AFOCS.Framework.Modules.MainMenu;
 using AFOCS.Framework.Framework.Menus;
 
 namespace AFOCS.FlowNodeEditor

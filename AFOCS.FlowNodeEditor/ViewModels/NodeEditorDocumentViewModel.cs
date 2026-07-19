@@ -6,7 +6,6 @@ using System.Windows.Input;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Framework.Framework;
-using Caliburn.Micro;
 
 namespace AFOCS.FlowNodeEditor.ViewModels
 {
@@ -16,6 +15,7 @@ namespace AFOCS.FlowNodeEditor.ViewModels
     public class NodeEditorDocumentViewModel : PersistedDocument
     {
         private readonly INodeRegistry _nodeRegistry;
+        private readonly ReactiveFlowExecutor _reactiveExecutor;
 
         // ========== 工具箱（左侧） ==========
         public ObservableCollection<ToolboxItemViewModel> ToolboxItems { get; } = [];
@@ -49,20 +49,53 @@ namespace AFOCS.FlowNodeEditor.ViewModels
         public ObservableCollection<ConnectionViewModel> Connections { get; } = [];
 
         // ========== 属性面板（右侧） ==========
-        private NodeViewModel? _selectedNode;
-        public NodeViewModel? SelectedNode
+        private ObservableCollection<NodeViewModel> _selectedNodes = [];
+        public ObservableCollection<NodeViewModel> SelectedNodes
         {
-            get => _selectedNode;
+            get => _selectedNodes;
             set
             {
-                if (_selectedNode == value) return;
-                if (_selectedNode != null)
-                    _selectedNode.IsSelected = false;
-                _selectedNode = value;
-                if (_selectedNode != null)
-                    _selectedNode.IsSelected = true;
+                _selectedNodes = value;
                 NotifyOfPropertyChange();
+                NotifyOfPropertyChange(nameof(SelectedNode));
             }
+        }
+
+        public NodeViewModel? SelectedNode => SelectedNodes.FirstOrDefault();
+
+        public void SelectNode(NodeViewModel node)
+        {
+            if (!SelectedNodes.Contains(node))
+            {
+                SelectedNodes.Add(node);
+                node.IsSelected = true;
+                NotifyOfPropertyChange(nameof(SelectedNode));
+            }
+        }
+
+        public void DeselectNode(NodeViewModel node)
+        {
+            if (SelectedNodes.Remove(node))
+            {
+                node.IsSelected = false;
+                NotifyOfPropertyChange(nameof(SelectedNode));
+            }
+        }
+
+        public void ClearSelection()
+        {
+            foreach (var node in SelectedNodes.ToList())
+                node.IsSelected = false;
+            SelectedNodes.Clear();
+            NotifyOfPropertyChange(nameof(SelectedNode));
+        }
+
+        public void ToggleSelectNode(NodeViewModel node)
+        {
+            if (SelectedNodes.Contains(node))
+                DeselectNode(node);
+            else
+                SelectNode(node);
         }
 
         // ========== 缩放和平移 ==========
@@ -88,6 +121,8 @@ namespace AFOCS.FlowNodeEditor.ViewModels
         public ICommand DisconnectConnectorCommand { get; }
         public ICommand RemoveConnectionCommand { get; }
         public ICommand ExecuteCommand { get; }
+        public ICommand ExecuteFromSelectedNodeCommand { get; }
+        public ICommand ExecuteSingleNodeCommand { get; }
 
         // ========== 执行状态 ==========
         private string _executionStatus = string.Empty;
@@ -100,22 +135,27 @@ namespace AFOCS.FlowNodeEditor.ViewModels
         public NodeEditorDocumentViewModel(INodeRegistry nodeRegistry)
         {
             _nodeRegistry = nodeRegistry;
+            _reactiveExecutor = new ReactiveFlowExecutor(nodeRegistry);
             DisplayName = "FlowGraph";
+
+            _reactiveExecutor.StartListening(Nodes, Connections);
 
             DeleteSelectedNodeCommand = new RelayCommand(_ =>
             {
-                if (SelectedNode == null) return;
+                if (SelectedNodes.Count == 0) return;
+                var selectedIds = SelectedNodes.Select(n => n.InstanceId).ToHashSet();
                 var related = Connections.Where(c =>
-                    c.Output.ParentInstanceId == SelectedNode.InstanceId ||
-                    c.Input.ParentInstanceId == SelectedNode.InstanceId).ToList();
+                    selectedIds.Contains(c.Output.ParentInstanceId) ||
+                    selectedIds.Contains(c.Input.ParentInstanceId)).ToList();
                 foreach (var conn in related)
                 {
                     conn.Output.IsConnected = false;
                     conn.Input.IsConnected = false;
                     Connections.Remove(conn);
                 }
-                Nodes.Remove(SelectedNode);
-                SelectedNode = null;
+                foreach (var node in SelectedNodes.ToList())
+                    Nodes.Remove(node);
+                ClearSelection();
                 IsDirty = true;
             });
 
@@ -138,7 +178,7 @@ namespace AFOCS.FlowNodeEditor.ViewModels
                 }
                 Nodes.Clear();
                 Connections.Clear();
-                SelectedNode = null;
+                ClearSelection();
                 IsDirty = true;
             });
 
@@ -156,7 +196,15 @@ namespace AFOCS.FlowNodeEditor.ViewModels
             DisconnectConnectorCommand = new RelayCommand(param =>
             {
                 if (param is ConnectorViewModel connector)
+                {
+                    var related = Connections.Where(c =>
+                        c.Output == connector || c.Input == connector).ToList();
+                    foreach (var conn in related)
+                    {
+                        _reactiveExecutor.OnConnectionRemoved(conn, Nodes, Connections);
+                    }
                     DisconnectConnector(connector);
+                }
             });
 
             // Nodify 移除连接命令 —— 参数为连接的 DataContext
@@ -164,6 +212,7 @@ namespace AFOCS.FlowNodeEditor.ViewModels
             {
                 if (param is ConnectionViewModel conn)
                 {
+                    _reactiveExecutor.OnConnectionRemoved(conn, Nodes, Connections);
                     conn.Output.IsConnected = false;
                     conn.Input.IsConnected = false;
                     Connections.Remove(conn);
@@ -175,6 +224,18 @@ namespace AFOCS.FlowNodeEditor.ViewModels
             ExecuteCommand = new RelayCommand(_ =>
             {
                 _ = ExecuteFlowAsync();
+            });
+
+            // 从选中节点开始执行
+            ExecuteFromSelectedNodeCommand = new RelayCommand(_ =>
+            {
+                _ = ExecuteFromSelectedNodeAsync();
+            });
+
+            // 只执行当前选中节点
+            ExecuteSingleNodeCommand = new RelayCommand(_ =>
+            {
+                _ = ExecuteSingleNodeAsync();
             });
         }
 
@@ -202,7 +263,8 @@ namespace AFOCS.FlowNodeEditor.ViewModels
             var vm = item.CreateNodeViewModel();
             vm.Location = new System.Windows.Point(300, 300);
             Nodes.Add(vm);
-            SelectedNode = vm;
+            ClearSelection();
+            SelectNode(vm);
             IsDirty = true;
         }
 
@@ -213,8 +275,6 @@ namespace AFOCS.FlowNodeEditor.ViewModels
             if (source.IsInput == target.IsInput) return false;
             // 不能自连
             if (source.ParentInstanceId == target.ParentInstanceId) return false;
-            // 已连接的端口不能再连
-            if (source.IsConnected || target.IsConnected) return false;
 
             // 端口类型校验
             var output = source.IsInput ? target : source;
@@ -223,6 +283,8 @@ namespace AFOCS.FlowNodeEditor.ViewModels
             if (!IsPortTypeCompatible(output.PortType, input.PortType))
                 return false;
 
+            // 输入端口只能有一个连接，但允许重新连接（会先断开旧连接）
+            // 输出端口可以连接多个输入
             return true;
         }
 
@@ -252,8 +314,19 @@ namespace AFOCS.FlowNodeEditor.ViewModels
 
             if (source.IsInput) (source, target) = (target, source);
 
+            // 如果输入端口已经有连接，先断开旧连接
+            var existingConn = Connections.FirstOrDefault(c => c.Input == target);
+            if (existingConn != null)
+            {
+                _reactiveExecutor.OnConnectionRemoved(existingConn, Nodes, Connections);
+                Connections.Remove(existingConn);
+            }
+
             var conn = new ConnectionViewModel(source, target);
             Connections.Add(conn);
+
+            // 触发响应式执行
+            _reactiveExecutor.OnConnectionAdded(conn, Nodes, Connections);
             IsDirty = true;
         }
 
@@ -275,7 +348,7 @@ namespace AFOCS.FlowNodeEditor.ViewModels
         {
             Nodes.Clear();
             Connections.Clear();
-            SelectedNode = null;
+            ClearSelection();
             InitializeToolbox();
             return Task.CompletedTask;
         }
@@ -291,22 +364,35 @@ namespace AFOCS.FlowNodeEditor.ViewModels
 
             var nodeMap = new Dictionary<Guid, NodeViewModel>();
             foreach (var nd in graph.Nodes)
+            {
+                var def = _nodeRegistry.CreateInstance(nd.TypeId);
+                if (def == null) continue;
+                var vm = new NodeViewModel(def, nd.InstanceId)
                 {
-                    var def = _nodeRegistry.GetDefinition(nd.TypeId);
-                    if (def == null) continue;
-                    var vm = new NodeViewModel(def, nd.InstanceId)
+                    Location = new System.Windows.Point(nd.X, nd.Y)
+                };
+                foreach (var (key, val) in nd.Properties)
+                {
+                    var type = def.GetType();
+                    var prop = type.GetProperty(key, BindingFlags.Public | BindingFlags.Instance);
+                    if (prop != null && prop.CanWrite)
                     {
-                        Location = new System.Windows.Point(nd.X, nd.Y)
-                    };
-                    foreach (var (key, val) in nd.Properties)
-                    {
-                        var field = def.GetType().GetField(key, BindingFlags.Public | BindingFlags.Instance);
-                        if (field != null)
-                            field.SetValue(def, val);
+                        var convertedValue = ConvertJsonValue(val, prop.PropertyType);
+                        prop.SetValue(def, convertedValue);
                     }
-                    Nodes.Add(vm);
-                    nodeMap[nd.InstanceId] = vm;
+                    else
+                    {
+                        var field = type.GetField(key, BindingFlags.Public | BindingFlags.Instance);
+                        if (field != null)
+                        {
+                            var convertedValue = ConvertJsonValue(val, field.FieldType);
+                            field.SetValue(def, convertedValue);
+                        }
+                    }
                 }
+                Nodes.Add(vm);
+                nodeMap[nd.InstanceId] = vm;
+            }
 
             foreach (var cd in graph.Connections)
             {
@@ -366,6 +452,52 @@ namespace AFOCS.FlowNodeEditor.ViewModels
             await File.WriteAllTextAsync(filePath, json);
         }
 
+        private static object? ConvertJsonValue(object? value, Type targetType)
+        {
+            if (value == null)
+                return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+
+            if (value is JsonElement jsonElement)
+            {
+                return jsonElement.ValueKind switch
+                {
+                    JsonValueKind.String => jsonElement.GetString(),
+                    JsonValueKind.Number => ConvertNumber(jsonElement, targetType),
+                    JsonValueKind.True => true,
+                    JsonValueKind.False => false,
+                    JsonValueKind.Null => targetType.IsValueType ? Activator.CreateInstance(targetType) : null,
+                    _ => jsonElement.ToString()
+                };
+            }
+
+            if (targetType.IsAssignableFrom(value.GetType()))
+                return value;
+
+            try
+            {
+                return Convert.ChangeType(value, targetType);
+            }
+            catch
+            {
+                return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+            }
+        }
+
+        private static object? ConvertNumber(JsonElement element, Type targetType)
+        {
+            if (targetType == typeof(int) || targetType == typeof(int?))
+                return element.GetInt32();
+            if (targetType == typeof(long) || targetType == typeof(long?))
+                return element.GetInt64();
+            if (targetType == typeof(double) || targetType == typeof(double?))
+                return element.GetDouble();
+            if (targetType == typeof(float) || targetType == typeof(float?))
+                return element.GetSingle();
+            if (targetType == typeof(decimal) || targetType == typeof(decimal?))
+                return element.GetDecimal();
+            return element.GetDouble();
+        }
+
         // ========== 流程执行 ==========
         public async Task ExecuteFlowAsync()
         {
@@ -375,12 +507,84 @@ namespace AFOCS.FlowNodeEditor.ViewModels
                 return;
             }
 
+            foreach (var n in Nodes)
+                n.ResetExecutionState();
+
             ExecutionStatus = "正在执行...";
             try
             {
                 var executor = new FlowExecutor(_nodeRegistry);
+
+                executor.NodeStateChanged += async (id, state) =>
+                {
+                    if (state == NodeExecutionState.Executing)
+                        await Task.Delay(300);
+                };
+
                 var results = await executor.ExecuteAsync(Nodes.ToList(), Connections.ToList());
                 ExecutionStatus = $"执行完成，共 {results.Count} 个节点";
+            }
+            catch (Exception ex)
+            {
+                ExecutionStatus = $"执行失败: {ex.Message}";
+            }
+        }
+
+        public async Task ExecuteFromSelectedNodeAsync()
+        {
+            if (SelectedNode == null)
+            {
+                ExecutionStatus = "请先选中一个节点";
+                return;
+            }
+
+            foreach (var n in Nodes)
+                n.ResetExecutionState();
+
+            ExecutionStatus = $"从节点 '{SelectedNode.Title}' 开始执行...";
+            try
+            {
+                var executor = new FlowExecutor(_nodeRegistry);
+
+                executor.NodeStateChanged += async (id, state) =>
+                {
+                    if (state == NodeExecutionState.Executing)
+                        await Task.Delay(300);
+                };
+
+                var results = await executor.ExecuteFromNodeAsync(SelectedNode, Nodes.ToList(), Connections.ToList());
+                ExecutionStatus = $"执行完成，共 {results.Count} 个节点";
+            }
+            catch (Exception ex)
+            {
+                ExecutionStatus = $"执行失败: {ex.Message}";
+            }
+        }
+
+        public async Task ExecuteSingleNodeAsync()
+        {
+            if (SelectedNode == null)
+            {
+                ExecutionStatus = "请先选中一个节点";
+                return;
+            }
+
+            foreach (var n in Nodes)
+                n.ResetExecutionState();
+
+            ExecutionStatus = $"执行节点 '{SelectedNode.Title}'...";
+            try
+            {
+                var executor = new FlowExecutor(_nodeRegistry);
+
+                executor.NodeStateChanged += async (id, state) =>
+                {
+                    if (state == NodeExecutionState.Executing)
+                        await Task.Delay(300);
+                };
+
+                var results = await executor.ExecuteSingleNodeAsync(SelectedNode, Nodes.ToList(), Connections.ToList());
+                ExecutionStatus = results.Count > 0 ? "执行完成" : "节点未执行";
             }
             catch (Exception ex)
             {

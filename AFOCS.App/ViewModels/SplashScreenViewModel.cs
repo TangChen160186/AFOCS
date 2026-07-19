@@ -118,7 +118,7 @@ namespace AFOCS.App.ViewModels
 
             List<IDevice> devices =
             [
-                _programmablePowerSupply,
+                //_programmablePowerSupply,
                 //_opticalSwitch,
                 //_heightGauge,
                 //_glueDispenserLeft,

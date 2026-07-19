@@ -7,6 +7,7 @@ namespace AFOCS.FlowNodeEditor.Services
     {
         IReadOnlyList<INodeDefinition> AllDefinitions { get; }
         INodeDefinition? GetDefinition(string typeId);
+        INodeDefinition? CreateInstance(string typeId);
         IReadOnlyList<IGrouping<string, INodeDefinition>> DefinitionsByCategory { get; }
     }
 
@@ -27,6 +28,12 @@ namespace AFOCS.FlowNodeEditor.Services
 
         public INodeDefinition? GetDefinition(string typeId) =>
             _lookup.TryGetValue(typeId, out var def) ? def : null;
+
+        public INodeDefinition? CreateInstance(string typeId)
+        {
+            var template = GetDefinition(typeId);
+            return template != null ? NodeDefinitionHelper.Clone(template) : null;
+        }
 
         public IReadOnlyList<IGrouping<string, INodeDefinition>> DefinitionsByCategory =>
             _definitions.GroupBy(d => NodeDefinitionHelper.GetCategory(d)).ToList();

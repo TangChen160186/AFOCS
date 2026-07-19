@@ -1,76 +1,221 @@
-using System.Reflection;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.ViewModels;
+using Caliburn.Micro;
+using Serilog;
+using System.Reflection;
 
 namespace AFOCS.FlowNodeEditor.Services
 {
+    public enum NodeExecutionState
+    {
+        Idle,
+        Executing,
+        Completed,
+        Error
+    }
+
     public class FlowExecutor
     {
         private readonly INodeRegistry _registry;
-        private readonly HashSet<Guid> _executing = [];
+        private readonly HashSet<Guid> _executed = [];
 
+        /// <summary>节点状态变化回调（节点实例Id, 状态）</summary>
+        public event Action<Guid, NodeExecutionState>? NodeStateChanged;
+
+        private ILogger _logger;
         public FlowExecutor(INodeRegistry registry)
         {
             _registry = registry;
+            _logger =  IoC.Get<ILogger>();
+        }
+        
+        public async Task<Dictionary<Guid, Dictionary<string, object?>>> ExecuteAsync(
+            IReadOnlyList<NodeViewModel> nodes,
+            IReadOnlyList<ConnectionViewModel> connections)
+        {
+            var entryNodes = nodes.Where(n =>
+                n.Outputs.Any(o => o.PortType == NodePortType.Execution) &&
+                !n.Inputs.Any(i => i.PortType == NodePortType.Execution)).ToList();
+
+            if (entryNodes.Count == 0)
+            {
+                _logger.Warning("[FlowExecutor] 未找到 Entry 节点，无法执行");
+                return new Dictionary<Guid, Dictionary<string, object?>>();
+            }
+
+            if (entryNodes.Count == 1)
+            {
+                return await ExecuteFromNodeAsync(entryNodes[0], nodes, connections);
+            }
+
+            return await ExecuteWithPriorityAsync(entryNodes, nodes, connections);
         }
 
-        public async Task<Dictionary<Guid, Dictionary<string, object?>>> ExecuteAsync(
+        private async Task<Dictionary<Guid, Dictionary<string, object?>>> ExecuteWithPriorityAsync(
+            List<NodeViewModel> entryNodes,
             IReadOnlyList<NodeViewModel> nodes,
             IReadOnlyList<ConnectionViewModel> connections)
         {
             var results = new Dictionary<Guid, Dictionary<string, object?>>();
             var context = new Dictionary<string, object?>();
 
-            var entryNode = nodes.FirstOrDefault(n =>
-                n.Outputs.Any(o => o.PortType == NodePortType.Execution) &&
-                !n.Inputs.Any(i => i.PortType == NodePortType.Execution));
-
-            if (entryNode != null)
+            var grouped = entryNodes.GroupBy(n =>
             {
-                foreach (var kv in GetNodeProperties(entryNode))
-                    context[kv.Key] = kv.Value;
+                var priorityProp = n.Definition.GetType().GetProperty("Priority");
+                return priorityProp != null ? (int)priorityProp.GetValue(n.Definition)! : 0;
+            })
+            .OrderBy(g => g.Key)
+            .ToList();
 
-                await ExecuteNodeWithDeps(entryNode, nodes, connections, results, context);
-                await FollowExecutionChain(entryNode, nodes, connections, results, context);
-            }
-            else
+            _logger.Information($"[FlowExecutor] 找到 {entryNodes.Count} 个入口，按优先级分组: {string.Join(", ", grouped.Select(g => $"优先级{g.Key}({g.Count()}个)"))}");
+
+            foreach (var group in grouped)
             {
-                var order = GetTopologicalOrder(nodes, connections);
-                foreach (var nodeId in order)
+                _logger.Information($"[FlowExecutor] 执行优先级 {group.Key} 的 {group.Count()} 个入口(并行)");
+
+                var tasks = group.Select(async entryNode =>
                 {
-                    var node = nodes.First(n => n.InstanceId == nodeId);
-                    await ExecuteNodeWithDeps(node, nodes, connections, results, context);
-                }
+                    var localResults = await ExecuteFromNodeAsync(entryNode, nodes, connections);
+                    lock (results)
+                    {
+                        foreach (var kv in localResults)
+                        {
+                            if (!results.ContainsKey(kv.Key))
+                                results[kv.Key] = kv.Value;
+                        }
+                    }
+                    lock (context)
+                    {
+                        foreach (var kv in localResults)
+                        {
+                            foreach (var outputKv in kv.Value)
+                            {
+                                context[outputKv.Key] = outputKv.Value;
+                            }
+                        }
+                    }
+                });
+
+                await Task.WhenAll(tasks);
             }
 
-            System.Diagnostics.Debug.WriteLine(
+            _logger.Information(
                 $"[FlowExecutor] 执行完成，共 {results.Count}/{nodes.Count} 个节点");
             return results;
         }
 
-        private static Dictionary<string, object?> GetNodeProperties(NodeViewModel node)
+        public async Task<Dictionary<Guid, Dictionary<string, object?>>> ExecuteFromNodeAsync(
+            NodeViewModel startNode,
+            IReadOnlyList<NodeViewModel> nodes,
+            IReadOnlyList<ConnectionViewModel> connections)
         {
-            var properties = new Dictionary<string, object?>();
-            var type = node.Definition.GetType();
-            
-            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
-            foreach (var field in fields)
+            var results = new Dictionary<Guid, Dictionary<string, object?>>();
+            var context = new Dictionary<string, object?>();
+            _executed.Clear();
+
+            _logger.Information($"[FlowExecutor] 从节点 '{startNode.Title}' 开始执行");
+
+            await ExecuteNodeWithDeps(startNode, nodes, connections, results, context);
+            await FollowExecutionChain(startNode, nodes, connections, results, context);
+
+            _logger.Information(
+                $"[FlowExecutor] 执行完成，共 {_executed.Count}/{nodes.Count} 个节点");
+            return results;
+        }
+
+        public async Task<Dictionary<Guid, Dictionary<string, object?>>> ExecuteSingleNodeAsync(
+            NodeViewModel node,
+            IReadOnlyList<NodeViewModel> nodes,
+            IReadOnlyList<ConnectionViewModel> connections)
+        {
+            var results = new Dictionary<Guid, Dictionary<string, object?>>();
+            var context = new Dictionary<string, object?>();
+            _executed.Clear();
+
+            _logger.Information($"[FlowExecutor] 只执行节点 '{node.Title}'");
+
+            foreach (var input in node.Inputs)
             {
-                if (!NodeDefinitionHelper.AllowPropertyEdit(node.Definition, field.Name))
+                if (input.PortType == NodePortType.Execution)
                     continue;
-                properties[field.Name] = field.GetValue(node.Definition);
+
+                var conn = connections.FirstOrDefault(c => c.Input == input);
+                if (conn != null)
+                {
+                    var sourceNode = nodes.FirstOrDefault(n => n.InstanceId == conn.Output.ParentInstanceId);
+                    if (sourceNode != null)
+                    {
+                        var sourceProp = GetPropertyByPortName(sourceNode.Definition, conn.Output.Name);
+                        if (sourceProp != null)
+                        {
+                            var val = sourceProp.GetValue(sourceNode.Definition);
+                            SetInputPortValue(node.Definition, input.Name, val);
+                        }
+                    }
+                }
             }
-            
-            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            foreach (var prop in props)
+
+            var isEnabled = node.Definition.GetType()
+                .GetProperty("Enabled")?.GetValue(node.Definition) as bool? ?? true;
+
+            if (!isEnabled)
             {
-                if (!prop.CanRead || prop.GetIndexParameters().Length > 0) continue;
-                if (!NodeDefinitionHelper.AllowPropertyEdit(node.Definition, prop.Name))
-                    continue;
-                properties[prop.Name] = prop.GetValue(node.Definition);
+                _logger.Information(
+                    $"[FlowExecutor] 节点 '{node.Title}' 已禁用，跳过执行");
+                return results;
             }
-            
-            return properties;
+
+            NodeStateChanged?.Invoke(node.InstanceId, NodeExecutionState.Executing);
+            node.IsExecuting = true;
+            node.IsCompleted = false;
+
+            try
+            {
+                if (node.Definition is IExecutableNode execNode)
+                {
+                    var outputs = await execNode.ExecuteAsync(context);
+                    results[node.InstanceId] = outputs;
+
+                    foreach (var kv in outputs)
+                    {
+                        var prop = node.Definition.GetType().GetProperty(kv.Key);
+                        if (prop != null && prop.CanWrite)
+                            prop.SetValue(node.Definition, kv.Value);
+                    }
+
+                    _logger.Information(
+                        $"[FlowExecutor] 节点 '{node.Title}' 执行成功，输出 {outputs.Count} 项");
+
+                    node.IsExecuting = false;
+                    node.IsCompleted = true;
+                    NodeStateChanged?.Invoke(node.InstanceId, NodeExecutionState.Completed);
+                }
+                else
+                {
+                    _logger.Information(
+                        $"[FlowExecutor] 节点 '{node.Title}' 未实现 IExecutableNode，跳过");
+                    node.IsExecuting = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Information(
+                    $"[FlowExecutor] 节点 '{node.Title}' 执行失败: {ex.Message}");
+                results[node.InstanceId] = new Dictionary<string, object?> { ["_error"] = ex.Message };
+
+                node.IsExecuting = false;
+                node.HasError = true;
+                NodeStateChanged?.Invoke(node.InstanceId, NodeExecutionState.Error);
+            }
+
+            return results;
+        }
+
+        private static PropertyInfo? GetPropertyByPortName(INodeDefinition definition, string portName)
+        {
+            return definition.GetType().GetProperties()
+                .FirstOrDefault(p => p.Name == portName ||
+                    p.GetCustomAttribute<NodePortAttribute>()?.Name == portName);
         }
 
         private async Task FollowExecutionChain(
@@ -88,6 +233,7 @@ namespace AFOCS.FlowNodeEditor.Services
             {
                 var nextNode = nodes.FirstOrDefault(n => n.Inputs.Contains(conn.Input));
                 if (nextNode == null) continue;
+                if (_executed.Contains(nextNode.InstanceId)) continue;
 
                 await ExecuteNodeWithDeps(nextNode, nodes, connections, results, context);
                 await FollowExecutionChain(nextNode, nodes, connections, results, context);
@@ -101,68 +247,82 @@ namespace AFOCS.FlowNodeEditor.Services
             Dictionary<Guid, Dictionary<string, object?>> results,
             Dictionary<string, object?> context)
         {
-            if (results.ContainsKey(node.InstanceId)) return;
+            if (_executed.Contains(node.InstanceId)) return;
 
-            if (!_executing.Add(node.InstanceId))
+            // 先执行数据依赖的源节点
+            foreach (var input in node.Inputs)
             {
-                System.Diagnostics.Debug.WriteLine(
-                    $"[FlowExecutor] 节点 '{node.Title}' 存在循环依赖，跳过");
+                if (input.PortType == NodePortType.Execution)
+                    continue;
+
+                var conn = connections.FirstOrDefault(c => c.Input == input);
+                if (conn != null)
+                {
+                    var sourceNode = nodes.FirstOrDefault(n => n.InstanceId == conn.Output.ParentInstanceId);
+                    if (sourceNode != null && !_executed.Contains(sourceNode.InstanceId))
+                    {
+                        await ExecuteNodeWithDeps(sourceNode, nodes, connections, results, context);
+                    }
+
+                    // 传递数据
+                    if (results.TryGetValue(sourceNode!.InstanceId, out var srcOutputs) &&
+                        srcOutputs.TryGetValue(conn.Output.Name, out var val))
+                    {
+                        SetInputPortValue(node.Definition, input.Name, val);
+                    }
+                }
+            }
+
+            var isEnabled = node.Definition.GetType()
+                .GetProperty("Enabled")?.GetValue(node.Definition) as bool? ?? true;
+
+            if (!isEnabled)
+            {
+                _logger.Information(
+                    $"[FlowExecutor] 节点 '{node.Title}' 已禁用，跳过执行");
+                _executed.Add(node.InstanceId);
                 return;
             }
 
+            NodeStateChanged?.Invoke(node.InstanceId, NodeExecutionState.Executing);
+            node.IsExecuting = true;
+            node.IsCompleted = false;
+
             try
             {
-                foreach (var input in node.Inputs)
-                {
-                    if (input.PortType == NodePortType.Execution)
-                        continue;
-
-                    var conn = connections.FirstOrDefault(c => c.Input == input);
-                    if (conn != null)
-                    {
-                        var sourceNode = nodes.FirstOrDefault(n => n.InstanceId == conn.Output.ParentInstanceId);
-                        if (sourceNode != null)
-                        {
-                            await ExecuteNodeWithDeps(sourceNode, nodes, connections, results, context);
-                            if (results.TryGetValue(sourceNode.InstanceId, out var srcOutputs) &&
-                                srcOutputs.TryGetValue(conn.Output.Name, out var val))
-                            {
-                                SetInputPortValue(node.Definition, input.Name, val);
-                            }
-                        }
-                    }
-                }
-
-                var def = _registry.GetDefinition(NodeDefinitionHelper.GetTypeId(node.Definition));
-                if (def is IExecutableNode execNode)
+                if (node.Definition is IExecutableNode execNode)
                 {
                     var outputs = await execNode.ExecuteAsync(context);
                     results[node.InstanceId] = outputs;
+                    _executed.Add(node.InstanceId);
 
-                    if (node.Outputs.Any(o => o.PortType == NodePortType.Execution))
-                    {
-                        foreach (var kv in outputs)
-                            context[kv.Key] = kv.Value;
-                    }
+                    foreach (var kv in outputs)
+                        context[kv.Key] = kv.Value;
 
-                    System.Diagnostics.Debug.WriteLine(
+                    _logger.Information(
                         $"[FlowExecutor] 节点 '{node.Title}' 执行成功，输出 {outputs.Count} 项");
+
+                    node.IsExecuting = false;
+                    node.IsCompleted = true;
+                    NodeStateChanged?.Invoke(node.InstanceId, NodeExecutionState.Completed);
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine(
+                    _logger.Information(
                         $"[FlowExecutor] 节点 '{node.Title}' 未实现 IExecutableNode，跳过");
+                    node.IsExecuting = false;
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine(
+                _logger.Information(
                     $"[FlowExecutor] 节点 '{node.Title}' 执行失败: {ex.Message}");
                 results[node.InstanceId] = new Dictionary<string, object?> { ["_error"] = ex.Message };
-            }
-            finally
-            {
-                _executing.Remove(node.InstanceId);
+                _executed.Add(node.InstanceId);
+
+                node.IsExecuting = false;
+                node.HasError = true;
+                NodeStateChanged?.Invoke(node.InstanceId, NodeExecutionState.Error);
             }
         }
 
@@ -180,40 +340,6 @@ namespace AFOCS.FlowNodeEditor.Services
             {
                 field.SetValue(definition, value);
             }
-        }
-
-        private static List<Guid> GetTopologicalOrder(
-            IReadOnlyList<NodeViewModel> nodes,
-            IReadOnlyList<ConnectionViewModel> connections)
-        {
-            var inDegree = nodes.ToDictionary(n => n.InstanceId, _ => 0);
-            var adjacency = nodes.ToDictionary(n => n.InstanceId, _ => new List<Guid>());
-
-            foreach (var conn in connections)
-            {
-                adjacency[conn.Output.ParentInstanceId].Add(conn.Input.ParentInstanceId);
-                inDegree[conn.Input.ParentInstanceId]++;
-            }
-
-            var queue = new Queue<Guid>();
-            foreach (var n in nodes)
-                if (inDegree[n.InstanceId] == 0)
-                    queue.Enqueue(n.InstanceId);
-
-            var result = new List<Guid>();
-            while (queue.Count > 0)
-            {
-                var current = queue.Dequeue();
-                result.Add(current);
-                foreach (var neighbor in adjacency[current])
-                {
-                    inDegree[neighbor]--;
-                    if (inDegree[neighbor] == 0)
-                        queue.Enqueue(neighbor);
-                }
-            }
-
-            return result;
         }
     }
 }

@@ -56,7 +56,10 @@ namespace AFOCS.FlowNodeEditor.Views
             if (sender is not NodeViewModel node) return;
 
             _suppressSelectionSync = true;
-            _viewModel.SelectedNode = node.IsSelected ? node : null;
+            if (node.IsSelected)
+                _viewModel.SelectNode(node);
+            else
+                _viewModel.DeselectNode(node);
             _suppressSelectionSync = false;
         }
 
@@ -65,15 +68,20 @@ namespace AFOCS.FlowNodeEditor.Views
             _editor = sender as Nodify.NodifyEditor;
             if (_editor == null) return;
 
-            // 备选：监听 SelectedItems 的集合变更（如果 Nodify 版本支持的话）
+            // 监听 SelectedItems 的集合变更（支持多选）
             if (_editor.SelectedItems is INotifyCollectionChanged selectedItems)
             {
                 selectedItems.CollectionChanged += (_, _) =>
                 {
                     if (_viewModel == null || _suppressSelectionSync) return;
-                    _viewModel.SelectedNode = _editor.SelectedItems.Count > 0
-                        ? _editor.SelectedItems[0] as NodeViewModel
-                        : null;
+                    _suppressSelectionSync = true;
+                    _viewModel.ClearSelection();
+                    foreach (var item in _editor.SelectedItems)
+                    {
+                        if (item is NodeViewModel node)
+                            _viewModel.SelectNode(node);
+                    }
+                    _suppressSelectionSync = false;
                 };
             }
 

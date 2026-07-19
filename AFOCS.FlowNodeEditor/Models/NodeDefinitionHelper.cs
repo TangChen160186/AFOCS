@@ -120,6 +120,27 @@ namespace AFOCS.FlowNodeEditor.Models
             return portAttr == null || portAttr.AllowPropertyEdit;
         }
 
+        public static INodeDefinition Clone(INodeDefinition source)
+        {
+            var type = source.GetType();
+            var clone = (INodeDefinition)Activator.CreateInstance(type)!;
+
+            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var field in fields)
+            {
+                field.SetValue(clone, field.GetValue(source));
+            }
+
+            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var prop in props)
+            {
+                if (!prop.CanRead || !prop.CanWrite || prop.GetIndexParameters().Length > 0) continue;
+                prop.SetValue(clone, prop.GetValue(source));
+            }
+
+            return clone;
+        }
+
         private record RuntimePortDefinition(string Name, string DisplayName, NodePortType PortType) : INodePortDefinition;
     }
 }

@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace AFOCS.FlowNodeEditor.Models
 {
     public interface INodePortDefinition

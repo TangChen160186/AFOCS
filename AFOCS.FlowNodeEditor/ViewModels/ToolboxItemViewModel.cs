@@ -8,17 +8,21 @@ namespace AFOCS.FlowNodeEditor.ViewModels
         public string DisplayName { get; }
         public Uri? IconSource { get; }
         public string TypeId { get; }
-        public INodeDefinition Definition { get; }
+        public INodeDefinition Template { get; }
 
-        public ToolboxItemViewModel(INodeDefinition definition)
+        public ToolboxItemViewModel(INodeDefinition template)
         {
-            Definition = definition;
-            Category = NodeDefinitionHelper.GetCategory(definition);
-            DisplayName = NodeDefinitionHelper.GetDisplayName(definition);
-            TypeId = NodeDefinitionHelper.GetTypeId(definition);
-            IconSource = NodeDefinitionHelper.GetIconSource(definition);
+            Template = template;
+            Category = NodeDefinitionHelper.GetCategory(template);
+            DisplayName = NodeDefinitionHelper.GetDisplayName(template);
+            TypeId = NodeDefinitionHelper.GetTypeId(template);
+            IconSource = NodeDefinitionHelper.GetIconSource(template);
         }
 
-        public NodeViewModel CreateNodeViewModel() => new(Definition);
+        public NodeViewModel CreateNodeViewModel()
+        {
+            var clonedDefinition = NodeDefinitionHelper.Clone(Template);
+            return new NodeViewModel(clonedDefinition);
+        }
     }
 }

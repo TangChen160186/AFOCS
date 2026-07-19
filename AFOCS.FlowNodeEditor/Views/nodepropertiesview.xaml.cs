@@ -16,9 +16,7 @@ namespace AFOCS.FlowNodeEditor.Views
         private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             if (e.OldValue is INotifyPropertyChanged oldVm)
-            {
                 oldVm.PropertyChanged -= OnViewModelPropertyChanged;
-            }
 
             if (e.NewValue is INotifyPropertyChanged newVm)
             {
@@ -34,21 +32,15 @@ namespace AFOCS.FlowNodeEditor.Views
         private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(NodeEditorDocumentViewModel.SelectedNode))
-            {
                 UpdatePropertyGridSelectedObject(sender);
-            }
         }
 
         private void UpdatePropertyGridSelectedObject(object? dataContext)
         {
             if (dataContext is NodeEditorDocumentViewModel vm && vm.SelectedNode != null)
-            {
                 propertyGrid.SelectedObject = vm.SelectedNode.Definition;
-            }
             else
-            {
                 propertyGrid.SelectedObject = null;
-            }
         }
     }
 }

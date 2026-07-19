@@ -3,13 +3,104 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:nodify="clr-namespace:Nodify;assembly=Nodify"
              xmlns:vm="clr-namespace:AFOCS.FlowNodeEditor.ViewModels"
-             xmlns:local="clr-namespace:AFOCS.FlowNodeEditor.Views">
+             xmlns:models="clr-namespace:AFOCS.FlowNodeEditor.Models"
+             xmlns:local="clr-namespace:AFOCS.FlowNodeEditor.Views"
+             xmlns:conv="clr-namespace:AFOCS.FlowNodeEditor.Converters">
 
     <UserControl.Resources>
-        <!-- ItemContainer 样式：同步选中状态和位置 -->
+        <!-- 现代化节点样式资源 -->
+        <SolidColorBrush x:Key="ModernNodeBg" Color="#FF2D2D30" />
+        <SolidColorBrush x:Key="ModernNodeBorder" Color="#FF3F3F46" />
+        <SolidColorBrush x:Key="ModernNodeHeaderBg" Color="#FF007ACC" />
+        <SolidColorBrush x:Key="ModernNodeHeaderText" Color="White" />
+        
+        <!-- 流程端口样式 -->
+        <SolidColorBrush x:Key="ExecConnectorColor" Color="#FFFFD700" />
+        <SolidColorBrush x:Key="ExecConnectorBg" Color="#FFFFD700" />
+        <SolidColorBrush x:Key="ExecConnectorText" Color="White" />
+        
+        <!-- 数据端口样式 -->
+        <SolidColorBrush x:Key="DataConnectorColor" Color="#FF4EC9B0" />
+        <SolidColorBrush x:Key="DataConnectorBg" Color="#FF4EC9B0" />
+        <SolidColorBrush x:Key="DataConnectorText" Color="White" />
+        
+        <SolidColorBrush x:Key="ExecBorderColor" Color="#FFFFD700" />
+        <SolidColorBrush x:Key="CompletedBorderColor" Color="#FF4EC9B0" />
+        <SolidColorBrush x:Key="ErrorBorderColor" Color="#FFFF4040" />
+
+        <conv:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+
+        <!-- 网格背景画笔 -->
+        <Pen x:Key="GridLinePen" Brush="#FF505050" Thickness="1" />
+        <DrawingBrush x:Key="GridBackgroundBrush" TileMode="Tile" Viewport="0,0,20,20" ViewportUnits="Absolute">
+            <DrawingBrush.Drawing>
+                <DrawingGroup>
+                    <GeometryDrawing Brush="#FF3F3F46">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="0,0,20,20" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Pen="{StaticResource GridLinePen}">
+                        <GeometryDrawing.Geometry>
+                            <LineGeometry StartPoint="0,0" EndPoint="20,0" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Pen="{StaticResource GridLinePen}">
+                        <GeometryDrawing.Geometry>
+                            <LineGeometry StartPoint="0,0" EndPoint="0,20" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                </DrawingGroup>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+
+        <!-- 执行中发光效果 -->
+        <DropShadowEffect x:Key="ExecutingGlow" Color="#FFFFCC00"
+                          BlurRadius="30" ShadowDepth="0" Opacity="1" />
+
+        <!-- ItemContainer 样式 -->
         <Style TargetType="{x:Type nodify:ItemContainer}" x:Key="SelectableContainerStyle">
             <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
             <Setter Property="Location" Value="{Binding Location, Mode=TwoWay}" />
+        </Style>
+
+        <!-- 节点边框样式（根据执行状态切换） -->
+        <Style x:Key="NodeBorderStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource ModernNodeBg}" />
+            <Setter Property="BorderBrush" Value="{StaticResource ModernNodeBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="MinWidth" Value="160" />
+            <Setter Property="Margin" Value="2" />
+            <Style.Triggers>
+                <!-- 禁用状态：灰色边框 + 半透明，优先级最高 -->
+                <DataTrigger Binding="{Binding IsEnabled}" Value="False">
+                    <Setter Property="BorderBrush" Value="#FF4A4A4A" />
+                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="Opacity" Value="0.45" />
+                </DataTrigger>
+                <!-- 执行中：金色发光边框 + 动画 -->
+                <DataTrigger Binding="{Binding IsExecuting}" Value="True">
+                    <Setter Property="BorderBrush" Value="{StaticResource ExecBorderColor}" />
+                    <Setter Property="BorderThickness" Value="2" />
+                    <Setter Property="Effect" Value="{StaticResource ExecutingGlow}" />
+                </DataTrigger>
+                <!-- 执行完成：青色边框 -->
+                <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                    <Setter Property="BorderBrush" Value="{StaticResource CompletedBorderColor}" />
+                    <Setter Property="BorderThickness" Value="2" />
+                </DataTrigger>
+                <!-- 执行出错：红色边框 -->
+                <DataTrigger Binding="{Binding HasError}" Value="True">
+                    <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderColor}" />
+                    <Setter Property="BorderThickness" Value="2" />
+                </DataTrigger>
+                <!-- 选中状态：蓝色边框 -->
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter Property="BorderBrush" Value="#FF007ACC" />
+                    <Setter Property="BorderThickness" Value="2" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
     </UserControl.Resources>
 
@@ -29,9 +120,45 @@
 
         <!-- 中间：节点编辑器 -->
         <Grid Grid.Column="2" Background="{DynamicResource EnvironmentWindowBackground}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- 工具栏 -->
+            <Border Grid.Row="0" Margin="8" Background="#FF3F3F46" Padding="8" CornerRadius="4">
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="执行流程"
+                            Command="{Binding ExecuteCommand}"
+                            Background="#FF007ACC"
+                            Foreground="White"
+                            Padding="12,4"
+                            Margin="0,0,8,0"
+                            Cursor="Hand" />
+                    <Button Content="从选中节点执行"
+                            Command="{Binding ExecuteFromSelectedNodeCommand}"
+                            Background="#FF00B894"
+                            Foreground="White"
+                            Padding="12,4"
+                            Margin="0,0,8,0"
+                            Cursor="Hand" />
+                    <Button Content="只执行当前节点"
+                            Command="{Binding ExecuteSingleNodeCommand}"
+                            Background="#FFE17E00"
+                            Foreground="White"
+                            Padding="12,4"
+                            Margin="0,0,8,0"
+                            Cursor="Hand" />
+                    <TextBlock Text="{Binding ExecutionStatus}"
+                               Foreground="#FF4EC9B0"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </Border>
+
             <nodify:NodifyEditor
+                Grid.Row="1"
                 x:Name="Editor"
-                Background="{DynamicResource EnvironmentWindowBackground}"
+                Background="{StaticResource GridBackgroundBrush}"
                 ItemsSource="{Binding Nodes}"
                 Connections="{Binding Connections}"
                 ItemContainerStyle="{StaticResource SelectableContainerStyle}"
@@ -45,38 +172,73 @@
                 Drop="Editor_OnDrop"
                 Loaded="Editor_OnLoaded">
 
-                <!-- ===== 编辑器内部资源：连接器样式 ===== -->
                 <nodify:NodifyEditor.Resources>
-                    <!-- 输入连接器样式 -->
-                    <Style TargetType="{x:Type nodify:NodeInput}">
+                    <conv:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+
+                    <!-- 流程输入端口样式 -->
+                    <Style x:Key="ExecInputStyle" TargetType="{x:Type nodify:NodeInput}">
                         <Setter Property="Header" Value="{Binding DisplayName}" />
                         <Setter Property="IsConnected" Value="{Binding IsConnected}" />
                         <Setter Property="Anchor" Value="{Binding Anchor, Mode=OneWayToSource}" />
-                        <Setter Property="Background"
-                                Value="{DynamicResource FlowNode.ConnectorStroke}" />
+                        <Setter Property="Background" Value="{StaticResource ExecConnectorBg}" />
                         <Setter Property="HeaderTemplate">
                             <Setter.Value>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding}"
-                                               Foreground="{DynamicResource FlowNode.ConnectorStroke}"
+                                               Foreground="{StaticResource ExecConnectorText}"
+                                               FontSize="11"
+                                               Margin="4,0"
+                                               FontWeight="Bold" />
+                                </DataTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                    <!-- 数据输入端口样式 -->
+                    <Style x:Key="DataInputStyle" TargetType="{x:Type nodify:NodeInput}">
+                        <Setter Property="Header" Value="{Binding DisplayName}" />
+                        <Setter Property="IsConnected" Value="{Binding IsConnected}" />
+                        <Setter Property="Anchor" Value="{Binding Anchor, Mode=OneWayToSource}" />
+                        <Setter Property="Background" Value="{StaticResource DataConnectorBg}" />
+                        <Setter Property="HeaderTemplate">
+                            <Setter.Value>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}"
+                                               Foreground="{StaticResource DataConnectorText}"
                                                FontSize="11"
                                                Margin="4,0" />
                                 </DataTemplate>
                             </Setter.Value>
                         </Setter>
                     </Style>
-                    <!-- 输出连接器样式 -->
-                    <Style TargetType="{x:Type nodify:NodeOutput}">
+                    <!-- 流程输出端口样式 -->
+                    <Style x:Key="ExecOutputStyle" TargetType="{x:Type nodify:NodeOutput}">
                         <Setter Property="Header" Value="{Binding DisplayName}" />
                         <Setter Property="IsConnected" Value="{Binding IsConnected}" />
                         <Setter Property="Anchor" Value="{Binding Anchor, Mode=OneWayToSource}" />
-                        <Setter Property="Background"
-                                Value="{DynamicResource FlowNode.ConnectorStroke}" />
+                        <Setter Property="Background" Value="{StaticResource ExecConnectorBg}" />
                         <Setter Property="HeaderTemplate">
                             <Setter.Value>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding}"
-                                               Foreground="{DynamicResource FlowNode.ConnectorStroke}"
+                                               Foreground="{StaticResource ExecConnectorText}"
+                                               FontSize="11"
+                                               Margin="4,0"
+                                               FontWeight="Bold" />
+                                </DataTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                    <!-- 数据输出端口样式 -->
+                    <Style x:Key="DataOutputStyle" TargetType="{x:Type nodify:NodeOutput}">
+                        <Setter Property="Header" Value="{Binding DisplayName}" />
+                        <Setter Property="IsConnected" Value="{Binding IsConnected}" />
+                        <Setter Property="Anchor" Value="{Binding Anchor, Mode=OneWayToSource}" />
+                        <Setter Property="Background" Value="{StaticResource DataConnectorBg}" />
+                        <Setter Property="HeaderTemplate">
+                            <Setter.Value>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}"
+                                               Foreground="{StaticResource DataConnectorText}"
                                                FontSize="11"
                                                Margin="4,0" />
                                 </DataTemplate>
@@ -88,70 +250,171 @@
                 <!-- ===== 节点 DataTemplate ===== -->
                 <nodify:NodifyEditor.ItemTemplate>
                     <DataTemplate DataType="{x:Type vm:NodeViewModel}">
-                        <Grid>
-                            <Border Background="{DynamicResource FlowNode.Background}"
-                                    BorderBrush="{DynamicResource FlowNode.Border}"
-                                    BorderThickness="1"
-                                    CornerRadius="6"
-                                    MinWidth="140"
-                                    Padding="0">
-                                <StackPanel>
-                                    <!-- 标题栏 -->
-                                    <Border Background="{DynamicResource FlowNode.HeaderBackground}"
-                                            CornerRadius="6,6,0,0"
-                                            Padding="10,6">
+                        <Border x:Name="NodeBorder" Style="{StaticResource NodeBorderStyle}">
+                            <StackPanel>
+                                <Border Background="{StaticResource ModernNodeHeaderBg}"
+                                        CornerRadius="8,8,0,0"
+                                        Padding="12,8">
+                                    <StackPanel>
                                         <TextBlock Text="{Binding Title}"
-                                                   Foreground="{DynamicResource FlowNode.HeaderText}"
+                                                   Foreground="{StaticResource ModernNodeHeaderText}"
                                                    FontWeight="SemiBold"
-                                                   FontSize="13" />
-                                    </Border>
+                                                   FontSize="13"
+                                                   HorizontalAlignment="Center" />
+                                        <TextBlock Text="{Binding Definition.Description}"
+                                                   Foreground="#FF888888"
+                                                   FontSize="10"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,2,0,0"
+                                                   TextWrapping="Wrap"
+                                                   MaxWidth="180"
+                                                   Visibility="{Binding Definition.Description, Converter={StaticResource StringToVisibilityConverter}}" />
+                                    </StackPanel>
+                                </Border>
 
-                                    <!-- 主体：输入在左，输出在右，中间伸展 -->
-                                    <Grid Margin="0,4">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
+                                <Grid Margin="4,4,4,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <ItemsControl Grid.Column="0" ItemsSource="{Binding ExecutionInputs}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type vm:ConnectorViewModel}">
+                                                <nodify:NodeInput Style="{StaticResource ExecInputStyle}" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <ItemsControl Grid.Column="2" ItemsSource="{Binding ExecutionOutputs}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type vm:ConnectorViewModel}">
+                                                <nodify:NodeOutput Style="{StaticResource ExecOutputStyle}" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Grid>
 
-                                        <!-- 输入连接器（左侧） -->
-                                        <ItemsControl Grid.Column="0" ItemsSource="{Binding Inputs}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate DataType="{x:Type vm:ConnectorViewModel}">
-                                                    <nodify:NodeInput />
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
+                                <Grid Margin="4,4,4,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <ItemsControl Grid.Column="0" ItemsSource="{Binding DataInputs}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type vm:ConnectorViewModel}">
+                                                <nodify:NodeInput Style="{StaticResource DataInputStyle}" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <ItemsControl Grid.Column="2" ItemsSource="{Binding DataOutputs}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type vm:ConnectorViewModel}">
+                                                <nodify:NodeOutput Style="{StaticResource DataOutputStyle}" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
 
-                                        <!-- 输出连接器（右侧） -->
-                                        <ItemsControl Grid.Column="2" ItemsSource="{Binding Outputs}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate DataType="{x:Type vm:ConnectorViewModel}">
-                                                    <nodify:NodeOutput />
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
-                        </Grid>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsExecuting}" Value="True">
+                                <DataTrigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <ThicknessAnimation
+                                                Storyboard.TargetName="NodeBorder"
+                                                Storyboard.TargetProperty="BorderThickness"
+                                                From="2" To="6" Duration="0:0:0.4"
+                                                AutoReverse="True" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.EnterActions>
+                                <DataTrigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ThicknessAnimation
+                                                Storyboard.TargetName="NodeBorder"
+                                                Storyboard.TargetProperty="BorderThickness"
+                                                To="2" Duration="0:0:0.2" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.ExitActions>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                <DataTrigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimation
+                                                Storyboard.TargetName="NodeBorder"
+                                                Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)"
+                                                To="#FF00FF00" Duration="0:0:0.2" />
+                                            <ThicknessAnimation
+                                                Storyboard.TargetName="NodeBorder"
+                                                Storyboard.TargetProperty="BorderThickness"
+                                                From="2" To="4" Duration="0:0:0.3" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.EnterActions>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding HasError}" Value="True">
+                                <DataTrigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <ColorAnimation
+                                                Storyboard.TargetName="NodeBorder"
+                                                Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)"
+                                                From="#FFFF4040" To="#FFFF8888" Duration="0:0:0.3"
+                                                AutoReverse="True" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.EnterActions>
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
                     </DataTemplate>
                 </nodify:NodifyEditor.ItemTemplate>
 
                 <!-- ===== 连接样式 ===== -->
                 <nodify:NodifyEditor.ConnectionTemplate>
                     <DataTemplate DataType="{x:Type vm:ConnectionViewModel}">
-                        <nodify:Connection Source="{Binding Output.Anchor, Mode=OneWay}"
+                        <nodify:Connection x:Name="connection"
+                                          Source="{Binding Output.Anchor, Mode=OneWay}"
                                           Target="{Binding Input.Anchor, Mode=OneWay}"
-                                          Stroke="{DynamicResource FlowNode.ConnectorStroke}"
                                           StrokeThickness="2" />
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Output.PortType}" Value="Execution">
+                                <Setter TargetName="connection" Property="Stroke" 
+                                        Value="{StaticResource ExecConnectorColor}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Output.PortType}" Value="{x:Static models:NodePortType.Any}">
+                                <Setter TargetName="connection" Property="Stroke" 
+                                        Value="{StaticResource DataConnectorColor}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Output.PortType}" Value="Double">
+                                <Setter TargetName="connection" Property="Stroke" 
+                                        Value="{StaticResource DataConnectorColor}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Output.PortType}" Value="Int">
+                                <Setter TargetName="connection" Property="Stroke" 
+                                        Value="{StaticResource DataConnectorColor}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Output.PortType}" Value="String">
+                                <Setter TargetName="connection" Property="Stroke" 
+                                        Value="{StaticResource DataConnectorColor}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Output.PortType}" Value="Bool">
+                                <Setter TargetName="connection" Property="Stroke" 
+                                        Value="{StaticResource DataConnectorColor}" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
                     </DataTemplate>
                 </nodify:NodifyEditor.ConnectionTemplate>
 
                 <!-- ===== 拖拽中连线样式 ===== -->
                 <nodify:NodifyEditor.PendingConnectionTemplate>
                     <DataTemplate>
-                        <nodify:PendingConnection Stroke="{DynamicResource FlowNode.ConnectionPreview}"
+                        <nodify:PendingConnection Stroke="#FF0099FF"
                                                   StrokeThickness="2"
                                                   StrokeDashArray="4,2" />
                     </DataTemplate>
