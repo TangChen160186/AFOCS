@@ -9,7 +9,7 @@ namespace AFOCS.FlowNodeEditor.Models
         NodePortType PortType { get; }
     }
 
-    public interface INodeDefinition
+    public interface INodeDefinition : INotifyPropertyChanged
     {
     }
 }

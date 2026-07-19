@@ -11,19 +11,19 @@ namespace AFOCS.FlowNodeEditor.Nodes
     {
         private int _priority = 0;
         [DisplayName("优先级")]
-        public int Priority { get => _priority; set => Set(ref _priority, value); }
+        public int Priority { get => _priority; set => SetProperty(ref _priority, value); }
 
         private string _param1 = "";
         [DisplayName("参数1")]
-        public string Param1 { get => _param1; set => Set(ref _param1, value); }
+        public string Param1 { get => _param1; set => SetProperty(ref _param1, value); }
 
         private string _param2 = "";
         [DisplayName("参数2")]
-        public string Param2 { get => _param2; set => Set(ref _param2, value); }
+        public string Param2 { get => _param2; set => SetProperty(ref _param2, value); }
 
         private string _param3 = "";
         [DisplayName("参数3")]
-        public string Param3 { get => _param3; set => Set(ref _param3, value); }
+        public string Param3 { get => _param3; set => SetProperty(ref _param3, value); }
 
         public Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
         {
@@ -45,7 +45,7 @@ namespace AFOCS.FlowNodeEditor.Nodes
     {
         private string _message = "流程执行完成";
         [DisplayName("完成消息")]
-        public string Message { get => _message; set => Set(ref _message, value); }
+        public string Message { get => _message; set => SetProperty(ref _message, value); }
 
         public Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
         {
@@ -65,7 +65,7 @@ namespace AFOCS.FlowNodeEditor.Nodes
             get => _value; 
             set 
             { 
-                if (Set(ref _value, value))
+                if (SetProperty(ref _value, value))
                 {
                     UpdateOutput();
                 }
@@ -74,7 +74,7 @@ namespace AFOCS.FlowNodeEditor.Nodes
 
         private object? _outputValue;
         [NodePort("Value", "值", NodePortType.Any, false)]
-        public object? OutputValue { get => _outputValue; set => Set(ref _outputValue, value); }
+        public object? OutputValue { get => _outputValue; set => SetProperty(ref _outputValue, value); }
 
         private void UpdateOutput()
         {
@@ -104,11 +104,11 @@ namespace AFOCS.FlowNodeEditor.Nodes
     {
         private object? _message;
         [NodePort("Message", "消息", NodePortType.Any, true)]
-        public object? Message { get => _message; set => Set(ref _message, value); }
+        public object? Message { get => _message; set => SetProperty(ref _message, value); }
 
         private object? _output;
         [NodePort("Output", "输出值", NodePortType.Any, false)]
-        public object? Output { get => _output; set => Set(ref _output, value); }
+        public object? Output { get => _output; set => SetProperty(ref _output, value); }
 
         public Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
         {
@@ -127,7 +127,7 @@ namespace AFOCS.FlowNodeEditor.Nodes
     {
         private int _delayMs = 1000;
         [DisplayName("延时(ms)")]
-        public int DelayMs { get => _delayMs; set => Set(ref _delayMs, value); }
+        public int DelayMs { get => _delayMs; set => SetProperty(ref _delayMs, value); }
 
         public async Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
         {
@@ -142,11 +142,11 @@ namespace AFOCS.FlowNodeEditor.Nodes
     {
         private string _variableName = "myVar";
         [DisplayName("变量名")]
-        public string VariableName { get => _variableName; set => Set(ref _variableName, value); }
+        public string VariableName { get => _variableName; set => SetProperty(ref _variableName, value); }
 
         private object? _value;
         [NodePort("Value", "值", NodePortType.Any, true)]
-        public object? Value { get => _value; set => Set(ref _value, value); }
+        public object? Value { get => _value; set => SetProperty(ref _value, value); }
 
         public Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
         {
@@ -162,11 +162,11 @@ namespace AFOCS.FlowNodeEditor.Nodes
     {
         private string _variableName = "myVar";
         [DisplayName("变量名")]
-        public string VariableName { get => _variableName; set => Set(ref _variableName, value); }
+        public string VariableName { get => _variableName; set => SetProperty(ref _variableName, value); }
 
         private object? _value;
         [NodePort("Value", "值", NodePortType.Any, false)]
-        public object? Value { get => _value; set => Set(ref _value, value); }
+        public object? Value { get => _value; set => SetProperty(ref _value, value); }
 
         public Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
         {
@@ -185,15 +185,15 @@ namespace AFOCS.FlowNodeEditor.Nodes
     {
         private double _a;
         [NodePort("A", "A", NodePortType.Double, true)]
-        public double A { get => _a; set => Set(ref _a, value); }
+        public double A { get => _a; set => SetProperty(ref _a, value); }
 
         private double _b;
         [NodePort("B", "B", NodePortType.Double, true)]
-        public double B { get => _b; set => Set(ref _b, value); }
+        public double B { get => _b; set => SetProperty(ref _b, value); }
 
         private double _result;
         [NodePort("Result", "结果", NodePortType.Double, false)]
-        public double Result { get => _result; set => Set(ref _result, value); }
+        public double Result { get => _result; set => SetProperty(ref _result, value); }
 
         public Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
         {
@@ -208,15 +208,15 @@ namespace AFOCS.FlowNodeEditor.Nodes
     {
         private double _a;
         [NodePort("A", "A", NodePortType.Double, true)]
-        public double A { get => _a; set => Set(ref _a, value); }
+        public double A { get => _a; set => SetProperty(ref _a, value); }
 
         private double _b;
         [NodePort("B", "B", NodePortType.Double, true)]
-        public double B { get => _b; set => Set(ref _b, value); }
+        public double B { get => _b; set => SetProperty(ref _b, value); }
 
         private double _result;
         [NodePort("Result", "结果", NodePortType.Double, false)]
-        public double Result { get => _result; set => Set(ref _result, value); }
+        public double Result { get => _result; set => SetProperty(ref _result, value); }
 
         public Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
         {
@@ -231,15 +231,15 @@ namespace AFOCS.FlowNodeEditor.Nodes
     {
         private double _a;
         [NodePort("A", "A", NodePortType.Double, true)]
-        public double A { get => _a; set => Set(ref _a, value); }
+        public double A { get => _a; set => SetProperty(ref _a, value); }
 
         private double _b;
         [NodePort("B", "B", NodePortType.Double, true)]
-        public double B { get => _b; set => Set(ref _b, value); }
+        public double B { get => _b; set => SetProperty(ref _b, value); }
 
         private double _result;
         [NodePort("Result", "结果", NodePortType.Double, false)]
-        public double Result { get => _result; set => Set(ref _result, value); }
+        public double Result { get => _result; set => SetProperty(ref _result, value); }
 
         public Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
         {
@@ -254,15 +254,15 @@ namespace AFOCS.FlowNodeEditor.Nodes
     {
         private double _a;
         [NodePort("A", "A", NodePortType.Double, true)]
-        public double A { get => _a; set => Set(ref _a, value); }
+        public double A { get => _a; set => SetProperty(ref _a, value); }
 
         private double _b;
         [NodePort("B", "B", NodePortType.Double, true)]
-        public double B { get => _b; set => Set(ref _b, value); }
+        public double B { get => _b; set => SetProperty(ref _b, value); }
 
         private double _result;
         [NodePort("Result", "结果", NodePortType.Double, false)]
-        public double Result { get => _result; set => Set(ref _result, value); }
+        public double Result { get => _result; set => SetProperty(ref _result, value); }
 
         public Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
         {

@@ -13,9 +13,6 @@ namespace AFOCS.FlowNodeEditor.Services
         Task<FlowExecutionResult> ExecuteFlowAsync(FlowGraph graph);
         Task<FlowExecutionResult> ExecuteFromNodeAsync(string filePath, Guid nodeInstanceId);
         Task<FlowExecutionResult> ExecuteSingleNodeAsync(string filePath, Guid nodeInstanceId);
-
-        Task<Dictionary<string, FlowExecutionResult>> ExecuteFlowsAsync(IEnumerable<string> filePaths);
-        Task<Dictionary<string, FlowExecutionResult>> ExecuteFlowsAsync(Dictionary<string, FlowGraph> graphs);
     }
 
     public class FlowExecutionResult
@@ -268,56 +265,6 @@ namespace AFOCS.FlowNodeEditor.Services
             }
 
             return (nodes, connections);
-        }
-
-        public async Task<Dictionary<string, FlowExecutionResult>> ExecuteFlowsAsync(IEnumerable<string> filePaths)
-        {
-            var graphs = new Dictionary<string, FlowGraph>();
-
-            foreach (var filePath in filePaths)
-            {
-                try
-                {
-                    var json = await File.ReadAllTextAsync(filePath);
-                    var graph = JsonSerializer.Deserialize<FlowGraph>(json);
-                    if (graph != null)
-                    {
-                        graphs[filePath] = graph;
-                    }
-                }
-                catch
-                {
-                    graphs[filePath] = new FlowGraph();
-                }
-            }
-
-            return await ExecuteFlowsAsync(graphs);
-        }
-
-        public async Task<Dictionary<string, FlowExecutionResult>> ExecuteFlowsAsync(Dictionary<string, FlowGraph> graphs)
-        {
-            var results = new Dictionary<string, FlowExecutionResult>();
-            var tasks = new List<Task>();
-
-            foreach (var kv in graphs)
-            {
-                var key = kv.Key;
-                var graph = kv.Value;
-
-                var task = Task.Run(async () =>
-                {
-                    var result = await ExecuteFlowAsync(graph);
-                    lock (results)
-                    {
-                        results[key] = result;
-                    }
-                });
-
-                tasks.Add(task);
-            }
-
-            await Task.WhenAll(tasks);
-            return results;
         }
 
         private static object? ConvertJsonValue(object? value, Type targetType)
