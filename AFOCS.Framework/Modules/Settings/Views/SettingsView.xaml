@@ -48,7 +48,9 @@
                 <RowDefinition Height="10" />
             </Grid.RowDefinitions>
 
-            <ScrollViewer IsTabStop="False" Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ScrollViewer IsTabStop="False" Grid.Row="0" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          behaviors1:ScrollViewerBehavior.BubbleMouseWheel="True">
                 <ItemsControl IsTabStop="False" HorizontalContentAlignment="Stretch"
                       ItemsSource="{Binding ElementName=TreeView, Path=SelectedValue}"
                       ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"

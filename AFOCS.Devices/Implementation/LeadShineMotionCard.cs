@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.Composition;
+using System.ComponentModel.Composition;
 using System.Text;
 using AFOCS.Infrastructure;
 using Serilog;
@@ -13,6 +13,7 @@ public class LeadShineMotionCardConfig
 
 [Export]
 [method: ImportingConstructor]
+[Export(typeof(IMotionControlCard))]
 public class LeadShineMotionCard(IConfigService configService, ILogger logger) : IMotionControlCard
 {
     public bool IsConnected { get; private set; }
@@ -787,6 +788,21 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
             return Result<bool>.Fail($"读取输入口 {bitNo} 失败");
         return Result<bool>.Success(level == 1);
     }
+
+    /// <summary>批量读取输入位</summary>
+    public async Task<Result<bool[]>> ReadInbitsAsync(ushort bitCount)
+    {
+        var bits = new bool[bitCount];
+        for (ushort i = 0; i < bitCount; i++)
+        {
+            var result = await ReadInbitAsync(i);
+            if (!result.IsSuccess)
+                return Result<bool[]>.Fail(result.Message);
+            bits[i] = result.Data;
+        }
+        return Result<bool[]>.Success(bits);
+    }
+
     /// <summary>
     /// 设置指定输出口电平
     /// </summary>
