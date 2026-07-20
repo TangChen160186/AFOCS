@@ -1,0 +1,624 @@
+Code	Type	Level1	Level2	Level3	Chinese	English	Thai	Note
+500000	1	Driver	File		文件不存在\n%1%	File is not exist\n%1%	ไฟล์ไม่มี\n%1%	File_base_CopyFile.vi
+500001	1	Driver	File		文件路径长度超过256个字符\n%1%	File path length is bigger than 256\n%1%	ความยาวพาธไฟล์มากกว่า 256\n%1%	File_base_CopyFile.vi
+500002	1	Driver	File		txt写入文件失败\n%1%	Write txt file fail\n%1%	ไม่สามารถเขียนไฟล์.txt\n%1%	File_txt_FileReadWrite.vi
+500003	1	Driver	File		机台"%1%"已超过%2%小时未进行校准，或者校准失败！	The cabinet "%1%" has not been calibrated for more than %2% hours, or the calibration fails	เครื่อง "%1%" ไม่ได้รับการสอบเทียบนานกว่า %2% ชั่วโมง หรือการสอบเทียบล้มเหลว!	File_txt_LoadOffsetDataToLocal.vi
+500004	1	Driver	File		机台"%1%"前一次校准数据未上传数据库	The previous calibration data of "%1%" was not uploaded to the database	ข้อมูลการสอบเทียบก่อนหน้าของเครื่อง "%1%" ยังไม่ได้อัปโหลดไปยังฐานข้อมูล	File_txt_LoadOffsetDataToLocal.vi
+500005	2	Driver	File		该机台已经超过10小时未进行校准了，请尽快校准，如果超过12小时，将不能继续测试！	The cabinet has not been calibrated for more than 10 hours. Please calibrate it asap. If it is more 	เครื่องไม่ได้รับการสอบเทียบนานกว่า 10 ชั่วโมง โปรดปรับเทียบโดยเร็วที่สุด. หากเกิน 12 ชั่วโมง,จะไม่สามารถทำงานต่อได้	File_txt_LoadOffsetDataToLocal.vi
+500006	1	Driver	File		CoefData.txt文件不存在	The CoefData.txt file does not exist	ไม่มีไฟล์ CoefData.txt	File_txt_AtsCoefData.vi
+500007	1	Driver	File		读取操作时部分通道系数不存在	Some channel coefficients do not exist	เมื่ออ่านค่าสัมประสิทธิ์ช่องทางบางส่วนไม่ได้อยู่	File_txt_AtsCoefData.vi
+500008	1	Driver	File		DutSlot DutChannel和Values数组大小不一致	The sizes of dutslot dutchannel and values arrays are inconsistent	DutSlot, DutChannel & Values ขนาดอาร์เรย์ไม่สอดคล้องกัน	File_txt_AtsFmtCheckerArray.vi
+500009	1	Driver	File		读取操作时部分通道参数不存在	Some channel data do not exist	ไม่มีข้อมูลบางช่อง	File_txt_AtsFmtDataGet.vi
+500010	1	Driver	File		Condition名字错误，不包含FMT	Condition is incorrect，FMT not included	Conditionชื่อผิดครับ,ไม่ได้ใส่FMT	File_txt_AtsFmtDataGet.vi
+500011	1	Driver	File		机台校准Offset文件不存在，\n路径：%1%	Calibration Offset file does not exist，\n路径：%1%	ไม่มีไฟล์ Offset การปรับเทียบเครื่อง，\nเส้นทางไดเรกทอรี: %1%	File_txt_AtsOffsetGet.vi
+500012	1	Driver	File		校准的Offset数据中未找到对应Slot, Channel的补偿值	Target Slot Channel Offset does not exist	ไม่มีออฟเซ็ตในช่องช่องเป้าหมาย	File_txt_AtsOffsetGet.vi
+500013	1	Driver	File		读取操作时部分通道参数不存在	Some channel datas do not exist	ไม่มีพารามิเตอร์ช่องสัญญาณบางอย่างในระหว่างการอ่าน	File_txt_AtsTtrData.vi
+500014	1	Driver	File		DebugInterface.txt文件不存在	DebugInterface.txt does not exist	DebugInterface.txtไฟล์ไม่มี	File_txt_CoefFwOrderGet.vi
+500015	1	Driver	File		DebugInterface.txt文件中不存在%1%的系数	%1% coefficient does not exist in debuginterface file	DebugInterface.txtไม่มีสัมประสิทธิ์ของ %1% ในไฟล์	File_txt_CoefFwOrderGet.vi
+500016	1	Driver	File		没有SampleSN=%1%，Channel=%2%的%3%测试规格	There is not spec about "%3%" which SampleSN = "%1%" and Channel=%2%	ไม่มี %3% ข้อกำหนดการทดสอบ ใน SampleSN=%1%，Channel=%2%	File_txt_AtsFmtCheckerSingle.vi
+500017	1	Driver	File		“%1%”文件检查失败	"%1%" file chack fail	"%1%"การตรวจสอบเอกสารล้มเหลว	FileCheck
+500030	1	Driver	File		ini文件写入失败，请确保键名数量和键值数量相等且不为空	Write to ini file fail, Please make sure that the number of key names and key values ​​are equal and not empty	iniการเขียนไฟล์ล้มเหลวจำนวนชื่อคีย์และค่าคีย์ต้องเท่ากันและไม่สามารถเว้นว่างได้	File_IniCfg_FileOperation.vi
+500031	1	Driver	File		ini文件不存在\n%1%	ini file does not exist\n%1%	iniไฟล์ไม่มี\n%1%	File_IniCfg_FileOperation.vi;File_IniCfg_AtsFileKeyNamesGet.vi
+500032	1	Driver	File		ini文件中目标键名不存在\n文件路径: %1%\n段名: %2%\n不存在的键名: %3%	The target key name does not exist in INI file\nfile path: %1%\nsection name: %2%\nnonexistent keyname:%3%	ไม่มีชื่อคีย์เป้าหมายในไฟล์ ini\nเส้นทางไฟล์: %1%\nชื่อกลุ่ม: %2%\nชื่อคีย์ไม่มีอยู่: %3%	File_IniCfg_FileOperation.vi
+500033	1	Driver	File		ini文件中目标字段不存在\n文件路径: %1%\n段名: %2%	The target section name does not exist in INI file\nfile path: %1%\nsection name: %2%	ไม่มีฟิลด์เป้าหมายในไฟล์ ini\nเส้นทางไฟล์: %1%\nชื่อเซ็กเมนต์: %2%	File_IniCfg_FileOperation.vi;File_IniCfg_AtsFileKeyNamesGet.vi
+500034	1	Driver	File		ini文件中无任何字段	There are no sections in the ini file	ไม่มีฟิลด์ในไฟล์ini	File_IniCfg_FileOperation.vi
+500050	1	Driver	File		设备配置文件不存在\n路径：%1%	Device config file does not exist\nPath: %1%	ไม่มีไฟล์การกำหนดค่าอุปกรณ์\nเส้นทาง: %1%	File_IniCfg_LoadDevicCfgToLocal.vi
+500051	1	Driver	File		设备默认值配置文件不存在\n路径："%1%"	Device default profile does not exist\nPath: %1%	ไม่มีไฟล์การกำหนดค่าเริ่มต้นของอุปกรณ์\nเส้นทาง: "%1%"	File_IniCfg_LoadDevicCfgToLocal.vi
+500052	1	Driver	File		测试程序的CFG文件夹不存在	The CFG folder for the test program does not exist	ไม่มีโฟลเดอร์ CFG ของโปรแกรมทดสอบ	File_IniCfg_LoadDevicCfgToLocal.vi
+500060	1	Driver	File		新增属性时，名称和值数组大小要一致并且不能为空	When adding a new attribute, the size of the name and value array should be consistent and cannot be	เมื่อเพิ่มคุณสมบัติ,ขนาดของอาร์เรย์ชื่อและค่าต้องเท่ากันและไม่สามารถเว้นว่างได้	File_XML_BaseNodeAttribute.vi
+500061	1	Driver	File		未找到符合条件的父节点	Parent node not found	ไม่พบโหนดหลักของรายการที่ตรงกัน	File_XML_FileOperation.vi
+500062	1	Driver	File		读操作时未找到符合条件的子节点	No eligible child nodes were found during read operation	ไม่พบโหนดชายน์ที่มีสิทธิ์ระหว่างการดำเนินการอ่าน	File_XML_FileOperation.vi
+500063	1	Driver	File		更新操作时未找到符合条件的子节点	No eligible child nodes were found during the update operation	ไม่พบโหนดชายน์ที่เข้าเกณฑ์ระหว่างการดำเนินการอัพเดต	File_XML_FileOperation.vi
+500064	1	Driver	File		部分属性未找到	Some attribute were not found	ไม่พบแอตทริบิวต์บางอย่าง	File_XML_BaseNodeAttribute.vi
+500065	1	Driver	File		节点管理出错	Node management error	การจัดการโหนดผิดพลาด	File_XML_Glb
+500100	1	Driver	DBA		RecordsAffected返回值是0	RecordsAffected is 0	RecordsAffectedค่าส่งคืนคือ 0	ADO_CmdExcute.vi
+500101	1	Driver	DBA		命令:%1%	Command:%1%	คำสั่ง:%1%	ADO_CmdExcute.vi
+500102	1	Driver	DBA		数据表无字段，命令:%1%	Null table fields,Command:%1%	ตารางข้อมูลไม่มีฟิลด์，คำสั่ง:%1%	ADO_Field.vi
+500103	1	Driver	DBA		Fields为空或者Datas数组列数与Fields列数不一致	Fields is empty or the number of columns in the data array is inconsistent with the number of column	ฟิลด์ว่างเปล่าหรือจำนวนคอลัมน์ในอาร์เรย์ข้อมูลไม่สอดคล้องกับจำนวนคอลัมน์ในฟิลด์	ADO_Insert.vi
+500104	1	Driver	DBA		返回的ID是0	Returned id is 0	IDค่าส่งคืนคือ 0	ADO_Insert.vi
+500105	1	Driver	DBA		从"%1%"文件中未发现表名“%2%”的连接信息！	Connection information for TableName '%2%' was not found from '%1%' file!	ไม่พบข้อมูลการเชื่อมต่อของชื่อตาราง %2% ในไฟล์ %1%!	DbSQL_Connect.vi
+500106	1	Driver	DBA		RecordsAffected返回值是0	RecordsAffected is 0	RecordsAffectedค่าส่งคืนคือ 0	DbSQL_Excute.vi
+500107	1	Driver	DBA		命令:%1%	Command:%1%	คำสั่ง:%1%	DbSQL_Excute.vi
+500108	1	Driver	DBA		数据表无字段，命令:%1%	Null table fields,Command:%1%	ตารางข้อมูลไม่มีฟิลด์ คำสั่ง: %1%	DbSQL_GetTableFields.vi
+500109	1	Driver	DBA		数据库“%1%"中没有如下列名：\n"%2%"	The following column names do not exist in TableName '%1%':\n%2%	ไม่มีชื่อรายการต่อไปนี้ %2% ในฐานข้อมูล %1%:\n	DbSQL_InsertRecords.vi
+500110	1	Driver	DBA		数据库中未找到料号%1%对应的Testplan料号信息	Can not find any information about %1% in database	ไม่พบข้อมูล Testplan ที่สอดคล้องกับหมายเลขวัสดุ %1% ในฐานข้อมูล	DB_GetTestplan601Pns.vi
+500111	1	Driver	DBA		数据库中未找到ItemCode='%1%'， processcode='%2%'， type='%3%'的规格数据	There is not any Spec information in "Z_V_PNTestRule" DbTable which ItemCode='%1%' and processcode='	ไม่พบข้อมูลข้อกำหนด ItemCode='%1%'， processcode='%2%'， type='%3%' ในฐานข้อมูล	DB_LoadFmtDbSpecToLocal.vi
+500112	1	Driver	DBA		保存规格数据到'%1%'失败！	Save FMT Database Spec to "%1%" Fail!	บันทึกข้อมูลลงไฟล์ '%1%' ล้มเหลว	DB_LoadFmtDbSpecToLocal.vi
+500113	1	Driver	DBA		%1%已经过期	%1% has expired	%1%หมดอายุแล้ว	DB_LoadOffsetSpec&Check.vi
+500114	1	Driver	DBA		保存规格数据到%1%失败！	Save Sample Database Spec to "%1%" Fail!	บันทึกข้อมูลลงไฟล์ '%1%' ล้มเหลว	DB_LoadSampleSpecToLocal.vi
+500115	1	Driver	DBA		在数据库中未查到%1%的SPC规格！	There is not any SPC Spec information in DbTable which SampleSN='%1%'	ไม่พบข้อกำหนด SPC ของ %1% ในฐานข้อมูล!	DB_LoadSampleSpecToLocal.vi
+500200	1	Driver	Common		信号量%1%获取超时，超时时间为%2%ms	Semaphore %1% acquisition timeout，timeout time is %2%ms	สัญญาณ %1% ได้รับหมดเวลาและเวลาออกสำหรับ %2%ms	Common_SemaphoreOperation
+500201	1	Driver	Common		非法信号量	Illegal semaphore	สัญญาณผิดกฎหมาย	Common_SemaphoreOperation
+500202	1	Driver	Common		创建信号量时，名称不能为空	When creating a semaphore, the name cannot be empty	เมื่อคุณสร้างปริมาณของสัญญาณชื่อไม่สามารถว่างเปล่า	Common_SemaphoreOperation
+500203	1	Driver	Common		信号量%1%已存在	Semaphore %1% already exists	สัญญาณ %1% อยู่แล้ว	Common_SemaphoreOperation
+500204	1	Driver	Common		dll：%1%\n方法名：%2%\n输入参数：%3%\n输出参数：%4%	dll: %1%\nFunction: %2%\nInput: %3%\nOutpu: %4%	dll: %1%\nหน้าที่: %2%\nนำเข้า: %3%\nเอาท์พุต: %4%	dll执行错误提示
+500300	0	Driver	Algorithm		通道配比或者通道输入值超范围！\nOpticalChannel: %1%\nElectricalChanne: %2%\nOptChannelCount: %3%\nEleChannelCount: %4%	Channel ratio or channel input value is out of range!\nOpticalChannel: %1%\nElectricalChanne: %2%\nO	อัตราส่วนช่องหรือค่าอินพุตช่องอยู่นอกช่วง！\nOpticalChannel: %1%\nElectricalChanne: %2%\nOptChannelCount: %3%\nEleChannelCount: %4%	NA
+500500	1	Driver	MES		dll路径:%1%\n结果=%2%\n机台名称:%3%\n数据库IP:%4%\nMes站别名称:%5%\nMes接口返回值:%6%	dll Path:%1%\nStatus=%2%\nCabinetName:%3%\nDbIP:%4%\nMesStation:%5%\nMesString:%6%	dllเส้นทาง:%1%\nผลลัพธ์=%2%\nชื่อเครื่อง:%3%\n IP ฐานข้อมูล:%4%\nชื่อเว็บไซต์ Mes:%5%\nค่าส่งคืนอินเทอร์เฟซ Mes:%6%	MES_FOL_CheckEquip.vi
+500501	1	Driver	MES		dll路径:%1%\n结果=%2%\n500PN:%3%\n数据库IP:%4%\n客户代码:%5%\n客户名称:%6%	dll Path:%1%\nStatus=%2%\nPN500:%3%\nDbIP:%4%\nCustomerCode:%5%\nCustomerName:%6%	dllเส้นทาง:%1%\nผลลัพธ์=%2%\n500PN:%3%\n IP ฐานข้อมูล:%4%\nรหัสลูกค้า:%5%\nชื่อลูกค้า:%6%	MES_FOL_CustomerName.vi
+500502	1	Driver	MES		%1%文件夹中的MES相关dll文件不全	Incomplete MES-related dll files in the %1% folder.	%1%ไฟล์ dll ที่เกี่ยวข้องกับ MES ไม่สมบูรณ์ในโฟลเดอร์	MES_FOL_dllSel.vi
+500503	1	Driver	MES		D:\dll文件夹中FOL_MES dll与MES dll版本不一致	The versions of FOL_MES dll and MES dll in the D:\dll folder are inconsistent.	เวอร์ชันของไฟล์ FOL_MES dll ในโฟลเดอร์ D:\dll ไม่สอดคล้องกับเวอร์ชันของระบบ MES	MES_FOL_dllSel.vi
+500504	1	Driver	MES		dll 路径:%1%\n结果=%2%\n500PN:%3%\n站别:%4%\n测试类别:%5%\n数据库IP:%6%	dll Path:%1%\nStatus=%2%\nPN500:%3%\nFlowNode:%4%\nCategory:%5%\nDbIP:%6%	dllเส้นทาง:%1%\nผลลัพธ์=%2%\n500PN:%3%\n หยุด:%4%\nหมวดหมู่การทดสอบ:%5%\n IP ฐานข้อมูล:%6%	MES_FOL_FmtDbSpec.vi
+500505	1	Driver	MES		dll 路径:%1%\n结果=%2%\nSN:%3%\n多模模块?:%4%\n数据库IP:%5%	dll Path:%1%\nStatus=%2%\nSN:%3%\nMM:%4%\nDbIP:%5%	dllเส้นทาง:%1%\nผลลัพธ์=%2%\nSN:%3%\nโมดูลมัลติโหมด?:%4%\n IP ฐานข้อมูล:%5%	FOL_MES_QpnMapping.vi
+500506	0	Driver	MES		MES返回信息: %1%	MesInfo: %1%	MESข้อความที่ส่งคืน: %1%	MES_FOL_StationCheck.vi
+500507	1	Driver	MES		dll 路径:%1%\n结果=%2%\nSN:%3%\nMes站别:%4%\n作业员工号:%5%\n数据库IP:%6%	dll Path:%1%\nStatus=%2%\nSN:%3%\nMesStation:%4%\nUserID:%5%\nDbIP:%6%	dllเส้นทาง:%1%\nผลลัพธ์=%2%\nSN:%3%\n สถานี Mes:%4%\n หมายเลขพนักงานปฏิบัติการ:%5%\n IP ฐานข้อมูล:%6%	MES_FOL_StationCheck.vi
+500508	1	Driver	MES		dll 路径:%1%\n结果=%2%\n站别ID:%3%\n数据IP:%4%\n站别名称:%5%	dll Path:%1%\nStatus=%2%\nStationID:%3%\nDbIP:%4%\nStationName:%5%	dllเส้นทาง:%1%\nผลลัพธ์=%2%\n สถานี ID:%3%\n IP ฐานข้อมูล:%4%\n ค่าส่งคืนอินเทอร์เฟซ:%5%	NA
+500509	1	Driver	MES		dll 路径(25G):%1%\n结果=%2%\nSN:%3%\nMes站别名称:%4%\n模块测试结果:%5%\n作业员工号:%6%\nMES代码:%7%\n不良记录信息:%8%\n数据库IP:%9%	dll Path(25G):%1%\nStatus=%2%\nSN:%3%\nMesStation:%4%\nDutStatus:%5%\nUserID:%6%\nFailCode:%7%\nFail	dll เส้นทางคมนาคม(25G):%1%\nผลลัพธ์=%2%\nSN:%3%\nMesชื่อสถานี:%4%\nผลการทดสอบโมดูล:%5%\nหมายเลขงาน:%6%\nMESโค้ด:%7%\nข้อมูลประวัติไม่ดี:%8%\nฐานข้อมูลIP:%9%	NA
+500510	1	Driver	MES		dll 路径:%1%\n结果=%2%\nSN:%3%\nMes站别名称:%4%\n模块测试结果:%5%\n作业员工号:%6%\nMES代码:%7%\n不良记录信息:%8%\n数据库IP:%9%	dll Path:%1%\nStatus=%2%\nSN:%3%\nMesStation:%4%\nDutStatus:%5%\nUserID:%6%\nFailCode:%7%\nFailLog:%8%\nDBIP:%9%	dll เส้นทางคมนาคม:%1%\nผลลัพธ์=%2%\nSN:%3%\nMesชื่อสถานี:%4%\nผลการทดสอบโมดูล:%5%\nหมายเลขงาน:%6%\nMESโค้ด:%7%\nข้อมูลประวัติไม่ดี:%8%\nฐานข้อมูลIP:%9%	NA
+500511	1	Driver	MES		dll 路径:%1%\n结果=%2%\nSN:%3%\nMes站别名称:%4%\n模块测试结果:%5%\n作业员工号:%6%\nMES代码:%7%\n不良记录信息:%8%\n数据库IP:%9%	dll Path:%1%\nStatus=%2%\nSN:%3%\nMesStation:%4%\nDutStatus:%5%\nUserID:%6%\nFailCode:%7%\nFailLog:%8%\nDBIP:%9%	dll เส้นทางคมนาคม:%1%\nผลลัพธ์=%2%\nSN:%3%\nMesชื่อสถานี:%4%\nผลการทดสอบโมดูล:%5%\nหมายเลขงาน:%6%\nMESโค้ด:%7%\nข้อมูลประวัติไม่ดี:%8%\nฐานข้อมูลIP:%9%	NA
+500512	1	Driver	MES		dll 路径:%1%\n结果=%2%\nID:%3%\n数据库IP:%4%\nMes站别:%5%\nMes返回信息:%6%	dll Path:%1%\nStatus=%2%\nID:%3%\nDbIP:%4%\nMesStation:%5%\nMesInfo:%6%	dll เส้นทางคมนาคม:%1%\nผลลัพธ์=%2%\nID:%3%\nฐานข้อมูลIP:%4%\nMesชื่อสถานี:%5%\nMESข้อความที่ส่งคืน:%6%	NA
+500513	1	Driver	MES		dll 路径:%1%\n结果=%2%\nOB_SN:%3%\n数据库IP:%4%\nVcselType(MES返回值):%5%	dll Path:%1%\nStatus=%2%\nOB_SN:%3%\nDbIP:%4%\nVcselType:%5%	dll เส้นทางคมนาคม:%1%\nผลลัพธ์=%2%\nOB_SN:%3%\nฐานข้อมูลIP:%4%\nVcselType(MESค่าส่งคืน):%5%	MES_FOL_VcselType.vi
+500514	1	Driver	MES		dll 路径:%1%\n结果=%2%\n500PN:%3%\n站别:%4%\n测试类别:%5%\n规格类别:%6%	dll Path:%1%\nStatus=%2%\nPN500:%3%\nFlowNode:%4%\nCategory:%5%\nSpecType:%6%	dllเส้นทาง:%1%\nผลลัพธ์=%2%\n500PN:%3%\n หยุด:%4%\nหมวดหมู่การทดสอบ:%5%\n หมวดหมู่ข้อมูลจำเพาะ:%6%	MES_FOL_LpFmtDbSpec.vi
+500515	1	Driver	MES		dll 路径:%1%\n结果=%2%\nSN:%3%\nMes站别名称:%4%\n模块测试结果:%5%\n作业员工号:%6%\nMES代码:%7%\n通道:%8%\n温度:%9%\n不良记录信息:%10%\nMES返回信息:%11%	dll path: %1%\nResult=%2%\nSN:%3%\nMes station alias name: %4%\nModule test result: %5%\nWorker number: %6%\nMES code: %7%\nChannel: %8%\nTemperature: %9%\nBad record information: %10%\nMES return information: %11%	เส้นทาง dll: %1%\nResult=%2%\nSN:%3%\nชื่อนามแฝงของสถานี Mes: %4%\nผลการทดสอบโมดูล: %5%\nหมายเลขผู้ปฏิบัติงาน: %6%\nรหัส MES: %7%\ nช่อง: %8%\nอุณหภูมิ: %9%\nข้อมูลประวัติเสีย: %10%\nข้อมูลการส่งคืน MES:%11%	MES_FOL_StationUpload
+500520	1	Driver	MES		检查胶水有效期失败\n %1%。	Checking glue expiration date failed\n %1%.	ตรวจสอบวันหมดอายุกาวไม่สำเร็จ\n %1%	MES_OPD_CheckGlue.vi
+500521	1	Driver	MES		获取胶水信息失败\n %1%。	Failed to get glue information\n %1%.	รับข้อมูลกาวไม่สำเร็จ\n %1%	MES_OPD_CheckGlueInfo.vi
+500522	1	Driver	MES		检查棱镜有效期失败\n %1%。	Checking Lens expiration date failed\n %1%.	การตรวจสอบการหมดอายุของปริซึมล้มเหลว\n %1%	MES_OPD_CheckLens.vi
+500523	1	Driver	MES		检查棱镜数量失败\n %1%。	Checking Lens count failed\n %1%.	ตรวจสอบจำนวนปริซึมล้มเหลว\n %1%	MES_OPD_CheckLensNew.vi
+500524	1	Driver	MES		人员%1%无登录权限，终端ID为%2%，厂区代码为%3%。	User %1% has no login permission, the terminal ID is %2%, and the factory code is %3%.	บุคลากร %1% ไม่มีสิทธิ์ในการเข้าสู่ระบบ รหัสเทอร์มินัลคือ %2% และรหัสโรงงานคือ %3%	MES_OPD_CheckUser.vi
+500525	1	Driver	MES		获取COC信息失败，SN为%1%，厂区代码为%2%。	Failed to obtain COC information, SN is %1%, and factory code is %2%.	ไม่สามารถรับข้อมูล COC ได้ SN คือ %1% และรหัสโรงงานคือ %2%	MES_OPD_GetCOCSN.vi
+500526	1	Driver	MES		MES中维护的Icord工艺路线不存在，请确认及重新维护，SN为%1%，厂区代码为%2%。	The Icord process route maintained in MES does not exist, please confirm and re-maintain, the SN is %1%, and the factory code is %2%.	ไม่มีเส้นทางกระบวนการ Icord ที่ดูแลใน MES โปรดยืนยันและรักษาใหม่ SN คือ %1% และรหัสโรงงานคือ %2%	MES_OPD_GetiCordFlow.vi
+500527	1	Driver	MES		获取MES进程失败，SN为%1%，厂区代码为%2%。	Failed to obtain MES process, SN is %1% and factory code is %2%.	ไม่สามารถรับกระบวนการ MES SN คือ %1% และรหัสโรงงานคือ %2%	MES_OPD_GetProcessInfo.vi
+500528	1	Driver	MES		获取MES系统中的物料工单信息失败，SN为%1%，厂区代码为%2%。	Failed to obtain material work order information in MES system, SN is %1%, and plant code is %2%.	การรับข้อมูลใบสั่งงานวัสดุในระบบ MES ล้มเหลว SN คือ %1% และรหัสโรงงานคือ %2%	MES_OPD_GetShopOreder.vi
+500529	1	Driver	MES		在MES系统中获取SN数量失败，SN为%1%，厂区代码为%2%。	Failed to obtain the number of SNs in the MES system, the SN is %1%, and the factory code is %2%.	ไม่สามารถรับจำนวน SN ในระบบ MES ได้ SN คือ %1% และรหัสโรงงานคือ %2%	MES_OPD_GetSNCount.vi
+500530	1	Driver	MES		在MES系统中获取SN良率失败，SN为%1%，厂区代码为%2%。	Failed to obtain the SN yield in the MES system, the SN is %1%, and the factory code is %2%.	ไม่สามารถรับผลตอบแทน SN ในระบบ MES ได้ SN คือ %1% และรหัสโรงงานคือ %2%	MES_OPD_GetSNIsPassedbyID.vi
+500531	1	Driver	MES		在MES系统中获取SN工单信息失败，SN为%1%，厂区代码为%2%。	Failed to obtain SN work order information in MES system, SN is %1%, and factory code is %2%.	การรับข้อมูลใบสั่งงาน SN ในระบบ MES ไม่สำเร็จ SN คือ %1% และรหัสโรงงานคือ %2%	MES_OPD_GetSNWOInfo.vi
+500532	1	Driver	MES		MES系统中胶水绑定失败，SN为%1%，进程ID为%2%，用户ID为%3%，厂区代码为%4%。	Failed to bind glue in MES system,SN is %1%,ProcessID is %2%,UserID is %3% and factory code is %4%.	การติดกาวล้มเหลวในระบบ MES, SN คือ %1%, ID กระบวนการคือ %2%, ID ผู้ใช้คือ %3% และรหัสโรงงานคือ %4%	MES_OPD_GlueBanding.vi
+500533	1	Driver	MES		MES入站失败，SN为%1%，厂区代码为%2%。	MES move in station failed,SN is %1% and factory code is %2%.	ขาเข้า MES ล้มเหลว SN คือ %1% และรหัสโรงงานคือ %2%	MES_OPD_In.vi
+500534	1	Driver	MES		MES出站失败，SN为%1%，终端ID为%2%，用户ID为%3%，厂区代码为%4%。	MES move out station failed,SN is %1%,TerminalID is %2%,UserID is %3% and factory code is %4%.	ขาออก MES ล้มเหลว SN คือ %1% ID เทอร์มินัลคือ %2% ID ผู้ใช้คือ %3% และรหัสโรงงานคือ %4%	MES_OPD_Out.vi
+500535	1	Driver	MES		MES系统中物料报废失败，SN为%1%，报废原因为%2%，报废代码为%3%，厂区代码为%4%。	The material scrapping fails in MES system,SN is %1%,the scrapping reason is %2%,the scrapping code is %3%, and factory code is %4%.	ในระบบ MES การกำจัดวัสดุล้มเหลว SN คือ %1% สาเหตุของการทิ้งคือ %2% รหัสของการตัดทิ้งคือ %3% และรหัสโรงงานคือ %4%	MES_OPD_Scrap.vi
+500536	1	Driver	MES		未获取到OBSN，物料SN为%1%，厂区代码为%2%，请联系制造工程师。	The OBSN has not been obtained, the material SN is %1%, and the factory code is %2%, please contact the manufacturing engineer.	ไม่ได้รับ OBSN, SN วัสดุคือ %1% และรหัสพื้นที่โรงงานคือ %2% โปรดติดต่อวิศวกรฝ่ายผลิต	MES_OPD_GetOBSNByMaterialSN.vi
+500537	1	Driver	MES		获取的OBSN=%1%，格式错误，请联系制造工程师。	Obtained OBSN=%1%, the format is wrong, please contact the manufacturing engineer.	ได้รับ OBSN=%1% รูปแบบไม่ถูกต้อง โปรดติดต่อวิศวกรการผลิต	MES_OPD_GetOBSNByMaterialSN.vi500538
+500550	1	Driver	iCord		上传数据至iCord失败，错误代码为：%1%，错误信息为:%2%。	Failed to upload data to iCord, the error code is: %1%, and the error message is: %2%.	อัปโหลดข้อมูลไปยัง iCord ไม่สำเร็จ รหัสข้อผิดพลาดคือ: %1% และข้อความแสดงข้อผิดพลาดคือ: %2%	Icord_AddData.vi
+500551	1	Driver	iCord		未在iCord中找到SN为%1%的COC信息，错误代码为：%2%。	Not found COC information in iCord,SN is %1% and ErrorCode is %2%.	ไม่พบข้อมูล COC ที่มี SN เท่ากับ %1% ใน iCord รหัสข้อผิดพลาดคือ: %2%	Icord_GetCOCAssyInf.vi
+500552	1	Driver	iCord		未在iCord中找到SN为%1%,工序为%2%，测试项为%3%的COC测试数据，错误代码为：%4%。	Not found COC test data in iCord. SN is %1%,Station is %2%,ItemName is %3% and ErrorCode is %4%.	ไม่พบข้อมูลการทดสอบ COC ที่มี SN %1% กระบวนการ %2% และรายการทดสอบ %3% ใน iCord และรหัสข้อผิดพลาดคือ: %4%	Icord_GetCOCTestData.vi
+500553	1	Driver	iCord		未在iCord中找到SN为%1%，工序为%2%，测试项为%3%，通道为%4%，厂区代码为%5%的测试数据。	Not found test data in iCord. SN is %1%,Station is %2%,ItemName is %3%,Channel is %4%,FactoryCode is %5%.	ข้อมูลการทดสอบด้วย SN %1%, กระบวนการ %2%, รายการทดสอบ %3%, ช่อง %4%, ไม่พบรหัสโรงงาน %5% ใน iCord	Icord_GetItemValue.vi
+500554	1	Driver	iCord		未在iCord中找到SN为%1%，工序为%2%，测试项为%3%，厂区代码为%4%的测试数据。	Not found test data in iCord. SN is %1%,Station is %2%,ItemName is %3%,FactoryCode is %4%.	ทดสอบข้อมูลด้วย SN %1% กระบวนการ %2% รายการทดสอบ %3% และรหัสโรงงาน %4% ไม่พบใน iCord	Icord_GetItemValueArr.vi
+500555	1	Driver	iCord		未找到SN=%1%,Station=%2%,Item=%3%,FactoryCode=%4%的测试记录。	No test records found with SN=%1%, Station=%2%, Item=%3%, FactoryCode=%4%.	ไม่พบบันทึกการทดสอบที่มี SN=%1%, Station=%2%, Item=%3%, FactoryCode=%4%	Icord_GetRecordValue.vi
+500556	1	Driver	iCord		在iCord中未找到SN=%1%的工艺路线信息。	No routing information found for SN=%1% in iCord.	ไม่พบข้อมูลการกำหนดเส้นทางสำหรับ SN=%1% ใน iCord	Icord_GetSNStaRunArgs.vi
+500557	1	Driver	iCord		未在iCord工艺路线中找到工序为%1%的参数规格信息。	The parameter specification information of %1% station was not found in iCord.	ไม่พบข้อมูลข้อกำหนดพารามิเตอร์สำหรับการดำเนินการ %1% ในการกำหนดเส้นทาง iCord	Icord_GetSPECByFidStation.vi
+500558	1	Driver	iCord		iCord中未找到SN=%1%,Station=%2%,Item=%3%的测试数据。	Not found test data in iCord,SN=%1%,Station=%2%,Item=%3%.	ทดสอบข้อมูลด้วย SN=%1%, Station=%2%, Item=%3% ไม่พบใน iCord	Icord_GetTestData.vi
+500559	1	Driver	iCord		登录iCord失败，错误信息为：%1%。	Failed to log in to iCord, the error message is: %1%.	เข้าสู่ระบบ iCord ไม่สำเร็จ ข้อความแสดงข้อผิดพลาดคือ: %1%	Icord_UserLogIn.vi
+500560	1	Driver	iCord		获取CBSN失败，输入的SN=%1%，错误信息为：%2%。	Failed to obtain CBSN,input SN=%1%,error message is: %2%.	รับ CBSN ล้มเหลว อินพุต SN=%1% ข้อความแสดงข้อผิดพลาดคือ: %2%	Icord_GetCBSn.vi
+500561	1	Driver	iCord		获取的CBSN=%1%，格式错误，请联系制造工程师。	Obtained CBSN=%1%, the format is wrong, please contact the manufacturing engineer.	CBSN ที่ได้รับ=%1% รูปแบบไม่ถูกต้อง โปรดติดต่อวิศวกรการผลิต	Icord_GetCBSn.vi
+510100	1	Common	SubVi		未找到Testplan文件夹	Can't find the folder of test plan!	หาโฟลเดอร์ Testplan ไม่เจอ!	Login.vi
+510101	0	Common	SubVi		PSW不正确	Password is incorrect!	รหัสผ่านไม่ถูกต้อง!	Login.vi
+510102	0	Common	SubVi		500料号错误	500PN is incorrect!	500PN หมายเลขชิ้นส่วนผิดพลาด	Login.vi
+510103	0	Common	SubVi		User栏位输入信息为空	The user field input information is empty！	ฟิลด์ผู้ใช้ว่างเปล่า!	Login.vi
+510104	0	Common	SubVi		该工号无权限	This Operation ID has not limits of authority!	ไม่ได้รับอนุญาตสำหรับงานนี้หมายเลข	Login.vi
+510105	0	Common	SubVi		该机台名未登记或者机台名不正确	The cabinet name is not registered or the cabinet name is incorrect!	ไม่ได้ลงทะเบียนชื่อเครื่องหรือชื่อเครื่องไม่ถูกต้อง	Login.vi
+510106	0	Common	SubVi		该机台绑定的设备状态异常	The status of the equipment bound to the station is abnormal!	สถานะของอุปกรณ์ที่ผูกไว้กับเครื่องผิดปกติ	Login.vi
+510107	0	Common	SubVi		DCA曾经被%1%号机台在%2%初始化过，是否需要再次初始化？	DCA has been initialized by station %1% at %2%, do you need to initialize it again?	DCA ได้รับการเริ่มต้นโดยสถานี %1% ที่ %2%，คุณต้องการเริ่มต้นใหม่อีกครั้งหรือไม่?	SharedDcaInitial.vi
+510108	1	Common	SubVi		更新DCA初始化时间到公共电脑失败	Failed to update the DCA initialization time to the public computer!	ไม่สามารถอัปเดตเวลาเริ่มต้นของ DCA ไปยังคอมพิวเตอร์สาธารณะ	SharedDcaInitial.vi
+510109	0	Common	SubVi		共享设备ACK更新失败！	Shared device ACK update failed!	การอัปเดต ACK อุปกรณ์ที่ใช้ร่วมกันล้มเหลว!	SharedDeviceAck.vi
+510110	1	Common	SubVi		UpdateStatus时未找到目标Block	The target block was not found during update status!	ไม่พบบล็อกเป้าหมายเมื่ออัปเดตสถานะเครื่อง	Sub_AllBlockGlbOperation.vi
+510111	1	Common	SubVi		GetIndex时未找到目标Block	The target block was not found during get index!	ไม่พบบล็อกเป้าหมายระหว่าง GetIndex	Sub_AllBlockGlbOperation.vi
+510112	1	Common	SubVi		Unit%1%中不存在Index=%2%,Name=%3%的Condition	Condition of Index=%2%, Name=%3% does not exist in Unit%1%	เงื่อนไขของ Index=%2%,Name=%3% ไม่มีอยู่ในหน่วย Unit%1%	Sub_AllGlbData.vi
+510113	1	Common	SubVi		Rx排队配置文件不存在，路径: "%1%"	Config file is not exist, file path: "%1%"	Rxไม่มีไฟล์การกำหนดค่าคิว เส้นทาง: "%1%"	Sub_SharedRxDeviceCtrl.vi
+510114	0	Common	SubVi		RX共享设备被ATS%1%占用，等待中	RX shared equipment is occupied by ATS%1%, waiting	RXอุปกรณ์ที่ใช้ร่วมกันถูกครอบครองโดย ATS%1% กำลังรอ	Sub_SharedRxDeviceCtrl.vi
+510115	1	Common	SubVi		占用或者释放共享RX设备未成功！	Occupy or release the shared RX device unsuccessfully!	อาชีพหรือการปล่อยอุปกรณ์ที่ใช้ร่วมกันของ RX ไม่ประสบความสำเร็จ!	Sub_SharedRxDeviceCtrl.vi
+510116	1	Common	SubVi		Tx排队配置文件不存在，路径: "%1%"	Config file is not exist, file path: "%1%"	Txไม่มีไฟล์การกำหนดค่าคิว เส้นทาง: "%1%"	Sub_SharedTxDeviceCtrl.vi
+510117	0	Common	SubVi		TX共享设备被ATS%1%占用，等待中	TX shared equipment is occupied by ATS%1%, waiting	TXอุปกรณ์ที่ใช้ร่วมกันถูกครอบครองโดย ATS%1% กำลังรอ	Sub_SharedTxDeviceCtrl.vi
+510118	1	Common	SubVi		占用或者释放共享TX设备未成功！	Occupy or release the shared TX device unsuccessfully!	ครอบครองหรือปล่อยอุปกรณ์ที่ใช้ร่วมกัน TX ไม่สำเร็จ!	Sub_SharedTxDeviceCtrl.vi
+510119	1	Common	SubVi		占用或者释放共享设备未成功！	Occupy or release the shared device unsuccessfully!	ครอบครองหรือปล่อยอุปกรณ์ที่ใช้ร่วมกันไม่สำเร็จ!	SharedDeviceCtrl.vi
+510120	1	Common	SubVi		检查程序版本时，数据库连接异常。\nIP：%1%\n返回的信息：%2%	Database connection exception while checking program version.\nIP: %1%\nMessage: %2%	เมื่อตรวจสอบเวอร์ชั่นของโปรแกรม การเชื่อมต่อฐานข้อมูลนั้นผิดปกติ \n IP：%1%\nข้อมูลที่ส่งคืน：%2%	Sub_GetProgramRevision
+510121	1	Common	SubVi		当前程序版本小于基线版本。\n程序名称：%1%\n版本类型：%2%\n当前程序版本：%3%\n返回信息：%4%	The current program version is less than the baseline version.\nProgram name：%1%\nVersion type：%2%\n	เวอร์ชันโปรแกรมปัจจุบันน้อยกว่าเวอร์ชันพื้นฐาน,ชื่อโปรแกรม: %1%\n ประเภทเวอร์ชัน: %2%\n เวอร์ชันโปรแกรมปัจจุบัน：%3%\nข้อมูลที่ส่งคืน：%4%	Sub_GetProgramRevision
+510122	1	Common	SubVi		当前选择站别：%1%，配置MES站别：%2%	Select StaionName: %1%, MES StationName:%2%	สถานีที่เลือกในปัจจุบัน: %1%, สถานี MES ที่กำหนดค่า: %2%	Sub_CheckStaionName
+510123	0	Common	SubVi		程序必须从'%1%'中打开	The program must be opened from '%1%'	โปรแกรมจะต้องเปิดจาก '%1%'	Login.vi
+510124	1	Common	SubVi		测试项%1%未找到对应别名！	No alias found for test item %1%	รายการทดสอบ %1% ไม่พบชื่อ ที่ตรงกัน	Sub_TestItemsToBlocks.vi
+510125	1	Common	SubVi		未在公盘中找到%1%登录类型的ID_Cfg配置	ID_Cfg configuration of %1% login type not found in the public disk	ไม่พบไฟล์การกำหนดค่า ID_Cfg ประเภทการเข้าสู่ระบบ %1% ในดิสก์สาธารณะ	OPD test system.vi
+520000	1	Common	ParallelUpload		%1%文件不存在	%1% file is absent	%1%ไฟล์ไม่มี	Xml2DbMes_FileSel.vi
+520001	1	Common	ParallelUpload		从"%1%"文件中未发现表名“%2%”的连接信息！	The connection information of the table name "%2%" was not found in the "%1%" file!	ไม่พบข้อมูลการเชื่อมต่อของชื่อตาราง "%2%" ในไฟล์ "%1%"!	Xml2DbMes_DbConnect.vi
+520002	1	Common	ParallelUpload		dll 路径:%1%\n结果=%2%\nSN:%3%\nMes站别名称:%4%\nDut结果:%5%\n作业员工号:%6%\n不良代码:%7%\n不良记录:%8%\n数据库地址:%9%	dll Path:%1%\nStatus=%2%\nSN:%3%\nMesStation:%4%\nDutStatus:%5%\nUserID:%6%\nFailCode:%7%\nFailLog:%8%\nDBIP:%9%	dll 路径:%1%\n结果=%2%\nSN:%3%\nMes站别名称:%4%\nDut结果:%5%\n作业员工号:%6%\n不良代码:%7%\n不良记录:%8%\n数据库地址:%9%	Xml2DbMes_MesUpdate_FolMes.vi
+520003	1	Common	ParallelUpload		记录上传和过站成功过程间出错或者删除xml出错	Save log fail or delete xml file fail	เกิดข้อผิดพลาดระหว่างบันทึกการอัปโหลดและกระบวนการอัปเดต，หรือลบข้อผิดพลาด xml	Xml2DbMes.vi
+520004	1	Common	ParallelUpload		待并行上传XML文件超上限	The XML file to be uploaded in parallel exceeds the upper limit	ไฟล์ XML ที่จะอัปโหลดพร้อมกันเกินขีดจำกัดบน	Xml2DbMes_CheckSize.vi
+550000	1	Driver	Device	Interface	通信地址："%1%"打开失败！	VISA_Config excute fail, VisaAddr: "%1%"	ที่อยู่ทางไปรษณีย์: "%1%" ไม่สามารถเปิดได้!	VISA_Config.vi
+550001	1	Driver	Device	Interface	发送命令接收数据失败，地址："%1%"\n命令："%2%"	VISA_Send&Read excute fail, VisaAddr: "%1%"\nCommand: "%2%"	การส่งคำสั่งล้มเหลวในการรับข้อมูล ที่อยู่: "%1%"\nสั่งการ: "%2%"	VISA_Send&Read.vi
+550002	1	Driver	Device	Interface	发送命令失败，地址："%1%"\n命令："%2%"	VISA_Send excute fail, VisaAddr: "%1%"\nCommand: "%2%"	ไม่สามารถส่งคำสั่ง ที่อยู่: "%1%"\nสั่งการ: "%2%"	VISA_Send.vi
+550003	1	Driver	Device	Interface	通信地址："%1%"关闭失败！	VISA_Disconnect excute fail, VisaAddr: "%1%"	ที่อยู่ทางไปรษณีย์: "%1%" ปิดไม่สำเร็จ!	VISA_Disconnect.vi
+550004	1	Driver	Device	Interface	非信号量	Not a semaphore	ไม่ใช่สัญญาณ	VISA_SemaphoreOperation.vi
+550010	1	Driver	Device	Interface	InputType, InputName和DefaultValues数组大小不相等或者等于0	InputType, InputName and DefaultValues arrays are not equal in size or equal to 0	InputType, InputName&DefaultValuesขนาดอาร์เรย์ไม่เท่ากับหรือเท่ากับ 0	DialogBoxUserInput.vi
+550100	1	Driver	Device	DUT(TransX)	DutDebugInterface文件不完整	DutDebugInterface file is imcomplete	Dut Debug Interfaceไฟล์ไม่สมบูรณ์	DUT_Common
+550101	1	Driver	Device	DUT(TransX)	DutSlot%1% EEPROM写入失败\n写入：%2%，读取：%3%	DutSlot%1% EEPROM write failed\nWirte: %2%, Read: %3%	Dut Slot %1% EEPROMเขียนไม่สำเร็จ\n เขียน: %2% อ่าน: %3%	DUT_Common
+550102	1	Driver	Device	DUT(TransX)	Coef数据类型%1%未定义	Coef data type %1% is undefined	Coefไม่ได้กำหนดประเภทข้อมูล %1%	DUT_AppCoef.vi
+550103	1	Driver	Device	DUT(TransX)	DutSlot=%1% Channel=%2% %3%寄存器写入失败\n写入值：%4%，读取值：%5%	DutSlot=%1% Channel=%2% %3% reg write failed\nWriteValue: %4%, ReadValue: %5%	Dut Slot=%1% Channel=%2% %3% ลงทะเบียนเขียนล้มเหลว\n เขียนค่า: %4% อ่านค่า: %5%	DUT_AppReg.vi
+550104	1	Driver	Device	DUT(TransX)	SN为非法字符“%1%”	SN illegal '%1%'	SN เป็นตัวละครที่ผิดกฎหมาย“%1%”	DUT_PnSn.vi
+550105	1	Driver	Device	DUT(TransX)	TxRx模式设置失败	TXRX mode setting failed	TxRxการตั้งค่าโหมดล้มเหลว	DUT_TxRxModeSet.vi
+550106	1	Driver	Device	DUT(TransX)	DSP版本读取异常，全是0	Reading DSP version fail, all zero!	DSPข้อยกเว้นการอ่านเวอร์ชัน,ทั้งหมด 0	DUT_DspRev.vi
+550107	1	Driver	Device	DUT(TransX)	不支持%1%	%1% is not supported	ไม่สนับสนุน %1%	不支持该MSA
+550108	1	Driver	Device	DUT(TransX)	DebugInterface中不存在%1%的App	%1% app does not exist in debuginterface	ไม่มีโปรแกรม %1% ใน debuginterface	DebugInterface不存在的App
+550500	1	Driver	Device	DUT(TransX)	未找到USB_ID=%1%的USB转IIC通信板	Not found USB to IIC communication board with id = %1%	ไม่พบบอร์ดสื่อสาร USB เป็น IIC ของ USB_ID=%1%.	DUT_CH375_Connect.vi
+550501	1	Driver	Device	DUT(TransX)	设置操作时，返回的值是%1%，不是AA	When setting the operation, the value returned is %1%, not AA	ระหว่างการดำเนินการที่ตั้งไว้ ค่าที่ส่งคืนคือ %1% ไม่ใช่ AA	DUT_CH375_PortRw.vi
+550502	1	Driver	Device	DUT(TransX)	Get ID函数返回的应该是1429685064，而实际返回的是%1%	The expected return of get ID function was 1429685064, but the actual return was %1%	Get ID จะส่งกลับ 1429685064 และผลตอบแทนที่แท้จริงคือ %1%	CH375 IIC RW
+550503	1	Driver	Device	DUT(TransX)	连接数为%1%，字节长度为%2%	The number of connections is %1% and the byte length is %2%	จำนวนการเชื่อมต่อ %1% และไบต์ %2%	CH375 IIC RW
+550510	1	Driver	Device	DUT(TransX)	IO设置失败	IO setting failed	การตั้งค่า IO ล้มเหลว	DUT_TCP_IOTxOnOff.vi
+550511	1	Driver	Device	DUT(TransX)	TxOnOff设置与反馈的值不相等\n设置: %1%, 反馈: %2%	Txonoff setting is not equal to the feedback value\nSet: %1%, return: %2%	TxOnOffการตั้งค่าไม่เท่ากับค่าป้อนกลับ\n การตั้งค่า: %1% ความคิดเห็น: %2%	DUT_TCP_IOTxOnOff.vi
+550512	1	Driver	Device	DUT(TransX)	IIC 读写失败\n命令：%1%，反馈：%2%	IIC read or write operation fail\n命令：%1%，反馈：%2%	IIC อ่านและเขียนไม่สำเร็จ\n คำสั่ง: %1%, ความคิดเห็น: %2%	DUT_TCP_IicBytesRw.vi
+550600	1	Driver	Device	DUT(TransX)	写密码和选页失败\n写：%1%，读：%2%	Failed to write password and select Page\nWrite: %1%，read: %2%	ไม่สามารถเขียนรหัสผ่านและการเลือกหน้า\nเขียน: %1% อ่าน: %2%	DUT_MSA_QSFP_Psw&PageSel.vi
+550601	1	Driver	Device	DUT(TransX)	TxOnOff设置失败\n设置：%1%，反馈：%2%	TxOnOff setting failed\nSet: %1%，return: %2%	TxOnOffการตั้งค่าล้มเหลว\n การตั้งค่า: %1% ความคิดเห็น: %2%	DUT_MSA_QSFP_TxOutputOnOff.vi
+550602	1	Driver	Device	DUT(TransX)	TxSquelchOnOff设置失败\n设置：%1%，反馈：%2%	TxSquelchOnOff setting failed\nSet: %1%，return: %2%	TxSquelchOnOffการตั้งค่าล้มเหลว\n การตั้งค่า: %1% ความคิดเห็น: %2%	DUT_MSA_QSFP_TxRxSquelchOnOff.vi
+550603	1	Driver	Device	DUT(TransX)	速率设置失败\n写：%1%，读：%2%	Bitrate setting failed\nWrite: %1%，read: %2%	Speedการตั้งค่าล้มเหลว\n การตั้งค่า: %1% ข้อมูลส่งคืน: %2%	DUT_MSA_QSFP_TxRxRateSelect.vi
+550604	1	Driver	Device	DUT(TransX)	TxEQ设置失败\n设置：%1%，反馈：%2%	TxEQ setting failed\nSet：%1%，return：%2%	TxEQ การตั้งค่าล้มเหลว\n การตั้งค่า: %1% ข้อมูลส่งคืน: %2%	DUT_MSA_QSFP_TxEqLevel.vi
+550605	1	Driver	Device	DUT(TransX)	RxEmphasisLevel设置失败\n设置：%1%，反馈：%2%	RxEmphasisLevel setting failed\nSet：%1%，return：%2%	RxEmphasisLevelการตั้งค่าล้มเหลว\n การตั้งค่า: %1% ข้อมูลส่งคืน: %2%	DUT_MSA_QSFP_RxEmphasisLevel.vi
+550606	1	Driver	Device	DUT(TransX)	RxAmplitudeLevel设置失败\n设置：%1%，反馈：%2%	RxAmplitudeLevel setting failed\nSet：%1%，return：%2%	RxAmplitudeLevelการตั้งค่าล้มเหลว\n การตั้งค่า: %1% ข้อมูลส่งคืน: %2%	DUT_MSA_QSFP_RxAmplitudeLevel.vi
+550607	1	Driver	Device	DUT(TransX)	OverrideLpMode, LowPowerMode, HighPowerEnable设置失败\n设置：%1%，反馈：%2%	OverrideLpMode, LowPowerMode, HighPowerEnable setting failed\nSet：%1%，return：%2%	OverrideLpMode, LowPowerMode, HighPowerEnableการตั้งค่าล้มเหลว\n การตั้งค่า: %1% ข้อมูลส่งคืน: %2%	DUT_MSA_QSFP_PowerControl.vi
+550608	1	Driver	Device	DUT(TransX)	RxCdrOnOff, TxCdrOnOff设置失败\n设置：%1%，反馈：%2%	RxCdrOnOff, TxCdrOnOff setting failed\nSet：%1%，return：%2%	RxCdrOnOff, TxCdrOnOffการตั้งค่าล้มเหลว\n การตั้งค่า: %1% ข้อมูลส่งคืน: %2%	DUT_MSA_QSFP_CdrOnOff.vi
+550609	1	Driver	Device	DUT(TransX)	Page14h Byte128 不能设置成06h	Page0x14h Byte128 can't be set to 0x06h	Page14h Byte128 ไม่สามารถตั้งค่าเป็น06h	DUT_MSA_CMIS_LSNR.vi
+550610	1	Driver	Device	DUT(TransX)	%1%设置为%2%失败	%1% setting to %2% failed	%1%การตั้งค่าเป็น %2% ล้มเหลว	DUT_MSA_SFP_Status&ControlBits.vi;DUT_MSA_SFP_ExtStatus&ControlBits.vi
+550611	1	Driver	Device	DUT(TransX)	软件LOS状态和硬件LOS状态不一致	The software Los status is inconsistent with the hardware Los status	LOSสถานะซอฟต์แวร์และสถานะฮาร์ดแวร์ไม่สอดคล้องกัน	DUT_MSA_SFP_RxLosHw.vi
+550612	1	Driver	Device	DUT(TransX)	波长值不在850nm到1650nm之间	The wavelength value is not between 850nm and 1650nm	ค่าความยาวคลื่นไม่อยู่ระหว่าง 850nm และ 1650nm	DUT_MSA_SFP_GetWavelength.vi
+550613	1	Driver	Device	DUT(TransX)	Page设置失败，设置%1%，读取%2%	Page setting failed, setting %1%, reading %2%	Pageการตั้งค่าล้มเหลว, ตั้งค่า%1%, เข้าใจความหมาย%2%	Page Sel
+550614	1	Driver	Device	DUT(TransX)	工程模式进入失败，读取的FW是%1%，而不是%2%	Enter eng mode fail, The FW read is %1%, not %2%	โหมดวิศวกรรมเข้าสู่ความล้มเหลว, อ่าน FW เป็น %1% ไม่ใช่ %2%	MSA_Psw_Common
+550700	1	Driver	Device	DUT(TransX)	命令字反馈始终不等于0	Command word feedback is always not equal to 0	คำติชมของคำสั่งไม่เท่ากับ 0 เสมอ	DUT_API_QSFP.vi
+550701	1	Driver	Device	DUT(TransX)	数据信息写入EEPROM失败\n写入：%1%，读取：%2%	Failed to write data to EEPROM\nWrite: %1%, Read: %2%	ไม่สามารถเขียนข้อมูลไปยัง EEPROM\n เขียน: %1% อ่าน: %2%	DUT_API_QSFP.vi
+550702	1	Driver	Device	DUT(TransX)	当前模块固件不支持Heater批量写入扫描操作。\n反馈:%1%	The current module does not support Heater scanning.\nFeedback:%1%	โมดูลปัจจุบันไม่รองรับการสแกนฮีตเตอร์.\n คำติชม:%1%	DUT_API_HeaterScan
+551000	1	Driver	Device	DCP	通信地址："%1%"不是%2%设备	VisaAddr: %1% is not %2% device	ที่อยู่ทางไปรษณีย์: "%1%" ไม่ใช่อุปกรณ์ %2% ​​	DCP_Common
+551001	1	Driver	Device	DCP	设置通道失败！设置：%1%，回读：%2%	Set Channel fail! set: %1%,get: %2%	ตั้งค่าช่องไม่สำเร็จ! การตั้งค่า: %1% อ่านย้อนหลัง: %2%	DCP_Common
+551002	1	Driver	Device	DCP	设置电流失败！设置：%1%，回读：%2%	Set Current fail! set: %1%,get: %2%	กระแสการตั้งค่าล้มเหลว! การตั้งค่า: %1% อ่านย้อนหลัง: %2%	DCP_Common
+551003	1	Driver	Device	DCP	设置开关失败！设置：%1%，回读：%2%	Set Output fail! set: %1%,get: %2%	สวิตซ์การตั้งค่าล้มเหลว! การตั้งค่า: %1% อ่านย้อนหลัง: %2%	DCP_Common
+551004	1	Driver	Device	DCP	设置电压失败！设置：%1%，回读：%2%	Set Voltage fail! set: %1%,get: %2%	แรงดันไฟฟ้าการตั้งค่าล้มเหลว! การตั้งค่า: %1% อ่านย้อนหลัง: %2%	DCP_Common
+551005	1	Driver	Device	DCP	通信地址："%1%"复位失败！	VisaAddr: %1% reset fail!	ที่อยู่การสื่อสาร: "%1%" การรีเซ็ตล้มเหลว!	DCP_Common
+551006	1	Driver	Device	DCP	设置限流失败！设置：%1%，回读：%2%	Set LimitCurrent fail! set: %1%,get: %2%	จำกัดกระแสการตั้งค่าล้มเหลว! การตั้งค่า: %1% อ่านย้อนหลัง: %2%	DCP_Common
+551007	1	Driver	Device	DCP	读取电流失败！回读：%1%	Get Current fail! get: %1%	อ่านกระแสล้มเหลว! อ่านย้อนหลัง: %1%	DCP_Common
+551008	1	Driver	Device	DCP	读取电压失败！回读：%1%	Get Voltage fail! get: %1%	ไม่สามารถอ่านแรงดันไฟฟ้าได้! อ่านย้อนหลัง: %1%	DCP_Common
+551009	1	Driver	Device	DCP	设置Sens失败！设置：%1%，回读：%2%	Setting Sens function fail, Set: %1%, Read: %2%	การตั้งค่าล้มเหลว,ตั้งค่า:%1%,อ่านกลับ:%2%	DCP_Rigol_SetSensOnOff.vi
+551300	1	Driver	Device	BERT	连接异常，通信地址：%1%，返回数据：%2%	Connection failed, Address: %1%, Return: %2%	การเชื่อมต่อผิดปกติ ที่อยู่การสื่อสาร: %1% ข้อมูลส่งคืน: %2%	BERT_Connect_Common
+551301	1	Driver	Device	BERT	断开连接失败，通信地址：%1%，返回信息：%2%	Disconnection failed, Address: %1%, Return: %2%	การตัดการเชื่อมต่อล้มเหลวที่อยู่ทางไปรษณีย์: %1% ข้อมูลการส่งคืน: %2%	BERT_Disconnect_Common
+551302	1	Driver	Device	BERT	初始化失败	Initialization failed	การเริ่มต้นล้มเหลว	BERT_Initial_Common
+551303	1	Driver	Device	BERT	Ppg初始化失败	Ppg initialization failed	Ppgการเริ่มต้นล้มเหลว	BERT_PpgInitial_Common
+551304	1	Driver	Device	BERT	Ed初始化失败	Ed initialization failed	Edการเริ่มต้นล้มเหลว	BERT_EdInitial_Common
+551305	1	Driver	Device	BERT	Bitrate设置失败，设置：%1%，返回：%2%	Bitrate setting failed, Set: %1%, Return: %2%	Bitrateการตั้งค่าล้มเหลว! การตั้งค่า: %1% อ่านย้อนหลัง: %2%	BERT_Bitrate_Common
+551306	1	Driver	Device	BERT	PRBS设置失败，设置：%1%，返回：%2%	PRBS setting failed, Set: %1%, Return: %2%	PRBSการตั้งค่าล้มเหลว! การตั้งค่า: %1% อ่านย้อนหลัง: %2%	BERT_PRBS_Common
+551307	1	Driver	Device	BERT	Trigger设置失败，设置：%1%，返回：%2%	Trigger setting failed, Set: %1%, Return: %2%	Triggerการตั้งค่าล้มเหลว! การตั้งค่า: %1% อ่านย้อนหลัง: %2%	BERT_Trigger_Common
+551308	1	Driver	Device	BERT	PpgAmplitude设置失败，设置：%1%，返回：%2%	PpgAmplitude setting failed, Set: %1%, Return: %2%	PpgAmplitudeการตั้งค่าล้มเหลว! การตั้งค่า: %1% อ่านย้อนหลัง: %2%	BERT_PpgAmplitude_Common
+551309	1	Driver	Device	BERT	Align失败，反馈：%1%	Align failed, Retrun: %1%	Alignล้มเหลว，อ่านย้อนหลัง: %1%	BERT_EdAlign_Common
+551310	1	Driver	Device	BERT	设置失败，设置：%1%，返回：%2%	Setting failed, Set: %1%, Return: %2%	การตั้งค่าล้มเหลว! การตั้งค่า: %1% อ่านย้อนหลัง: %2%	BERT_Setting_Common
+551311	1	Driver	Device	BERT	ED Gating打开关闭失败，设置：%1%，返回：%2%	ED gating setting failed, Set: %1%, Return: %2%	ED Gatingสวิตซ์การตั้งค่าล้มเหลว! การตั้งค่า: %1% อ่านย้อนหลัง: %2%	BERT_EdGatingOnOff_Common
+551312	1	Driver	Device	BERT	PPG输出开关设置失败，设置：%1%，返回：%2%	PPG output switch setting failed, Set: %1%, Return: %2%	PPG output สวิตซ์การตั้งค่าล้มเหลว! การตั้งค่า: %1% อ่านย้อนหลัง: %2%	BERT_PpgOutputOnOff_Common
+551313	1	Driver	Device	BERT	PPG极性设置失败，设置：%1%，返回：%2%	PPG polarity setting failed, Set: %1%, Return: %2%	PPGขั้วการตั้งค่าล้มเหลว! การตั้งค่า: %1% อ่านย้อนหลัง: %2%	BERT_PpgPolarity_Common
+551314	1	Driver	Device	BERT	Error Count清除失败，设置：%1%，返回：%2%	Error count clearing failed, Set: %1%, Return: %2%	Error Countการล้างข้อมูลล้มเหลว การตั้งค่า: %1% การส่งคืน: %2%	BERT_ClearErrCount_Common
+551315	1	Driver	Device	BERT	Error Count获取失败，设置：%1%，返回：%2%	Error count getting failed, Set: %1%, Return: %2%	Error Countรับล้มเหลว ตั้งค่า: %1% ส่งคืน: %2%	BERT_ErrCount_Common
+551316	1	Driver	Device	BERT	Lock状态获取失败，设置：%1%，返回：%2%	Lock status getting failed, Set: %1%, Return: %2%	Lockสถานะรับล้มเหลว ตั้งค่า: %1% ส่งคืน: %2%	BERT_EdLockStatus_Common
+551317	1	Driver	Device	BERT	ED极性设置失败，设置：%1%，返回：%2%	ED polarity setting failed, Set: %1%, Return: %2%	EDการตั้งค่าขั้วล้มเหลว! การตั้งค่า: %1% อ่านย้อนหลัง: %2%	BERT_EdPolarity_Common
+551318	1	Driver	Device	BERT	PPG预加重设置失败，设置：%1%，返回：%2%	PPG Emphasis setting failed, Set: %1%, Return: %2%	PPGเน้นย้ำการตั้งค่าล้มเหลว! การตั้งค่า: %1% อ่านย้อนหลัง: %2%	BERT_PpgEmphasisSet_Common
+551319	1	Driver	Device	BERT	误码读取失败，信息：%1%	BER getting failed, msg: %1%	ไม่สามารถอ่านรหัสข้อผิดพลาด ข้อความ: %1%	BERT_EdBER_Common
+551320	1	Driver	Device	BERT	版本号读取失败，信息：%1%	Version getting failed, msg: %1%	ไม่สามารถอ่านหมายเลขเวอร์ชันได้ ข้อความ: %1%	BERT_GetVersion_Common
+551321	1	Driver	Device	BERT	不支持%1%	%1% is not supported	ไม่สนับสนุน %1%	不支持该设置
+551600	1	Driver	Device	VOA	通信地址："%1%"不是%2%设备	VisaAddr: %1% is not %2% device	ที่อยู่ทางไปรษณีย์: "%1%" ไม่ใช่อุปกรณ์ %2% ​​	VOA_Common
+551601	1	Driver	Device	VOA	衰减量小于0dB！	Att value is less than 0dB!	การลดทอนน้อยกว่า 0dB!	VOA_Common
+551602	1	Driver	Device	VOA	设置回读不一致，设置：%1%，回读：%2%	Inconsistent setting getting,set: %1%,get: %2%	การตั้งค่าไม่สอดคล้องกับการอ่านค่า การตั้งค่า: %1% การอ่านค่า: %2%	VOA_Common
+551603	1	Driver	Device	VOA	返回值不对！返回值：%1%	The return value is incorrect！get：%1%	ค่าส่งคืนไม่ถูกต้อง! มูลค่าผลตอบแทน: %1%	VOA_Common
+551604	1	Driver	Device	VOA	设备仅支持%1%，不能设置%2%nm	Device only support %1%!Cannot set %2%nm	อุปกรณ์รองรับเฉพาะ %1% และไม่สามารถตั้งค่า %2%nm	VOA_Common
+551605	1	Driver	Device	VOA	不支持读取光功率功能	does not support reading optical power function	ไม่รองรับการอ่านฟังก์ชันพลังงานแสง	VOA_Common
+551606	1	Driver	Device	VOA	衰减量大于30dB！	Att value is more than 30dB!	ระดับการสลายตัวสูงกว่า 30 db !	VOA_Common
+551900	1	Driver	Device	DCA	目标状态：%1%\n回读状态：%2%	Set:%1%\nGet:%2%	สถานะเป้าหมาย: %1%\n สถานะการอ่านย้อนหลัง: %2%	DCA_Common_ReadBackCheck
+551901	1	Driver	Device	DCA	%1%值超过有效范围！	%1% value out of range！	%1%ค่าเกินช่วงที่ถูกต้อง!	DCA_Common_ValueOutofRange.vi
+552000	0	Driver	Device	DCA	即将校准DCA模组，请确保没有信号输入模组！	The DCA module will be calibrated, please make sure that there is no signal input module!	โมดูล DCA กำลังจะสอบเทียบ โปรดตรวจสอบให้แน่ใจว่าไม่มีโมดูลอินพุตสัญญาณ!	DCA_Keysight_AppInitial.vi
+552001	0	Driver	Device	DCA	校准完成，可恢复信号输入	Calibration is complete, signal input can be restored	การสอบเทียบเสร็จสมบูรณ์ สามารถคืนค่าสัญญาณเข้าได้	DCA_Keysight_AppInitial.vi
+552002	1	Driver	Device	DCA	DCA模组Slot%1%不在位！	Module Slot%1% is not Present!	%1%สล็อตโมดูล DCA ไม่ได้อยู่ในตำแหน่ง!	DCA_Keysight_CalibrateModule.vi
+552003	0	Driver	Device	DCA	校准失败，请确保没有任何信号连入DCA！\n排除异常后继续	Calibration failed, please make sure that no signal is connected to DCA!\nContinue after troubleshoo	การสอบเทียบล้มเหลว โปรดตรวจสอบให้แน่ใจว่าไม่มีสัญญาณเชื่อมต่อกับ DCA! \nดำเนินการต่อหลังจากแก้ไขปัญหา	DCA_Keysight_CalibrateModule.vi
+552004	1	Driver	Device	DCA	当前DCA没有IRC选件！	No IRC Option!	ขณะนี้ไม่มีตัวเลือก IRC สำหรับ DCA!	DCA_Keysight_ChannelFilter.vi
+552005	1	Driver	Device	DCA	眼图存图失败！	Failed to save eye diagram!	บันทึกไดอะแกรมดวงตาไม่สำเร็จ!	DCA_Keysight_DiskSaveEyeDiagram.vi
+552006	1	Driver	Device	DCA	Mask模板为空！	The Mask template is empty!	Maskเทมเพลตว่างเปล่า！	DCA_Keysight_MaskLoad.vi
+552007	1	Driver	Device	DCA	文件格式只支持“png,jpg,gif”，推荐使用png格式！	File format ony support "png,jpg,gif", png format is recommended!	รูปแบบไฟล์รองรับเฉพาะ "png, jpg, gif" แนะนำให้ใช้รูปแบบ png!	DCA_Keysight_DiskSaveEyeDiagram
+552100	0	Driver	Device	DCA	即将校准DCA Mainframe，请确保没有任何信号输入该模组！	Will Calibrate DCA Mainframe, please make sure that no signal is input to DCA!	เกี่ยวกับการปรับเทียบเมนเฟรม DCAโปรดตรวจสอบให้แน่ใจว่าไม่มีสัญญาณเข้าไปยังโมดูล!	DCA_TekTSO820_CalibrateMainframe.vi
+552101	0	Driver	Device	DCA	即将校准Channel的模组，请确保没有任何信号输入该模组！	Will Calibrate DCA CH Module, please make sure that no signal is input to DCA!	โมดูลที่จะสอบเทียบ Channel โปรดตรวจสอบให้แน่ใจว่าไม่มีสัญญาณเข้าไปยังโมดูล!	DCA_TekTSO820_CalibrateModule.vi
+552102	1	Driver	Device	DCA	MeasureID超过设备规定上限！	MeasureID exceeds the upper limit specified by the device!	MeasureIDเกินขีดจำกัดอุปกรณ์！	DCA_TekTSO820_DisplayMeasure.vi
+552103	1	Driver	Device	DCA	请检查Tek DCA中是否存在"%1%"的模板	Please check if there is a template for "%1%" in Tek DCA!	โปรดตรวจสอบว่ามีเทมเพลตสำหรับ "%1%" ใน Tek DCA . หรือไม่	DCA_TekTSO820_MaskLoad.vi
+552200	0	Driver	Device	DCA	请手动进行示波器Noise校准动作，完成后点击“OK"!	Please perform the noise calibration of DCA， and then click "OK"!	โปรดดำเนินการสอบเทียบสัญญาณรบกวนออสซิลโลสโคปด้วยตนเองคลิก "ตกลง" เมื่อเสร็จแล้ว!	DCA_Tektronix_AppInitial.vi
+552201	0	Driver	Device	DCA	DCA模组校验完成，请插上待测模块！	DCA calibration completed, please plug in DUT!	DCAการตรวจสอบโมดูลเสร็จสมบูรณ์ โปรดเสียบโมดูลเพื่อทำการทดสอบ!	DCA_Tektronix_AppInitial.vi
+552202	0	Driver	Device	DCA	即将校准DCA Mainframe，请确保没有任何信号输入该模组！	Will Calibrate DCA Mainframe, please make sure that no signal is input to DCA!	เกี่ยวกับการปรับเทียบเมนเฟรม DCAโปรดตรวจสอบให้แน่ใจว่าไม่มีสัญญาณเข้าไปยังโมดูล!	DCA_Tektronix_CalibrateMainframe.vi
+552203	0	Driver	Device	DCA	即将校准Channel的模组，请确保没有任何信号输入该模组！	Will Calibrate DCA CH Module, please make sure that no signal is input to DCA!	โมดูลที่จะสอบเทียบ Channel โปรดตรวจสอบให้แน่ใจว่าไม่มีสัญญาณเข้าไปยังโมดูล!	DCA_Tektronix_CalibrateModule.vi
+552204	1	Driver	Device	DCA	眼图存图保存失败！	Failed to save eye diagram!	บันทึกไดอะแกรมดวงตาไม่สำเร็จ!	DCA_Tektronix_DiskSaveEyeDiagram.vi
+552205	1	Driver	Device	DCA	M4软件Analyze无响应!请尝试停止测试,关闭并重启M4!	The M4 software Analyze is not responding! Please try to stop the test, close and restart M4!	ซอฟต์แวร์ M4 วิเคราะห์ไม่ตอบสนอง!โปรดลองหยุดการทดสอบ ปิดและรีสตาร์ท M4!	DCA_Tektronix_M4_Analyze.vi
+552206	1	Driver	Device	DCA	无法连接DSA8300设备！	Failed to connect with DSA8300!	ไม่สามารถเชื่อมต่อกับอุปกรณ์ DSA8300!	DCA_Tektronix_M4_Connect.vi
+552207	1	Driver	Device	DCA	M4软件断开连接失败！	Failed to disconnect with M4 software!	การตัดการเชื่อมต่อซอฟต์แวร์ M4 ล้มเหลว!	DCA_Tektronix_M4_Disconnect.vi
+552208	1	Driver	Device	DCA	读取模组%1%名称失败！	Get Module%1% Name Fail!	ไม่สามารถอ่านโมดูล %1%! ชื่อ	DCA_Tektronix_M4_GetModuleName.vi
+552209	1	Driver	Device	DCA	读取模组%1%序列号失败！	Get Module%1% SN Fail!	ไม่สามารถอ่านหมายเลขซีเรียลของโมดูล %1%!	DCA_Tektronix_M4_GetSerialName.vi
+552210	1	Driver	Device	DCA	M4调取之前保存配置失败！\n配置路径:%1%	RecallSetup error!\nPath: %1%	M4 ไม่สามารถอ่านการกำหนดค่าที่บันทึกไว้ได้! \n เส้นทางการกำหนดค่า: %1%	DCA_Tektronix_M4_RecallSetup.vi
+552211	1	Driver	Device	DCA	设置光源调试模式失败！	Set laser TuningMode error!	ไม่สามารถตั้งค่าโหมดแก้ไขแหล่งกำเนิดแสงได้!	DCA_Tektronix_M4_SetLaserTuningMode.vi
+552212	1	Driver	Device	DCA	无法识别指令！	LaserTuningMode Command Not Recognized!	คำสั่งที่ไม่รู้จัก!	DCA_Tektronix_M4_SetLaserTuningMode.vi
+552213	1	Driver	Device	DCA	M4软件通讯超时！	M4 Timed out!	M4ซอฟต์แวร์สื่อสารหมดเวลา!	DCA_Tektronix_M4_WriteAndRead.vi
+552214	1	Driver	Device	DCA	请检查Tek DCA中是否存在"%1%"的模板	Please check if there is a template for "%1%" in Tek DCA	โปรดตรวจสอบว่ามีเทมเพลตสำหรับ "%1%" ใน Tek DCA . หรือไม่	DCA_Tektronix_MaskLoad.vi
+552500	1	Driver	Device	TCS	通信地址："%1%"不是%2%设备	VisaAddr: %1% is not %2% device	ที่อยู่ทางไปรษณีย์: "%1%" ไม่ใช่อุปกรณ์ %2% ​​	TCS_Common
+552501	1	Driver	Device	TCS	设置回读不一致，设置：%1%，回读：%2%	Inconsistent setting getting,set: %1%,get: %2%	การตั้งค่าไม่สอดคล้องกับการอ่านค่า การตั้งค่า: %1% การอ่านค่า: %2%	TCS_Common
+552502	1	Driver	Device	TCS	返回值不对！返回值：%1%	The return value is incorrect！get：%1%	ค่าส่งคืนไม่ถูกต้อง! มูลค่าผลตอบแทน: %1%	TCS_Common
+552503	1	Driver	Device	TCS	TEC未达到工作状态，请手动预热后重试！	TEC has not reached the working state, please try again after manual warm-up!	TEC ยังไม่ถึงสถานะการทำงาน โปรดลองอีกครั้งหลังจากการอุ่นเครื่องด้วยตนเอง!	TCS_Tec3.0_GetWorkStatus.vi
+552504	1	Driver	Device	TCS	设备等级较低无法使用！所需最小等级：%1%，设备等级：%2%	Device level is low and cannot be used! Minimum level required:%1%,Equipment level:%2%	ระดับอุปกรณ์ต่ำกว่าและไม่สามารถใช้งานได้!ระดับขั้นต่ำที่ต้องการ: %1% ระดับอุปกรณ์: %2%	TCS_Common
+552800	1	Driver	Device	WLM	通信地址："%1%"不是%2%设备	VisaAddr: %1% is not %2% device	ที่อยู่ทางไปรษณีย์: "%1%" ไม่ใช่อุปกรณ์ %2% ​​	WLM_Keysight_Connect.vi
+552801	1	Driver	Device	WLM	设置回读不一致，设置：%1%，回读：%2%	Inconsistent setting getting,set: %1%,get: %2%	การตั้งค่าไม่สอดคล้องกับการอ่านค่า การตั้งค่า: %1% การอ่านค่า: %2%	WLM_Keysight_SweepMode.vi
+552802	1	Driver	Device	WLM	设备仅支持1270nm~1650nm，扫描区间%1%nm~%2%nm超出了范围	Sweep Range %1%nm~%2%nm is out of range, only support 1270nm~1650nm!	อุปกรณ์รองรับ 1270nm ~ 1650nm เท่านั้นช่วงการสแกน %1%nm~%2%nm อยู่นอกช่วง	WLM_Keysight_SweepRange.vi
+552803	1	Driver	Device	WLM	返回值不对！返回值：%1%	The return value is incorrect！get：%1%	ค่าส่งคืนไม่ถูกต้อง! มูลค่าผลตอบแทน: %1%	WLM_Keysight_SweepWait.vi，WLM_Golight_SpectrumDataGet.vi
+553100	1	Driver	Device	CDR	目标状态：%1%\n回读状态：%2%	Set:%1%\nGet:%2%	สถานะเป้าหมาย: %1%\n สถานะการอ่านย้อนหลัง: %2%	CDR_Common_ReadBackCheck
+553151	1	Driver	Device	CDR	当前设备不支持%1%MHz, 支持的带宽设置如下:\n%2%	Can not support %1%MHz, the bandwidth of support is as follows:\n%2%	อุปกรณ์ปัจจุบันไม่รองรับ %1%MHz,การตั้งค่าแบนด์วิดท์ที่รองรับมีดังนี้:\n%2%	CDR_Steligent_LoopBandwidth.vi
+553400	1	Driver	Device	OPM	目标状态：%1%\n回读状态：%2%	Set:%1%\nGet:%2%	สถานะเป้าหมาย: %1%\n สถานะการอ่านย้อนหลัง: %2%	OPM_Common_ReadBackCheck
+553401	1	Driver	Device	OPM	波长设定值超过设备范围	Wavelength is out of range!	ค่าการตั้งค่าความยาวคลื่นเกินช่วงอุปกรณ์	OPM_Common_SetParametersError
+553402	1	Driver	Device	OPM	当前设备不支持批量读取Power操作	Current Equipment doesn't suppot reading mutiple Powers at once.	อุปกรณ์ปัจจุบันไม่รองรับการอ่านแบบแบตช์การทำงานพลังงาน	OPM_Common_ReadMutiplePowerError
+553403	1	Driver	Device	OPM	读取光功率失败	Failed to read optical power	ไม่สามารถอ่านพลังงานแสงได้	Common
+553700	1	Driver	Device	OSW	设置SelPort=%1% 读取SelPort=%2%	Set SelPort=%1%  Read SelPort=%2%	การตั้งค่า SelPort: %1% อ่านย้อนหลังSelPort: %2%	OSW_DaWei_GetSetPort
+553701	1	Driver	Device	OSW	重置%1%	Reset%1%	รีเซ็ต%1%	OSW_DaWei_Reset
+553702	1	Driver	Device	OSW	设置端口 %1%	Set Port %1%	ตั้งค่าพอร์ต %1%	OSW_Glsun_SetPort
+553703	1	Driver	Device	OSW	设置端口 %1%	Set Port %1%	ตั้งค่าพอร์ต %1%	OSW_Glsun1x8_SetPort
+553704	1	Driver	Device	OSW	PN号包含SW %1%	SW  in PN  %1%	หมายเลข PN มีSW %1%	OSW_Golight_Connect
+553705	1	Driver	Device	OSW	获取端口号  %1%	GetPort  %1%	อ่านหมายเลขพอร์ต  %1%	OSW_Golight_Connect
+553706	1	Driver	Device	OSW	设置端口号%1%  读取端口号%1%	SetPort%1%  ReadPort%1%	ตั้งค่าหมายเลขพอร์ต %1% อ่านหมายเลขพอร์ต %1%	OSW_Golight_GetSetPort
+553707	1	Driver	Device	OSW	设置端口号 %1%	SetPort %1%	ตั้งค่าพอร์ต %1%	OSW_Golight_SetPort
+553708	1	Driver	Device	OSW	OSW连接失败！！	OSW connect fail!!	OSW การเชื่อมต่อล้มเหลว!	OSW_Connect
+553709	1	Driver	Device	OSW	设置端口号%1%  读取端口号%1%	SetPort%1%  ReadPort%1%	ตั้งค่าหมายเลขพอร์ต %1% อ่านหมายเลขพอร์ต %1%	OSW_Yokogawa_GetSetPort
+554000	1	Driver	Device	OSA	自动测量失败！	AutoMeasure Fail！	การวัดอัตโนมัติล้มเหลว!	OSA_Anritsu_AutoMeasure
+554001	1	Driver	Device	OSA	OSA_Anritsu不支持SMSR2功能	OSA_Anritsu does not support reading SMSR2 function	OSA_Anritsuไม่รองรับฟังก์ชัน SMSR2	OSA_TestSmsr2
+554002	1	Driver	Device	OSA	OSA_Anritsu不支持SMSR3功能	OSA_Anritsu does not support reading SMSR3 function	OSA_Anritsuไม่รองรับฟังก์ชัน SMSR3	OSA_TestSmsr3
+554003	1	Driver	Device	OSA	OSA_Anritsu不支持WDM WL功能	OSA_Anritsu does not support reading WDM WL function	OSA_Anritsuไม่รองรับฟังก์ชัน WDM WL.	OSA_TestWL_WDM
+554004	1	Driver	Device	OSA	OSA_Anritsu不支持TestPower功能	OSA_Anritsu does not support reading Power function	OSA_Anritsuไม่รองรับฟังก์ชันTestPower.	OSA_TestPower
+554300	1	Driver	Device	ESW	ESW 连接失败!!	ESW connect fail!	ESW การเชื่อมต่อล้มเหลว!	ESW_Golight_Connect
+554301	1	Driver	Device	ESW	ESW 获取端口号失败!	ESW GetPort fail	ESW ไม่สามารถอ่านหมายเลขพอร์ต!	ESW_Golight_GetPort
+554302	1	Driver	Device	ESW	ESW 设置端口号失败！	ESW set port fail！	ESW ไม่สามารถตั้งค่าหมายเลขพอร์ต！	ESW_Golight_SetPort
+554303	1	Driver	Device	ESW	设置端口号%1%  读取端口号%2%	Set Port %1%   Read Port %2%	ตั้งค่าหมายเลขพอร์ต %1% อ่านหมายเลขพอร์ต %2%	ESW_Golight_GetSetPort
+554600	1	Driver	Device	DAQ	DAQ 连接失败!	DAQ connect fail！	DAQ  การเชื่อมต่อล้มเหลว!	DAQ_Keysight_Connect
+554601	1	Driver	Device	DAQ	DAQ 电流测试失败！	DAQ measure current fail!	DAQ วัดกระแสล้มเหลว!	DAQ_Mid_MeasureCurrent
+554602	1	Driver	Device	DAQ	DAQ 温度测试失败！	DAQ measure temperture fail!	DAQ การทดสอบอุณหภูมิล้มเหลว！	DAQ_Mid_MeasureTemperture
+554603	1	Driver	Device	DAQ	DAQ 电压测试失败!	DAQ measure voltage fail!	DAQ การทดสอบแรงดันไฟฟ้าล้มเหลว!	DAQ_Mid_MeasureVoltage
+555800	1	Driver	Device	DRO	DRO 连接失败！	DRO connect fail!	DRO  การเชื่อมต่อล้มเหลว!	DAQ_Mid_MeasureVoltage
+556100	1	Driver	Device	Robot	Robot确认执行完毕第%1%次重连	Robot confirms the completion of the %1% reconnection	หุ่นยนต์ยืนยันเสร็จสิ้นการเชื่อมต่อใหม่ %1%	Robot_V1_Ready.vi
+556101	1	Driver	Device	Robot	Robot请求更换模块第%1%次重连	Robot requests to replace module %1% reconnection	หุ่นยนต์ร้องขอให้เปลี่ยนโมดูล %1% การเชื่อมต่อใหม่	Robot_V1_ChangeModule.vi
+556102	1	Driver	Device	Robot	Robot请求第一次插拔模块第%1%次重连	Robot requests the %1% reconnection for the first time when the module is plugged and unplugged	หุ่นยนต์ร้องขอการเชื่อมต่อใหม่ %1% เป็นครั้งแรกเมื่อเสียบปลั๊กและถอดปลั๊กโมดูล	Robot_V1_NullModule.vi
+559900	1	Driver	Device	Common	版本%1%低于%2%\n路径:%3%	Version "%1%" is older than "%2%"\nPath: "%3%"	เวอร์ชัน %1% ต่ำกว่า %2%\nเส้นทาง: %3%	DeviceVersionChk.vi
+559901	1	Driver	Device	Common	地址：%1%，设置：%2%，返回：%3%	Address: %1%, Set: %2%, Return: %3%	จ่าหน้าซอง: %1%, ตั้งค่า: %2%, อ่านหนังสือ: %3%	Device_Common_SetGet
+559902	1	Driver	Device	Common	地址：%1%，通道：%2%，设置：%3%，返回：%4%	Address: %1%, Channel: %2%, Set: %3%, Return: %4%	จ่าหน้าซอง: %1%, ช่องสัญญาณ: %2%, ตั้งค่า: %3%, อ่านหนังสือ: %4%	Device_Common_SetGet_Channel
+559903	1	Driver	Device	Common	地址：%1%，槽位：%2%，设置：%3%，返回：%4%	Address: %1%, Slot: %2%, Set: %3%, Return: %4%	จ่าหน้าซอง: %1%, สล็อต: %2%, ตั้งค่า: %3%, อ่านหนังสือ: %4%	Device_Common_SetGet_Slot
+559904	1	Driver	Device	Common	地址：%1%，槽位：%2%，通道：%3%，设置：%4%，返回：%5%	Address: %1%, Slot: %2%, Channel: %3%, Set: %4%, Return: %5%	จ่าหน้าซอง: %1%, สล็อต: %2%, ช่องสัญญาณ: %3%, ตั้งค่า: %4%, อ่านหนังสือ: %5%	Device_Common_SetGet_Slot_Channel
+559910	1	Driver	Device	Common	连接失败，地址：%1%，返回：%2%	Connection failed, Address: %1%, Return: %2%	การเชื่อมต่อล้มเหลว, จ่าหน้าซอง: %1%, อ่านหนังสือ: %2%	Device_Common_Connect
+559911	1	Driver	Device	Common	连接失败，地址：%1%，通道：%2%，返回：%3%	Connection failed, Address: %1%, Channel: %2%, Return: %3%	การเชื่อมต่อล้มเหลว, จ่าหน้าซอง: %1%, ช่องสัญญาณ: %2%, อ่านหนังสือ: %3%	Device_Common_Connect_Channel
+559912	1	Driver	Device	Common	连接失败，地址：%1%，槽位：%2%，返回：%3%	Connection failed, Address: %1%, Slot: %2%, Return: %3%	การเชื่อมต่อล้มเหลว, จ่าหน้าซอง: %1%, สล็อต: %2%, อ่านหนังสือ: %3%	Device_Common_Connect_Slot
+559913	1	Driver	Device	Common	断开失败，地址：%1%，返回：%2%	Disconnection failed, Address: %1%, Return: %2%	ยกเลิกการเชื่อมต่อล้มเหลว, จ่าหน้าซอง: %1%, อ่านหนังสือ: %2%	Device_Common_Disconnect
+560000	1	DeviceApp	HwAdmin		找不到AppSel=%1%，DutSlot=%2%，DutChannel=%3%的信息	The information of AppSel=%1%, DutSlot=%2%, DutChannel=%3% cannot be found	ไม่พบข้อมูลเกี่ยวกับ AppSel=%1%, DutSlot=%2%, DutChannel=%3%	HwAdmin_GLB_Device_Common
+560001	1	DeviceApp	HwAdmin		找不到TestUnit=%1% DeviceIndex=%2%的信息	The information of TestUnit=%1% DeviceIndex=%2% cannot be found	ไม่พบข้อมูลเกี่ยวกับ TestUnit=%1% DeviceIndex=%2%	HwAdmin_GLB_Device_Common
+560002	1	DeviceApp	HwAdmin		找不到TestUnit=%1%的信息	The information of TestUnit=%1% cannot be found	ไม่พบข้อมูลเกี่ยวกับ TestUnit=%1%	HwAdmin_GLB_Device_Common
+560003	1	DeviceApp	HwAdmin		NewParameter输入控件为空数组	NewParameter input control is an empty array	NewParameter การควบคุมการป้อนข้อมูลเป็นอาร์เรย์ที่ว่างเปล่า	HwAdmin_GLB_Device_Common
+560100	1	DeviceApp	DeviceApp	DUT	DUT数量不足	Insufficient number of DUTs	DUTปริมาณไม่เพียงพอ	DUT_App_Connect.vi
+561000	1	DeviceApp	DeviceApp	DCP	未找到DUT对应的电源的Slot和Channel	No DCP device's slot and channel corresponding to DUT	ไม่พบสล็อตและช่องสัญญาณของแหล่งจ่ายไฟที่สอดคล้องกับ DUT	DCP_App_Common
+561300	1	DeviceApp	DeviceApp	BERT	未找到目标DutSlotChannel的BERT信息	The Bert information for the target dutslotchannel was not found	ไม่พบข้อมูล BERT สำหรับเป้าหมาย DutSlotChannel	BERT_App_Common
+561600	1	DeviceApp	DeviceApp	VOA	未找到DUT对应的衰减器的Slot和Channel	No VOA device's slot and channel corresponding to DUT	ไม่พบ Slot & Channel ของตัวลดทอนที่สอดคล้องกับ DUT	VOA_APP_Common
+561900	1	DeviceApp	DeviceApp	DCA	未找到DUT对应DCA设备的Slot和Channel信息	No device's slot and channel corresponding to DUT	ไม่พบข้อมูล Slot&Channel ของอุปกรณ์ DCA ที่สอดคล้องกับ DUT	DCA_App_Common_InfoNotFound.vi
+562500	1	DeviceApp	DeviceApp	TCS	未找到DUT对应的控温设备的Slot和Channel	No TCS device's slot and channel corresponding to DUT	ไม่พบ Slot & Channel ของอุปกรณ์ควบคุมอุณหภูมิที่สอดคล้องกับ DUT	TCS_APP_Common
+562800	1	DeviceApp	DeviceApp	WLM	未找到DUT对应的波长计的Slot和Channel	No WLM device's slot and channel corresponding to DUT	ไม่พบ Slot & Channel ของเครื่องวัดความยาวคลื่นที่สอดคล้องกับ DUT	WLM_App_Common
+563400	1	DeviceApp	DeviceApp	OPM	未找到DUT对应OPM设备的Slot和Channel信息	No device's slot and channel corresponding to DUT	ไม่พบข้อมูล Slot & Channel ของอุปกรณ์ OPM ที่สอดคล้องกับ DUT	OPM_App_MeasuerPower
+563700	1	DeviceApp	DeviceApp	OSW	未找到DUT对应OSW设备的Slot和Channel信息	No device's slot and channel corresponding to DUT	ไม่พบข้อมูล Slot & Channel ของอุปกรณ์ OSW ที่สอดคล้องกับ DUT	OSW_App_GetSetPort
+564000	1	DeviceApp	DeviceApp	OSA	未找到DUT对应的Slot和Channel	No device's slot and channel corresponding to DUT	ไม่พบ Slot & Channel ที่สอดคล้องกับ DUT	OSA_App_CycleTestSMSR_DFB-LD
+564300	1	DeviceApp	DeviceApp	ESW	未找到DUT对应ESW设备的Slot和Channel信息	No device's slot and channel corresponding to DUT	ไม่พบข้อมูล Slot & Channel ของอุปกรณ์ ESW ที่สอดคล้องกับ DUT	ESW_App_GetSetPort
+564600	1	DeviceApp	DeviceApp	DAQ	未找到DUT对应的Slot和Channel	No device's slot and channel corresponding to DUT	ไม่พบ Slot & Channel ที่สอดคล้องกับ DUT	DAQ_App_MeasureTemp
+565500	1	DeviceApp	DeviceApp	LS(REF)	未找到DUT对应的光源的Slot和Channel	No LS device's slot and channel corresponding to DUT	ไม่พบ Slot & Channel ของแหล่งกำเนิดแสงที่สอดคล้องกับ DUT	LS_App_Commmon
+565800	1	DeviceApp	DeviceApp	DRO	未找到DUT对应的Slot和Channel	No device's slot and channel corresponding to DUT	ไม่พบ Slot & Channel ที่สอดคล้องกับ DUT	DRO_App_MeasureTopDepth
+566100	1	DeviceApp	DeviceApp	OPM_CAL	未找到DUT对应OPM_Cal设备的Slot和Channel信息	No device's slot and channel corresponding to DUT	ไม่พบข้อมูล Slot & Channel ของอุปกรณ์ OPM_Cal ที่สอดคล้องกับ DUT	OPM_Cal_App_Common_InfoNotFound.vi
+566400	1	DeviceApp	DeviceApp	Robot	未找到Robot对应设备的Slot	No device's slot corresponding to Robot	ไม่พบช่องสำหรับอุปกรณ์ที่เกี่ยวข้องของ Robot	Robot_App_NullModule.vi
+566450	1	DeviceApp	DeviceApp	Relay	未找到DUT对应的继电器的Slot和Channel	No Relay device's slot and channel corresponding to DUT	ไม่พบช่องและช่องของรีเลย์ที่สอดคล้องกับ DUT	Relay_App_OnOff
+566451	1	DeviceApp	DeviceApp	TempSea	未找到DUT对应的热海的Slot和Channel	No TempSea device's slot and channel corresponding to DUT	ไม่มีสล็อตและช่องของอุปกรณ์ TempSea ที่สอดคล้องกับ DUT	
+566452	1	DeviceApp	DeviceApp	TestUnit	未找到DUT对应的测试盒的Slot和Channel	No TestUnit device's slot and channel corresponding to DUT	ไม่มีสล็อตและช่องสัญญาณของอุปกรณ์ TestUnit ที่สอดคล้องกับ DUT	
+569900	1	DeviceApp	DeviceApp	Common	读取%1%的配置信息时失败	Failed to read configuration information for %1%	ไม่สามารถอ่านข้อมูลการกำหนดค่า %1%	DeviceApp_CfgRead.vi
+569901	1	DeviceApp	DeviceApp	Common	读取%1%设备配置信息时，DeviceSel=%2%的设备未编入测试程序中	When reading%1% device configuration information, devicesel =%2% device was not programmed into th	เมื่ออ่านข้อมูลการกำหนดค่าอุปกรณ์ %1%DeviceSel=%2% ของอุปกรณ์ไม่ได้ถูกตั้งโปรแกรมไว้ในโปรแกรมทดสอบ	DeviceApp_CfgRead.vi
+569902	1	DeviceApp	DeviceApp	Common	读取%1%设备配置信息时，文件中缺少如下关键键值：%2%	When reading%1% device configuration information, the following key values are missing from the file：%2%	เมื่ออ่านข้อมูลการกำหนดค่าอุปกรณ์ %1% ค่าคีย์ต่อไปนี้หายไปในไฟล์: %2%	DeviceApp_CfgRead.vi
+569903	1	DeviceApp	DeviceApp	Common	DeviceCfgNote.txt文件中缺少如下默认配置信息：%1%	The following default configuration information is missing from the devicecfgnote.txt file: %1%	DeviceCfgNote.txtข้อมูลการกำหนดค่าเริ่มต้นต่อไปนี้หายไปจากไฟล์: %1%	DeviceApp_CfgRead.vi
+569904	1	DeviceApp	DeviceApp	Common	全局变量中的%1%未注册	%1% in global variable is not registered	%1% ในตัวแปรทั่วโลกไม่ได้จดทะเบียน	DeviceApp_CfgRead
+569905	1	DeviceApp	DeviceApp	Common	未找到目标DutSlot,DutChannel对应的设备全局变量信息	The device global variable information corresponding to the target DutSlot and DutChannel was not found.	ข้อมูลตัวแปรทั่วโลกสำหรับอุปกรณ์ที่สอดคล้องกับเป้าหมาย DutSlot DutChannel	XX_App_YY.vi
+569910	1	DeviceApp	DeviceApp	Common	未找到目标AppSel,DutSlot,DutChannel对应的设备全局变量信息。\nAppSel=%1%\nDutSlot=%2%\nDutChannel=%3%	The device global variable information corresponding to the target AppSel, DutSlot and DutChannel was not found.\nAppSel=%1%\nDutSlot=%2%\nDutChannel=%3%	ข้อมูลตัวแปรทั่วโลกสำหรับอุปกรณ์ที่สอดคล้องกับเป้าหมาย AppSel DutSlot DutChannell ไม่พบ\nAppSel=%1%\nDutSlot=%2%\nDutChannel=%3%	DeviceApp_SearchDevIndex.vi
+569920	1	DeviceApp	DeviceApp	Common	设备占用申请超时	Equipment occupation application timeout	อุปกรณ์ที่ใช้หมดเวลา	Device_App_Connect
+570000	1	Common	FlowCtrl		未找到StepName=%1%, CondName=%2%, CondIndex=%3%的Condition	Condition with StepName =%1%, CondName =%2%, CondIndex =%3% not found	ไม่พบขั้นตอน StepName=%1%, CondName=%2%, CondIndex=%3%	FlowControl_TargetCond
+570001	1	Common	FlowCtrl		未找到BlockName=%1%, BlockAliasName=%2%, BlockIndex=%3%的Block	Block with BlockName =%1%, BlockAliasName =%2%, BlockIndex =%3% not found	ไม่พบ BlockName=%1%, BlockAliasName=%2%, BlockIndex=%3% Block	FlowControl_TargetBlock
+570002	1	Common	FlowCtrl		未找到StepName=%1%的未测试Condition	Untested condition with StepName=%1% not found	ไม่ทดสอบ Condition สำหรับ StepName=%1% ไม่พบ	FlowControl_ConditionStart
+570003	1	Common	FlowCtrl		ConditionInfo中的如下簇元素为空\n%1%	The following elements in the ConditionInfo cluster are empty\n%1%	ต่อไปนี้กลุ่มองค์ประกอบใน ConditionInfo ว่างเปล่า\n%1%	FlowControl_ConditionStart
+570004	1	Common	FlowCtrl		ItemName %1%中没有E	There is no E in ItemName %1%	ไม่มี E ใน ItemName %1%	FlowControl_BlockTtrFmtData
+570005	1	Common	FlowCtrl		DutSlot, DutChannel和ItemValue或者Log或者LpPassFail数组大小不一致	The array size of DutSlot, DutChannel is inconsistent with ItemValue or Log or LpPassFail	ขนาดของอาร์เรย์ที่ไม่สอดคล้องกัน	FlowControl_BlockTtrFmtData
+570006	1	Common	FlowCtrl		ItemName=%1%, DutSlot=%2%, DutChannel=%3%的参数不存在。	The data which ItemName=%1%, DutSlot=%2% and DutChannel=%3% is not exist	การ ItemName=%1% DutSlot=%2% DutChannel=%3% ไม่มีอยู่จริง	FlowControl_BlockTtrFmtData
+570007	1	Common	FlowCtrl		%1%此Block不存在	%1% block doesn't exist	บล็อกชื่อ %1% ไม่มี	FlowControl_CallBlock
+570008	1	FlowCtrl			当前Condition中不存在名叫%1%的未测试的Block	There is no untested Block named %1% in the current Condition	ไม่มีบล็อกที่ยังไม่ได้ทดสอบชื่อ %1% ใน Condition ปัจจุบัน	FlowControl_CallBlock
+570100	1	Common	FmtCheck		MES中不存在ItemCode=%1%，processcode=%2%和 type=%3%的规格	There are no specifications with ItemCode=%1%, processcode=%2% and type=%3% in MES	ไม่มี ItemCode=%1% processcode=%2% type=%3% สเปคใน MES	FmtCheck_LoadSpec
+570102	1	Common	FmtCheck		这些测试项目没有规格：%1%	These test items have no specifications: %1%	รายการทดสอบเหล่านี้ไม่มีสเปค: %1%	FmtCheck_LoadSpec
+570103	1	Common	FmtCheck		DutSlot, DutChannel和ItemValue数组大小不一致	The array size of DutSlot, DutChannel is inconsistent with ItemValue	ขนาดของอาร์เรย์ที่ไม่สอดคล้องกัน	FmtCheck_LoadSpec
+570200	1	Common	CalOffset		校准数据异常	Abnormal calibration data	ความผิดปกติของข้อมูลการสอบเทียบ	CalOffset_Load2Glb
+570201	1	Common	CalOffset		未找到Terminal=%1%, Channel=%2%, Mode=%3%，ItemName=%4% 的校准数据	Calibration data of Terminal=%1%, Channel=%2%, Mode=%3%, ItemName=%4% are not found	ไม่พบข้อมูลการสอบเทียบสำหรับ Terminal=%1%, Channel=%2%, Mode=%3%, ItemName=%4%	CalOffset_GlbData
+570202	1	Common	CalOffset		TestUnit%1%不存在	TestUnit%1% not exist	TestUnit%1% ไม่มีอยู่จริง	CalOffset_GlbData
+570300	1	Common	BkgData		数据库中未找到%1%料号对应的Testplan料号信息	Testplan 601 number corresponding to %1% was not found in the database	ไม่พบข้อมูลที่สอดคล้องกันสำหรับการทดสอบแผน %1% ในฐานข้อมูล	BkgData_GetTestplan601Pns
+571000	1	Framework	STS	Main	FlowNode非法	FlowNode illegle	FlowNode ผิดกฎหมาย	Framework_Login
+571001	1	Framework	STS	Main	Testplan文件夹不存在	Testplan folder does not exist	Testplan โฟลเดอร์ไม่มี	Framework_Login
+571002	1	Framework	STS	Main	500料号错误	500 part number error	ส่วนหมายเลขข้อผิดพลาด	Framework_Login
+571003	1	Framework	STS	Main	该工号无权限，MES反馈：%1%	The user has no permission, mes return: %1%	งานหมายเลขไม่ได้รับอนุญาต, MES ข้อเสนอแนะ: %1%	Framework_Login
+571004	1	Framework	STS	Main	信息填写不完整	Incomplete information	กรอกข้อมูลไม่สมบูรณ์	Framework_Login
+571005	1	Framework	STS	Main	该机台名未登记或者不正确	The CabinetName is not registered or incorrect	ชื่อเครื่องไม่ได้จดทะเบียนหรือไม่ถูกต้อง	Framework_Login
+571006	1	Framework	STS	Main	无Testplan可用	No testplan available	ไม่มี testplan พร้อมใช้งาน	Framework_Login
+571007	0	Framework	STS	Main	确定要修改模块在位状态？	Are you sure to modify the module in place status?	คุณแน่ใจว่าคุณต้องการที่จะปรับเปลี่ยนสถานะของโมดูล	Framework_Main
+571008	1	Framework	STS	Main	待并行上传的XML文件数量已超过%1%	The number of XML files to be uploaded in parallel has exceeded %1%	จำนวนของไฟล์ XML ที่จะอัปโหลดในแบบคู่ขนานได้เกิน %1%	Framework_Main
+571009	0	Framework	STS	Main	并行上传队列中有待处理的XML文件	XML files to be processed in parallel upload queue	ไฟล์ XML ที่ยังคงประมวลผลในคิวอัพโหลดแบบขนาน	Framework_Main
+571010	0	Framework	STS	Main	测试进行中，请勿关闭程序	Do not close the program while the test is in progress	ในระหว่างการทดสอบอย่าปิดโปรแกรม	Framework_Main
+571011	0	Framework	STS	Main	确定关闭程序？	Are you sure to close the program?	คุณแน่ใจหรือว่าต้องปิดโปรแกรม	Framework_Main
+571012	0	Framework	STS	Main	是否初始化设备？	Initialize device?	คุณต้องการที่จะเริ่มต้นอุปกรณ์	Framework_Main
+571013	1	Framework	STS	Main	%1%被更新，请重新从服务器启动程序	%1% is updated, please restart the program from the server	%1% ไฟล์มีการปรับปรุงโปรดเริ่มโปรแกรมจากเซิร์ฟเวอร์	Framwork_Main
+571500	0	Framework	STS	Block	使用上一次校准数据？	Use last calibration data?	ใช้ข้อมูลการสอบเทียบล่าสุด	C_Common
+571501	0	Framework	STS	Block	确定执行下一步？	Are you sure to proceed to the next step?	แน่ใจนะว่าต้องทำอะไรต่อไป	C_Common
+571502	0	Framework	STS	Block	放弃校准？	Are you sure to abort?	แน่ใจนะว่าจะยอมแพ้	C_Common
+571510	0	Framework	STS	Block	取下模块，以校准空板电流	Remove the module to calibrate the empty board current	ถอดโมดูลการสอบเทียบแผ่นว่างเปล่าในปัจจุบัน	C_IccOffset
+571511	0	Framework	STS	Block	插上模块	Plug in the module	เสียบโมดูล	C_VccOffset
+571520	0	Framework	STS	Block	请选择光功率计的槽位(Slot)和通道(Channel)，以及是否要按通道开关光的输出(TxDisable?)	Please input power meter's Slot and Channel, Whether to switch the output of TX?	กรุณาเลือก Slot & Channel ของเครื่องวัดพลังงานแสง, คุณต้องการที่จะเปลี่ยนเอาท์พุทของแสง	C_DcaOffset
+571521	0	Framework	STS	Block	将Slot%1%的Sample的TxChannel%2%接入光功率计	Connect TxChannel%2% of the sample of Slot%1% to the optical power meter	เชื่อมต่อ TxChannel%2% ของ Slot%1% Sample   กับเครื่องวัดพลังงานแบบออปติคัล	C_DcaOffset
+571522	0	Framework	STS	Block	将Tx端光纤复位，准备量测DCA上的光功率，以计算DcaOffset	Reset the Tx fiber and prepare to measure the optical power on DCA	รีเซ็ตไฟเบอร์ที่ปลาย Tx และเตรียมวัดพลังงานแสงบน DCA เพื่อคำนวณ DcaOffset	C_DcaOffset
+571530	0	Framework	STS	Block	请选择光功率计的槽位(Slot)和通道(Channel)，以及是否要按通道开关光源模块的输出(TxDisable?)	Please input power meter's Slot and Channel, Whether to switch the output of reference light source?	กรุณาเลือก Slot & Channel ของเครื่องวัดพลังงานแสง, คุณต้องการที่จะเปลี่ยนเอาท์พุทของแสง	C_RxOffset
+571531	0	Framework	STS	Block	将Slot%1% Channel%2%的RX光纤接入光功率计	Connect rx fiber of Slot%1% Channel%2% to the optical power meter	เครื่องวัดพลังงานแสงด้วยเส้นใยแสง RX Slot%1% Channel%2%	C_RxOffset
+571540	0	Framework	STS	Block	准备读取光源SN，请确保光源IIC通信正常，如与DUT共用通信地址，请将光源插到DUT测试板后继续。	Prepare to read the light source SN, please ensure that the communication between the light source IIC is normal. If you share the communication address with the DUT, please insert the light source into the DUT test board and continue.	เตรียมอ่านแหล่งกำเนิดแสง SN ให้แน่ใจว่าแหล่งกำเนิดแสง IIC สื่อสารอย่างถูกต้องถ้าใช้ที่อยู่การสื่อสารกับดุดเสียบแหล่งกำเนิดแสงในดุดทดสอบบอร์ดต่อไป	C_LsTest
+571541	1	Framework	STS	Block	%1%在AtsSampleLsSN数据表中不存在	%1% does not exist in AtsSampleLsSN data table	%1% ไม่ได้อยู่ใน AtsSampleLsSN ตารางข้อมูล	C_LsTest
+571542	1	Framework	STS	Block	%1%的有效期是%2%	%1% is valid for %2%	อายุการใช้งานของ %1% คือ %2%	C_LsTest
+571543	1	Framework	STS	Block	%1%不是光源	%1% is not a light source	%1% ไม่ใช่แหล่งกำเนิดแสง	C_LsTest
+571544	1	Framework	STS	Block	%1%机种类型不是%2%	%1% model type is not %2%	ประเภท %1% ไม่ใช่ %2%	C_LsTest
+571545	1	Framework	STS	Block	准备测试光源眼图，请确保光源眼图正常	Prepare to test the light source eye diagram, please ensure that the eye diagram is normal	เตรียมแผนที่ตาสำหรับการทดสอบแหล่งกำเนิดแสงให้แน่ใจว่าภาพที่ถูกต้องของแหล่งกำเนิดแสง	C_LsTest
+572000	1	Framework	ITS		Unit %1%:Block [%2%] End: 无DUT继续测试。	Unit %1%:Block [%2%] End: No DUT for continue test.	หน่วย %1%:บล็อก [%2%] สิ้นสุด: ไม่มี DUT สําหรับการทดสอบต่อไป	ATS_BlockEnd.vi
+572001	1	Framework	ITS		Unit %1%:[Login]下未找到机台号数据。文件: %2%	Unit %1%:No CabinetName data found under [Login].File:%2%	หน่วย %1%:ไม่พบข้อมูล CabinetName ภายใต้ [เข้าสู่ระบบ] ไฟล์:%2%	ATS_C_CalHistoryDataShow.vi
+572002	1	Framework	ITS		Unit %1% 获取温度控制超时。目标温度:%2%，超时设定(s):%3%	Unit %1% Get temperature control timeout. Target Temp(C):%2%, Timeout(s):%3%	หน่วย %1% รับการหมดเวลาควบคุมอุณหภูมิ อุณหภูมิเป้าหมาย (C):% 2%, หมดเวลา:% 3%	ATS_M_HTLTAccessRequest.vi
+572003	1	Framework	ITS		Unit %1% TestUnit step 对齐超时。StepIndex=%2%	Unit %1% TestUnit step alignment timeout.StepIndex=%2%	หน่วย %1% TestUnit การหมดเวลาการจัดตําแหน่งขั้นตอน StepIndex =% 2%	ATS_M_TargetUnitStepAlign.vi
+572004	1	Framework	ITS		VI "%1%"输入参数数量未对齐。	VI "%1%"The number of input parameters is misaligned.	VI "%1%"จํานวนพารามิเตอร์อินพุตไม่ตรงแนว	CallVI_NotWaitExit.vi
+572005	0	Framework	ITS		测试盒未配置或除霜已在运行。	The test box is not configured or defrost is already running.	กล่องทดสอบไม่ได้กําหนดค่าหรือละลายน้ําแข็งกําลังทํางานอยู่	ATS_M_TempSeaManualDefrostCheck.vi
+572006	1	Framework	ITS		Unit %1% Block [%2%] 执行失败。	Unit %1% Block [%2%] Execution failed.	หน่วย %1% บล็อก [%2%] การดําเนินการล้มเหลว	CallTestingBlock.vi
+572007	1	Framework	ITS		Unit %1% 未找到StepName=%2%,气道转盘切换未执行。	Unit %1% StepName=%2% not found, airway switch not performed.	หน่วย% 1% StepName =% ไม่พบสวิตช์ทางเดินหายใจไม่ทํางาน	ATS_P_TargetStepAirSwitch.vi
+572008	0	Framework	ITS		Unit %1% 上料后检测到异常，系统将重走上料流程。排除产品或设备异常后，点击"OK"继续。\n若需终止测试，请在后续S_InsertDut上料界面内点击"取消"，系统将终止当前测试盒运行。	Unit %1% An abnormality is detected, and the system will redo the Insert DUT process. After ruling out product or device abnormalities, click "OK" to continue.\nIf you need to abort the test, please click "Cancel" in the subsequent S_InsertDut loading interface, and the system will terminate the current test box operation.	หน่วย %1% ตรวจพบความผิดปกติ และระบบจะทํากระบวนการแทรก DUT อีกครั้ง หลังจากตรวจสอบความผิดปกติของผลิตภัณฑ์หรืออุปกรณ์แล้ว ให้คลิก "ตกลง" เพื่อดําเนินการต่อnหากคุณต้องการยกเลิกการทดสอบโปรดคลิก "ยกเลิก" ในอินเทอร์เฟซการโหลด S_InsertDut ที่ตามมาและระบบจะยุติการทํางานของกล่องทดสอบปัจจุบัน	ATS_Process_UnitStepSync.vi
+572009	1	Framework	ITS		Unit %1% 未找到StepName=%2%,气道转盘切换未执行。Condition=%3%.	Unit %1% StepName=%2% not found, airway switch not performed. Condition=%3%.	หน่วย% 1% StepName =% ไม่พบสวิตช์ทางเดินหายใจไม่ทํางาน เงื่อนไข =% 3%	ATS_P_TargetConditionAirSwitch.vi
+572010	1	Framework	ITS		Unit %1% 获取共享设备控制超时。设备类型:%2%，超时设定(s):%3%	Unit %1% Gets the shared device control timeout. Device Type:%2%, Timeout(s):%3%	หน่วย %1% รับการหมดเวลาการควบคุมอุปกรณ์ที่ใช้ร่วมกัน ประเภทอุปกรณ์:% 2%, หมดเวลา:% 3%	ATS_M_SharedDeviceAccessRequest.vi
+580000	1	Block			DutBitrateType=0只适用于QSFP	DutBitrateType=0 is only applicable to QSFP	DutBitrateType=0 ใช้กับ QSFP เท่านั้น	T_SetDutBitrate.vi
+580001	1	Block			DUT温度无法达到%1%C！	DutTemp can't reach %1%C!	DUTอุณหภูมิไม่ถึง %1%C!	T_SetTemp.vi
+580002	1	Block			TxLopTempDelta的值配置错误，没有%1%	TxLopTempDelta value configuration error, no %1%	กำหนดค่า TxLopTempDelta ไม่ถูกต้อง ไม่มี %1%	T_TxLopTempDelta.vi
+580003	1	Block			TestPlan对应Section中无任何配置！	There is not any keys in this section！	ไม่มีการกำหนดค่าใน TestPlan ที่สอดคล้องกับส่วน!	X_IniEEPROM.vi
+580004	1	Block			数据长度不一致错误	Inconsistent data length error	ข้อผิดพลาดความยาวข้อมูลไม่สอดคล้องกัน	X_IniEEPROM.vi
+580005	1	Block			DUT温度无法达到%1%C！	DutTemp can't reach %1%C!	DUTอุณหภูมิไม่ถึง %1%C!	X_SetTemp.vi
+580006	1	Block			未找到"%1%"的系数配置信息	Coefficient configuration information for %1% not found	ไม่พบข้อมูลการกำหนดค่าสัมประสิทธิ์สำหรับ "%1%"	X_WriteCoef_Dut.vi
+580007	1	Block			未找到DutSlot%1%的系数	Coefficient not found for DutSlot%1%	ไม่พบค่าสัมประสิทธิ์สำหรับ DutSlot%1%	X_WriteCoef_Dut.vi
+580008	0	Block			请输入分光器SN	Please enter the splitter SN.	โปรดป้อนตัวแยก SN	C_RxOffset
+580009	0	Block			输入的分光器SN与维护的SN 信息不匹配，请重新输入！	The entered optical splitter SN does not match the maintained SN information, please re-enter!	SN ตัวแยกแสงที่ป้อนไม่ตรงกับข้อมูล SN ที่เก็บรักษาไว้ โปรดป้อนใหม่!	C_RxOffset
+580010	0	Block			输入的分光器SN TX,RX类别错误，请检查后重新输入！	The input optical splitter SN TX, RX category is wrong, please check and re-enter!	ตัวแยกแสงอินพุต SN TX, หมวดหมู่ RX ผิด โปรดตรวจสอบและป้อนใหม่!	C_RxOffset
+580011	1	Block			获取光学TEC信息失败	Failed to obtain OpticalTEC information	ไม่สามารถรับข้อมูล Optical TEC	T_DmiTecCurrent
+581000	0	Block			是否使用上一次校准的数据，以跳过此步校准动作？	Do you want to skip this step using the data calibrated last time?	คุณใช้ข้อมูลจากการสอบเทียบครั้งก่อนเพื่อข้ามขั้นตอนนี้ของการสอบเทียบหรือไม่	C_Common_使用上一次数据
+581001	0	Block			确定执行下一步动作？	Next Step?	คุณแน่ใจหรือไม่ว่าจะดำเนินการในขั้นตอนต่อไป	C_Common_下一步
+581002	0	Block			确定放弃校准？	Abort?	คุณแน่ใจว่าจะละทิ้งการสอบเทียบหรือไม่?	C_Common_放弃
+581003	1	Block			Testplan的Start_Condition中缺少如下相关Block:\n%1%	The following blocks is missing in Start Condition:\n%1%	Block:\n%1% ที่เกี่ยวข้องต่อไปนี้หายไปจาก Start_Condition ของ Testplan	EvbTimes.vi & FiberTimes.vi
+581004	1	Block			CDR锁定失败	CDR Lock Fail	CDRล็อคไม่สำเร็จ	Block_Common
+581010	1	Block			各模块要按SN顺序插入测试板，另外SN不能相同	Each module shall be inserted into the test board in SN order. In addition, Sn cannot be the same	ควรใส่แต่ละโมดูลลงในบอร์ดทดสอบตามลำดับ SN, และ SN ต้องไม่เหมือนกัน	Block_PNSN_Common_SN按顺序
+581100	0	Block			请选择光功率计的槽位(Slot)和通道(Channel)，以及是否是MPO接口的光功率计(MPO?)	Please input power meter's Slot and Channel, Is it an MPO interface?	กรุณาเลือก Slot & Channel ของเครื่องวัดพลังงานแสง,และตรวจสอบว่าเป็นเครื่องวัดพลังงานแสงที่มีอินเทอร์เฟซ MPO หรือไม่	C_DcaOffset.vi；C_RxOffset.vi
+581101	0	Block			将Slot%1%的Sample的TxChannel%2%接入光功率计	Connect TxChannel%2% of the sample of Slot%1% to the optical power meter	เชื่อมต่อ TxChannel%2% ของ Slot%1% Sample   กับเครื่องวัดพลังงานแบบออปติคัล	C_DcaOffset.vi
+581102	0	Block			将Tx端光纤复位，准备量测DCA上的光功率，以计算DcaOffset	Reset the Tx fiber and prepare to measure the optical power on DCA	รีเซ็ตไฟเบอร์ที่ปลาย Tx และเตรียมวัดพลังงานแสงบน DCA เพื่อคำนวณ DcaOffset	C_DcaOffset.vi
+581103	0	Block			请从测试板上移除Sample	Please remove the sample from test board!	โปรดนำตัวอย่างออกจากกระดานทดสอบ	C_IccOffset.vi
+581104	0	Block			请将Sample插入测试板	Please insert the sample into the test board	กรุณาใส่ตัวอย่างลงในกระดานทดสอบ	C_VccOffset.vi
+581105	0	Block			将DutSlot%1% RxChannel%2%的光纤接入光功率计	Connect the optical fiber of dutslot%1% rxchannel%2% to the optical power meter	เชื่อมต่อ DutSlot%1% RxChannel%2% ไฟเบอร์กับเครื่องวัดพลังงานแสง	C_RxOffset.vi
+581106	0	Block			准备读取光源SN，请确保光源模块已上电并且IIC通讯正常。	Make sure the Light Source is powered on and communication is normal!	หากต้องการอ่าน SN ของแหล่งกำเนิดแสง โปรดตรวจสอบให้แน่ใจว่าโมดูลแหล่งกำเนิดแสงเปิดอยู่ และการสื่อสาร IIC เป็นเรื่องปกติ	C_LsTest.vi
+581107	0	Block			%1%不是光源模块	%1% is not light source module	%1%ไม่ใช่โมดูลแหล่งกำเนิดแสง	C_LsTest.vi
+581108	0	Block			%1%的模块机种类型是"%2%"，跟"%3%"类型不符	%1% module type is '%2%', is inconsistent with type %3%.	%1%ประเภทโมดูล  คือ "%2%" ซึ่งไม่ตรงกับประเภท "%3%"	C_LsTest.vi
+581109	0	Block			准备量测光源眼图，请将光源TX信号接入DCA并确保光源眼图正常然后继续。	To prepare the measurement light source eye diagram, please connect the light source TX signal to DC	ในการเตรียมการวัดแผนภาพดวงตาของแหล่งกำเนิดแสง โปรดเชื่อมต่อสัญญาณ TX ของแหล่งกำเนิดแสงกับ DCA และตรวจสอบให้แน่ใจว่าแผนภาพดวงตาของแหล่งกำเนิดแสงเป็นปกติก่อนดำเนินการต่อ	C_LsTest.vi
+581110	0	Block			请插入Sample以读取PN,SN,FW	Please insert sample to read PN, Sn, FW	กรุณาใส่ตัวอย่างเพื่ออ่าน PN,SN,FW	C_PnSnFw.vi
+581111	0	Block			请插入Sample %1%!	Insert sample %1%!	กรุณาใส่ตัวอย่าง %1%!	C_Prepare.vi
+581112	1	Block			%1%未在ATSNameRelation数据库中与%2%进行绑定.	'%1%' is not bound to%2% in the ATSNameRelation database	%1%ไม่ถูกผูกไว้กับ %2% ในฐานข้อมูล ATSNameRelation.	C_Prepare.vi
+581113	1	Block			AtsSampleLsSN数据库中不存在"%1%"的记录！	The record of '%1%' does not exist in the AtsSamplelsSn database!	AtsSampleLsSNไม่มีบันทึกของ "%1%" ในฐานข้อมูล!	C_Prepare.vi
+581114	1	Block			%1%的模块机种类型是"%2%"，跟"%3%"类型不符	%1% module type is '%2%', is inconsistent with type %3%.	%1%ประเภทโมดูล  คือ "%2%" ซึ่งไม่ตรงกับประเภท "%3%"	C_Prepare.vi
+581115	1	Block			DUT温度无法达到%1%C！	DUT temperature cannot reach %1%C!	ดั๊กอุณหภูมิไม่สามารถเข้าถึง %1%sC	C_TempOffset
+581116	0	Block			请选择模块%1%对应数据采集器的槽位(Slot)和通道(Channel),并将采集器探头与Evboard供电夹头相连	Please select the template %1% corresponding to the slot (Slot) and channel (Channel) of the data collector, and connect the probe of the collector to the power clip provided by Evboard.	โปรดเลือกเทมเพลต %1% ที่สอดคล้องกับสล็อต (Slot) และช่อง (Channel) ของตัวรวบรวมข้อมูล และเชื่อมต่อโพรบของตัวรวบรวมข้อมูลเข้ากับคลิปไฟฟ้าที่ Evboard จัดเตรียมไว้ให้	C_VccOffset_DaqMeasureValue.vi
+581117	2	Block			当前温度Sample %1%支持校准温度为%2%,实际校准温度为%3%	The current temperature sample %1% supports an adjustment temperature of %2%, and the actual adjustment temperature is %3%.	ตอุณหภูมิปัจจุบัน ตัวอย่าง%1% รองรับอุณหภูมิการสอบเทียบที่ %2% และอุณหภูมิการสอบเทียบจริงคือ %3%	C_TempOffset
+581118	1	Block			当前机台校准温度为%1%,实际测试温度为%2%,请重新校准机台！	The current calibration temperature of the machine is %1%, and the actual test temperature is %2%. Please recalibrate the machine!	อุณหภูมิการสอบเทียบปัจจุบันของเครื่องคือ %1% และอุณหภูมิการทดสอบจริงคือ %2% โปรดปรับเทียบเครื่องใหม่!	S_SpcCheck
+581200	0	Block			SN不能有重复，且数量要为%1%	SN should not be duplicated and the count should is %1%!	ไม่สามารถทำซ้ำ SN และปริมาณต้องเป็น %1%	EvbTimes.vi & FiberTimes
+581201	0	Block			SN与机台校验时不一致，请确认SN或重新校验！	SN is inconsistent with the calibration's, please check SN or re-calibrate!	SN ไม่สอดคล้องกับการปรับเทียบเครื่อง โปรดยืนยัน SN หรือปรับเทียบใหม่!	EvbTimes.vi & FiberTimes.vi
+581202	1	Block			数据库中不存在"%1%"的记录！	There is no record of"%1% "in the database	ไม่มีบันทึกของ "%1%" ในฐานข้อมูล!	EvbTimes.vi & FiberTimes.vi
+581203	1	Block			%1%的对应机台号%2%与当前机台号不一致！	The CabinetName of "%1% used is %2% which inconsistent with the current cabinet name	หมายเลขเครื่องที่สอดคล้องกัน %2% ของ %1% ไม่สอดคล้องกับหมายเลขเครื่องปัจจุบัน!	EvbTimes.vi
+581204	1	Block			%1%已使用过%2%次，大于规格上限%3%！	%1% has been used%2% times, which is greater than the upper specification limit by%3%!	%1% ถูกใช้ไปแล้ว %2% ครั้ง ซึ่งมากกว่าขีดจำกัดสูงสุดของข้อกำหนด %3%!	EvbTimes.vi & FiberTimes.vi
+581205	1	Block			EvbSN不能有重复，且数量要为%1%	EvbSN should not be duplicated and the count should is %1%!	เอฟบีเอสเอ็นไม่สามารถทำซ้ำ และจำนวน%1%	EvbTimes.vi
+581206	1	Block			EvbSN与机台校验时不一致，请确认EvbSN或重新校验！	EvbSN is inconsistent with the verification of the machine, please confirm EvbSN or re-check!	เอฟบีเอสเอ็นไม่สอดคล้องกับการตรวจสอบสถานีโปรดยืนยันการตรวจสอบอีกครั้ง!	EvbTimes.vi
+581207	1	Block			光纤SN不能有重复，且数量要为%1%	The fiber SN must not have duplicates and the number must be %1%	ใยแก้วนำแสงไม่สามารถทำซ้ำได้ และจำนวน%1%	FiberTimes.vi
+581208	1	Block			光纤SN与机台校验时不一致，请确认光纤SN或重新校验！	The fiber SN is inconsistent with the calibration of the machine, please confirm the fiber SN or check again!	ไฟเบอร์ออปติกเอสเอ็นไม่สอดคล้องกับการตรวจสอบสถานีโปรดยืนยันการตรวจสอบเส้นใยแก้วนำแสง หรือการตรวจสอบอีกครั้ง!	FiberTimes.vi
+582000	0	Block			请将Sample插入测试板，即将进行机台通道顺序检查	Please insert the Sample into the test board. The sequence check of the machine channel is about to 	โปรดใส่ตัวอย่างลงในบอร์ดทดสอบ แล้วระบบจะดำเนินการตรวจสอบลำดับช่องเครื่องในเร็วๆ นี้	I_IniDevice_AocDirectionChk
+582001	1	Block			Testplan中没有任何Reg_Setup_Post配置	here is not any Reg_Setup_Post sections in Testplan	ไม่มีการกำหนดค่า Reg_Setup_Post ในแผนการทดสอบ	IniRegPost
+582002	1	Block			数据长度错误	Data length error	ข้อผิดพลาดของความยาวข้อมูล	LsPostIniEEPROM
+582003	0	Block			请确保光源模块已上电并且IIC通讯正常！准备切换光源工作模式。	Make sure the Light Source is powered on and communication is normal!Ready to switch the light sourc	โปรดตรวจสอบให้แน่ใจว่าโมดูลแหล่งกำเนิดแสงเปิดอยู่และการสื่อสาร IIC เป็นเรื่องปกติ!พร้อมสลับโหมดการทำงานของแหล่งกำเนิดแสง	LsPostIniEEPROM
+582004	1	Block			数据长度错误	Data length error	ข้อผิดพลาดของความยาวข้อมูล	LsPreIniEEPROM
+582005	0	Block			请确保光源模块已上电并且IIC通讯正常！准备切换光源工作模式。	Make sure the Light Source is powered on and communication is normal!Ready to switch the light sourc	โปรดตรวจสอบให้แน่ใจว่าโมดูลแหล่งกำเนิดแสงเปิดอยู่และการสื่อสาร IIC เป็นเรื่องปกติ!พร้อมสลับโหมดการทำงานของแหล่งกำเนิดแสง	LsPreIniEEPROM
+582006	0	Block			请确保光源模块已上电并且IIC通讯正常！准备切换光源工作模式。	Make sure the Light Source is powered on and communication is normal!Ready to switch the light sourc	โปรดตรวจสอบให้แน่ใจว่าโมดูลแหล่งกำเนิดแสงเปิดอยู่และการสื่อสาร IIC เป็นเรื่องปกติ!พร้อมสลับโหมดการทำงานของแหล่งกำเนิดแสง	LsSwitchToLinePrbs
+582007	1	Block			数据长度错误	Data length error	ข้อผิดพลาดของความยาวข้อมูล	PostIniEEPROM
+582008	1	Block			数据长度错误	Data length error	ข้อผิดพลาดของความยาวข้อมูล	PreIniEEPROM
+582009	1	Block			%1%在12小时之内未进行SPC测试！	%1%is not test SPC for more than 12 hours！	%1%การทดสอบ SPC ไม่ได้ดำเนินการภายใน 12 ชั่วโมง!	S_25GSpcCheck
+582010	1	Block			模块不在位，请检查	The module is not detected. Please check	โมดูลไม่อยู่ในตำแหน่ง โปรดตรวจสอบ	S_DutPresent
+582011	2	Block			测试板SN不能有重复，且数量要为%1%	The EVB SN should not be duplicated and the array number should is %1%!	ไม่สามารถทำซ้ำ SN ของกระดานทดสอบได้ และปริมาณต้องเป็น %1%	S_EvbTimes
+582012	2	Block			测试板“%1%"与机台校验时不一致，请更换SN或重新校验！	The Evboard "%1%" is inconsistent with the calibration's, please replace the SN or re-calibrate!	แผงทดสอบ "%1%" ไม่สอดคล้องกับการปรับเทียบเครื่อง โปรดเปลี่ยน SN หรือปรับเทียบใหม่!	S_EvbTimes
+582013	1	Block			测试板编号数据库"EVboard_Plugnumber"中不存在"%1%"的记录！	The EVB %1% number can not be find in database !	ไม่มีบันทึกของ "%1%" ในฐานข้อมูลหมายเลขกระดานทดสอบ "EVboard_Plugnumber"!	S_EvbTimes
+582014	1	Block			测试板"%1%"的对应机台号%2%与当前机台号不一致！	The CabinetName of EVB "%1% used is %2%\nwhich inconsistent with the current cabinet name	หมายเลขเครื่องที่สอดคล้องกัน %2% ของกระดานทดสอบ "%1%" ไม่สอดคล้องกับหมายเลขเครื่องปัจจุบัน!	S_EvbTimes
+582015	1	Block			测试板"%1%"已使用过%2%次，大于规格上限%3%！	The test board "%1%" has been used %2% times, exceeding the specification limit %3%!	กระดานทดสอบ "%1%" ถูกใช้ไปแล้ว %2% ครั้ง ซึ่งมากกว่าขีดจำกัดบนของข้อกำหนด %3%!	S_EvbTimes
+582016	2	Block			光纤SN不能有重复，每个模块需要输入%1%跟光纤，总数量为%2%	The Fiber SN should not be duplicated, each DUT requires %1% SN inputs and the total number should i	ใยแก้วนำแสง SN ไม่สามารถทำซ้ำได้ แต่ละโมดูลต้องป้อนเส้นใยแก้วนำแสง %1% และปริมาณรวมคือ %2%	S_FiberTimes
+582017	2	Block			光纤“%1%"与机台校验时不一致，请更换SN或重新校验！	The Fiber "%1%" is inconsistent with the calibration's, please replace the SN or re-calibrate!	ไฟเบอร์ "%1%" ไม่สอดคล้องกับการปรับเทียบเครื่อง โปรดเปลี่ยน SN หรือปรับเทียบใหม่!	S_FiberTimes
+582018	1	Block			光纤数据库"FibreTestTimesRecord"中不存在"%1%"的记录！	The Fiber number %1% can not be find in database!	ไม่มีบันทึกของ "%1%" ในฐานข้อมูลไฟเบอร์ "FibreTestTimesRecord"!	S_FiberTimes
+582019	1	Block			光纤"%1%"的对应机台号%2%与当前机台号不一致！	The CabinetName of Fiber "%1% used is %2%\nwhich inconsistent with the current cabinet name	หมายเลขเครื่องที่สอดคล้องกัน %2% ของไฟเบอร์ "%1%" ไม่สอดคล้องกับหมายเลขเครื่องปัจจุบัน!	S_FiberTimes
+582020	1	Block			光纤"%1%"已使用过%2%次，大于规格上限%3%！	The optical fiber "%1%" has been used %2% times, exceeding the upper limit %3%!	ใยแก้วนำแสง "%1%" ถูกใช้ไปแล้ว %2% ครั้ง ซึ่งมากกว่าขีดจำกัดบนของข้อกำหนด %3%!	S_FiberTimes
+582021	1	Block			500料号与组装数据库记录不一致	Inconsistence between 500 material number and assembly database record!	หมายเลขชิ้นส่วน 500 ไม่สอดคล้องกับบันทึกระบบข้อมูลที่ประกอบ	S_PnDbCheck
+582022	1	Block			PN与Q_PN_Mapping数据库记录不一致	Inconsistence between PN and "Q_PN_Mapping" database record!	บันทึกฐานข้อมูล PN และ Q_PN_Mapping ไม่สอดคล้องกัน	S_PnDbCheck
+582023	1	Block			FW与"CheckFWRev"数据库记录不一致	Inconsistence between FW and "CheckFWRev" database record!	บันทึกของ FW และ "CheckFWRev" ในฐานข้อมูลไม่สอดคล้องกัน	S_PnDbCheck
+582024	1	Block			500料号与组装数据库记录不一致	Inconsistence between 500 material number and assembly database record!	หมายเลขชิ้นส่วน 500 ไม่สอดคล้องกับบันทึกระบบข้อมูลที่ประกอบ	S_PnDbCheckSr4
+582025	1	Block			PN与Q_PN_Mapping数据库记录不一致	Inconsistence between PN and "Q_PN_Mapping" database record!	บันทึกฐานข้อมูล PN และ Q_PN_Mapping ไม่สอดคล้องกัน	S_PnDbCheckSr4
+582026	1	Block			FW与"CheckFWRev"数据库记录不一致	Inconsistence between FW and "CheckFWRev" database record!	บันทึกของ FW และ "CheckFWRev" ในฐานข้อมูลไม่สอดคล้องกัน	S_PnDbCheckSr4
+582027	1	Block			DUT各端要按顺序插入测试板，另外各端SN不能相同	Each end of DUT should insert EVB in sequence.	ปลายแต่ละด้านของ DUT จะต้องถูกสอดเข้าไปในบอร์ดทดสอบตามลำดับ และ SN ของปลายแต่ละด้านจะต้องแตกต่างกัน	S_PnSnFw
+582028	1	Block			PN或者FW与Testplan中的不一致	PN or FW is incorrect	PN หรือ FW ไม่สอดคล้องกับใน Testplan	S_PnSnFw
+582029	1	Block			Sample只能用SPC的Testplan来测试！	Sample can only be tested with SPC's Testplan	ตัวอย่างทดสอบได้กับ SPC Testplan เท่านั้น!！	S_PnSnFw
+582030	1	Block			此模块已测试且数据并行上传过程中！	Some DUT is uploading data to DB	โมดูลนี้ได้รับการทดสอบแล้วและกำลังอัปโหลดข้อมูลแบบขนาน!	S_PnSnFw
+582031	1	Block			RS1RS0检测异常！	RS1RS0 CheckFail！	RS1RS0ตรวจจับความผิดปกติ！	S_RS1RS0Check
+582032	1	Block			AtsSampleLsSN数据库中不存在%1%的记录！	This %1% is inexist in database AtsSampleLsSN!	AtsSampleLsSNไม่มีระเบียน %1% ในฐานข้อมูล！	S_SampleValid
+582033	2	Block			%1%已失效！	%1% is Invalid!	%1%หมดอายุ！	S_SampleValid
+582034	2	Block			%1%还有%2%天失效!	%1% has %2% days of failure!	%1% เหลืออีก %2% วันที่จะหมดอายุ!	S_SampleValid
+582035	2	Block			%1%到期时间%2%	%1% ExpiryTime=%1%	%1% เวลาหมดอายุ %2%	S_SampleValid
+582036	1	Block			Sample未与该机台进行绑定	The Sample is not bound to the machine	ตัวอย่างไม่ถูกผูกไว้กับเครื่องนี้	S_SampleValid
+582037	1	Block			机台支持测试%1%个模块，但是只有%2%个进行过SPC测试Pass\n该机台SPC测试失败，请重新进行SPC测试	%1% dut support to be tested, but only %2% have been SPC tested pass\nSPC Test fail, Please Test SPC	เครื่องรองรับการทดสอบโมดูล %1% แต่มีเพียง %2% เท่านั้นที่ผ่านการทดสอบ SPC ผ่าน\n การทดสอบ SPC ของเครื่องนี้ล้มเหลว โปรดลองทดสอบ SPC อีกครั้ง\n	S_SpcCheck
+582038	1	Block			机台支持测试%1%个模块，但是只有%2%个进行过SPC测试Pass\n该机台SPC测试失败，请重新进行SPC测试\n该机台已经超过%3%小时未进行SPC测试！	%1% dut support to be tested, but only %2% have been SPC tested pass\nSPC Test fail, Please Test SPC,The machine has not been SPC tested for more than 3% of hours!	เครื่องรองรับการทดสอบโมดูล %1% แต่มีเพียง %2% เท่านั้นที่ผ่านการทดสอบ SPC ผ่าน\n เครื่องไม่ผ่านการทดสอบ SPC นานกว่า %3% ชั่วโมง!	S_SpcCheck
+582039	1	Block			校准机台后请立即进行SPC测试！	SPC test immediately after calibration!	โปรดทำการทดสอบ SPC ทันทีหลังจากปรับเทียบเครื่อง!	S_SpcCheck
+582040	0	Block			SPC测试已有多次不良，请维护处理意见后继续测试，\n点击“放弃”按钮将停止测试	SPC tests have failed for many times, please maintain the handling opinions and continue testing.\nC	การทดสอบ SPC ไม่ดีมาหลายครั้งแล้ว โปรดทำการทดสอบต่อหลังจากรักษาความคิดเห็นของคุณแล้ว\nคลิกปุ่ม "ละทิ้ง" เพื่อหยุดการทดสอบ	S_SpcFailLock
+582041	1	Block			AtsSampleLsSN数据库中不存在%1%的记录！	This %1% is inexist in database AtsSampleLsSN!	AtsSampleLsSNไม่มีระเบียน %1% ในฐานข้อมูล！	SampleValid
+582042	1	Block			%1%已失效！	%1% is Invalid!	%1%หมดอายุ！	SampleValid
+582043	1	Block			%1%还有%2%天失效!	%1% has %2% days of failure!	%1% เหลืออีก %2% วันที่จะหมดอายุ!	SampleValid
+582044	2	Block			%1% 到期时间%2%	%1% ExpiryTime=%2%	%1% เวลาหมดอายุ %2%	SampleValid
+582045	1	Block			Sample未与该机台进行绑定	The Sample is not bound to the machine	ตัวอย่างไม่ถูกผูกไว้กับเครื่องนี้	SampleValid
+582046	1	Block			数据长度错误	Data length error	ข้อผิดพลาดของความยาวข้อมูล	SFECDisable_EERPOM
+582047	1	Block			该员工无权限	The employee has no permissions	ลูกจ้างไม่ได้รับอนุญาต	S_SpcFailLock_Authority
+582048	1	Block			请输入SPC不良的处理意见信息	Enter the troubleshooting information about the faulty SPC	โปรดป้อนข้อมูลคำแนะนำการจัดการที่ไม่ดีของ SPC	S_SpcFailLock_Authority
+582049	0	Block			请输入Slot%1%的模块序列号	Enter the SN of Slot%1%	โปรดป้อนหมายเลขซีเรียลของโมดูล Slot%1%	S_SnKeyIn
+582050	1	Block			请确认模块和光纤端面及插拔是否异常，等待温度稳定后重新测试	Please confirm whether the module and optical fiber end face and pull out are abnormal, and wait for the temperature to stabilize before retesting	โปรดยืนยันว่าโมดูลและส่วนท้ายของไฟเบอร์ออปติกและการดึงออกผิดปกติหรือไม่ และรอให้อุณหภูมิคงที่ก่อนทำการทดสอบอีกครั้ง	TxPwrCheck,RxRspCheck
+582051	2	Block			测试多次失败！请联系工程师检查！	Multiple test failures! Please contact the engineer to check!	การทดสอบล้มเหลวหลายครั้ง!กรุณาติดต่อวิศวกรเพื่อตรวจสอบ!	CheckFailTimes
+583000	1	Block			AlarmWarningMasks的个数不等于5	The count of Masks must be greater than5	จำนวน AlarmWarningMasks ไม่เท่ากับ5	T_AwCheck.vi
+583001	1	Block			未配置起始结束点	Start and end points are not configured	ไม่ได้กำหนดค่าจุดเริ่มต้นและจุดสิ้นสุด	T_BerCurve.vi
+583002	1	Block			光源光功率小于Overlod测试光功率，无法测试QOverload!	The LS power is less than the overload test power, and QOverload cannot be tested!	พลังงานแสงของแหล่งกำเนิดแสงน้อยกว่าพลังงานแสงของการทดสอบ Overlod และไม่สามารถทดสอบการโอเวอร์โหลดได้!	T_OverloadQ1
+583003	1	Block			读取寄存器配置错误，没有类型%1%	Read register configuration error, no type %1%	เกิดข้อผิดพลาดในการอ่านการกำหนดค่าการลงทะเบียน ไม่มีประเภท %1%	T_ReadDutInfo.vi
+583004	1	Block			当前光源SN与机台校准时使用光源SN不一致，请更换光源或重新校验！	The current light source SN is inconsistent with the light source SN used during machine calibration. Please replace the light source or re-calibrate!	แหล่งกำเนิดแสง SN ปัจจุบันไม่สอดคล้องกับแหล่งกำเนิดแสง SN ที่ใช้ระหว่างการปรับเทียบเครื่อง โปรดเปลี่ยนแหล่งกำเนิดแสงหรือปรับเทียบใหม่!	S_LsSnCheck
+583005	1	Block			当前机台Rx收光OMA不满足要求，请更换光源或重新校准机台！	The current Rx receiver OMA does not meet the requirements, please replace the light source or recalibrate the machine!	ตัวรับสัญญาณ Rx ปัจจุบัน OMA ไม่ตรงตามข้อกำหนด โปรดเปลี่ยนแหล่งกำเนิดแสงหรือปรับเทียบเครื่องใหม่!	S_LsSnCheck
+583006	0	Block			光源配置动作完成，请重新插拔光源模块后点击确定！	LS operation has completed, please re-plugin module，then click the "ok" button!	การดำเนินการกำหนดค่าแหล่งกำเนิดแสงเสร็จสมบูรณ์ โปรดเสียบโมดูลแหล่งกำเนิดแสงอีกครั้งแล้วคลิกตกลง!	LsPreIniEEPROM;LsPostIniEEPROM
+583007	1	Block			请检查TX光纤是否接反，或者更换新料	Please check whether the TX optical fiber is reversely connected and replace it with a new one	โปรดตรวจสอบว่าใยแก้วนำแสง TX เชื่อมต่อกลับด้านและเปลี่ยนใหม่	CheckFiberConnection
+583008	1	Block			请检查RX光纤是否接反，或者更换新料	Please check whether the RX optical fiber is reversely connected and replace it with a new one	โปรดตรวจสอบว่าใยแก้วนำแสง RX เชื่อมต่อกลับด้านและเปลี่ยนใหม่	CheckFiberConnection
+583009	1	Block			光源%1%在数据库未找到对应补偿！	Light source %1% No compensation was found in database!	แหล่งกำเนิดแสง%1%ไม่พบการชดเชย ที่ตรงกันในฐานข้อมูล!	C_RxOffset.vi
+585000	1	Block_V3	S_PnSnFw		不能有相同SN的模块，%1%	Module Sn cannot be the same, %1%	โมดูล SN ไม่สามารถเหมือนกัน, %1%	S_PnSnFw
+585001	1	Block_V3	S_PnSnFw		PN与Testplan中的不一致	PN is inconsistent with that in testplan	ความแตกต่างระหว่าง PN และ testplan	S_PnSnFw
+585002	1	Block_V3	S_PnSnFw		FW与Testplan中的不一致	FW is inconsistent with that in testplan	ความแตกต่างระหว่าง FW และ testplan	S_PnSnFw
+585003	1	Block_V3	S_PnSnFw		%1%处于并行上传队列中	%1% is in parallel upload queue	%1% อยู่ในคิวอัพโหลดแบบขนาน	S_PnSnFw
+585004	1	Block_V3	S_PnSnFw		%1%未在ATSNameRelation数据库中与%2%进行绑定	%1% is not bound to %2% in the ATSNameRelation database	%1% ไม่ผูกพันกับ %2% ใน ATSNameRelation ฐานข้อมูล	S_PnSnFw
+585005	1	Block_V3	S_PnSnFw		%1%在AtsSampleLsSN数据库中不存在	%1% does not exist in AtsSampleLsSN database	%1% ไม่ได้อยู่ใน AtsSampleLsSN ฐานข้อมูล	S_PnSnFw
+585006	1	Block_V3	S_PnSnFw		%1%不是Sample	%1% is not sample	%1% ไม่ใช่ sample	S_PnSnFw
+585007	1	Block_V3	S_PnSnFw		%1%跟Testplan中的机种类型不一致	%1% is inconsistent with the model type in testplan	%1% ไม่สอดคล้องกับชนิดของเครื่องใน testplan	S_PnSnFw
+585008	1	Block_V3	S_PnSnFw		%1%已过期	%1% expired	%1% หมดอายุ	S_PnSnFw
+585009	1	Block_V3	S_PnSnFw		%1%没有SPC规格	%1% no SPC specification	%1% เปอร์เซ็นต์ไม่มีสเปค SPC	S_PnSnFw
+585010	1	Block_V3	S_PnSnFw		%1%没有机台校准规格	%1% no calibration specification	%1% เไม่มีสเปค	S_PnSnFw
+585011	1	Block_V3	S_PnSnFw		SN中有非法字符\nDutSlot=%1%\nSN=%2%	Illegal characters in SN\nDutSlot=%1%\nSN=%2%	มีตัวละครที่ผิดกฎหมายใน SN\nDutSlot=%1%\nSN=%2%	S_PnSnFw
+585030	1	Block_V3	EvbTimes		AtsEvbUsageTimes数据表中不存在"%1%"的记录	The record of %1% does not exist in the AtsEvbUsageTimes data table	ไม่มีบันทึกของ %1% เปอร์เซ็นต์ใน AtsEvbUsageTimes แผ่นข้อมูล	EvbTimes
+585031	0	Block_V3	EvbTimes		确定放弃？	Are you sure to abort?	แน่ใจนะว่าจะยอมแพ้	EvbTimes
+585032	1	Block_V3	EvbTimes		EV_BoardSpec数据表中没有Type=%1%, Station=%2%，Customer=%3%的规格	There are no specifications for type=%1%, station=%2%, customer=%3% in the EV_BoardSpec data table	ไม่มี type=%1% หรือ station=%2% หรือ customer=%3% ใน EV_BoardSpec datasheet	EvbTimes
+585033	1	Block_V3	EvbTimes		%1%使用次数超上限%2%次	%1% usage times exceed the upper limit %2% times	ใช้ %1% มากกว่าขีดจำกัดบน %2% ครั้ง	EvbTimes
+585034	1	Block_V3	EvbTimes		%1%文件中不存在,请先校准机台	%1% file does not exist, please calibrate first	ไม่มีไฟล์ %1% กรุณาปรับแต่งเครื่องก่อน	EvbTimes
+585035	1	Block_V3	EvbTimes		%1%文件中不存在DutSlot%2%的记录。	There is no record of DutSlot%2% in %1% file.	ไม่มีบันทึกของ DutSlot%2% ในไฟล์ %1%	EvbTimes
+585050	1	Block_V3	FiberTimes		光纤数据库"FibreTestTimesRecord"中不存在"%1%"的记录！	The Fiber number %1% can not be find in database!	ไม่มีบันทึกของ "%1%" ในฐานข้อมูลไฟเบอร์ "FibreTestTimesRecord"!	FiberTimes
+585051	1	Block_V3	FiberTimes		光纤"%1%"的对应机台号%2%与当前机台号不一致！	The CabinetName of Fiber "%1% used is %2%\nwhich inconsistent with the current cabinet name	หมายเลขเครื่องที่สอดคล้องกัน %2% ของไฟเบอร์ "%1%" ไม่สอดคล้องกับหมายเลขเครื่องปัจจุบัน!	FiberTimes
+585052	0	Block_V3	FiberTimes		确定放弃？	Are you sure to abort?	แน่ใจนะว่าจะยอมแพ้	FiberTimes
+585053	1	Block_V3	FiberTimes		%1%文件中不存在DutSlot%2%的记录。	There is no record of DutSlot%2% in %1% file.	ไม่มีบันทึกของ DutSlot%2% ในไฟล์ %1%	FiberTimes
+585054	1	Block_V3	FiberTimes		%1%文件中不存在,请先校准机台	%1% file does not exist, please calibrate first	ไม่มีไฟล์ %1% กรุณาปรับแต่งเครื่องก่อน	FiberTimes
+585055	1	Block_V3	FiberTimes		光纤次数规格库中不存在FibreType=%1%, Station=%2%的规格	There is no specification with FibreType=%1% and Station=%2% in the database	ไม่มีข้อมูลเกี่ยวกับ FibreType=%1% Station=%2% และสเปค	FiberTimes
+585056	1	Block_V3	FiberTimes		%1%使用次数%2%已超过上限%3%	%1% has been used for %2% times and has exceeded the upper limit of %3%	%1% ใช้ %2% ครั้งและเกินขีดจำกัดบน %3%	FiberTimes
+585070	1	Block_V3	S_PnDbCheck		CheckFwRev数据表中没有%1%的FW记录	There is no %1% FW record in the CheckFwRev data table	ไม่มีบันทึก FW %1% ใน CheckFwRev ข้อมูลตาราง	S_PnDbCheck
+585071	1	Block_V3	S_PnDbCheck		登录的500料号跟MES数据库中的500料号不一致	The registered part number is inconsistent with the part number in MES database	หมายเลขวัสดุที่เข้าสู่ระบบไม่สอดคล้องกับจำนวนของวัสดุในฐานข้อมูล MES	S_PnDbCheck
+585072	1	Block_V3	S_PnDbCheck		模块的PN跟MES数据库中的不一致	The PN of the module is inconsistent with that in the MES database	ความแตกต่างระหว่าง PN โมดูลและ MES ฐานข้อมูล	S_PnDbCheck
+585073	1	Block_V3	S_PnDbCheck		模块的FW跟CheckFWRev数据库中的不一致	The FW of the module is inconsistent with that in the CheckFWRev database	ความแตกต่างระหว่าง FW โมดูลและ CheckFWRev ฐานข้อมูล	S_PnDbCheck
+585090	1	Block_V3	S_SpcCheck		SPC记录文件不存在	SPC record file does not exist	แฟ้มบันทึก SPC ไม่มีอยู่จริง	S_SpcCheck
+585091	1	Block_V3	S_SpcCheck		机台校准后请立即进行SPC测试	Please conduct SPC test immediately after calibration	ดำเนินการทดสอบ SPC ทันทีหลังจากการสอบเทียบ	S_SpcCheck
+585092	1	Block_V3	S_SpcCheck		超时未进行SPC测试	SPC test not conducted for a long time	ไม่ได้ทดสอบ SPC เป็นเวลานาน	S_SpcCheck
+585093	1	Block_V3	S_SpcCheck		SPC测试失败	SPC test failed	การทดสอบ SPC ล้มเหลว	S_SpcCheck
+585094	1	Block_V3	S_SpcCheck		DutSlot%1%未进行SPC测试	DutSlot%1% did not perform SPC test	DutSlot%1% ไม่ได้ดำเนินการทดสอบ SPC	S_SpcCheck
+586000	1	Block_V3	T_AwCheck		AlarmWarningMasks的个数不等于5	The number of AlarmWarningMasks is not equal to 5	จำนวนของ AlarmWarningMasks ไม่เท่ากับห้า	S_SpcCheck
+586020	1	Block_V3	T_RxOLPoints		测试光功率点大于RxOffset值	The test optical power point is greater than RxOffset value	การทดสอบจุดพลังงานแสงมากกว่าค่า RxOffset	T_RxOLPoints
+586021	1	Block_V3	T_RxOLPoints		无可用测试光功率点	No test optical power point available	ไม่มีการทดสอบจุดพลังงานแสง	T_RxOLPoints
+586030	1	Block_V3	T_RxOLQ		OL规格无下限	OL specification has no lower limit	ไม่มีขีดจำกัดต่ำสุดสำหรับ OL สเปค	T_RxOLQ
+586031	1	Block_V3	T_RxOLQ		无起始点	No starting point	ไม่มีจุดเริ่มต้น	T_RxOL
+586040	0	Block_V3	I_IniDevice		准备检查机台设备连接方向，将Sample插入测试板	Prepare to check the connection direction of the equipment, and insert the sample into the EVB	พร้อมที่จะตรวจสอบทิศทางของการเชื่อมต่ออุปกรณ์แทรกตัวอย่างลงในแผ่นทดสอบ	I_IniDevice_AOC
+586041	1	Block_V3	I_IniDevice		设备连接方向异常	Connection direction of the equipment is abnormal	ทิศทางการเชื่อมต่ออุปกรณ์ผิดปกติ	I_IniDevice_AOC
+590000	0	Project			无法删除重建ATS临时文件夹！	Unable to delete and rebuild the ATS temporary folder	ไม่สามารถลบและสร้างโฟลเดอร์ชั่วคราว ATS ใหม่ได้!	Common_MainVi.vi
+590001	0	Project			是否要初始化设备？	Initialize Equipment?	คุณต้องการเริ่มต้นอุปกรณ์หรือไม่?	Common_MainVi.vi
+590002	0	Project			TestPlan中必须要有Start_Conditioin和End_Condition	Start_Condition and End_Condition must be exist in test plan	TestPlan ต้องมี Start_Conditioin และ End_Condition	Common_MainVi.vi
+590003	1	Project			StartCondition执行失败	StartCondition fail	StartConditionการดำเนินการล้มเหลว	Common_MainVi.vi
+590004	0	Project			无Testplan可用	there is no testplan	ไม่มีแผนการทดสอบ	Common_MainVi.vi
+590005	0	Project			是否要校验机台？	Calibrate Station Offset?	คุณต้องการปรับเทียบเครื่องหรือไม่?	Common_MainVi.vi
+590006	0	Project			请等待数据上传和过站完成后再关闭程序！	Uploading data and updating MES, Please wait!	กรุณารอจนกว่าการอัพโหลดข้อมูลและสถานีจะเสร็จสิ้นก่อนที่จะปิดโปรแกรม!	Common_MainVi.vi
+590007	0	Project			请等待TTR数据上传公共盘完成后再关闭程序！	Uploading Ttr files to server path, Please wait!	กรุณารอจนกว่าการอัพโหลดข้อมูล TTR ไปยังดิสก์สาธารณะจะเสร็จสิ้นก่อนที่จะปิดโปรแกรม!	Common_MainVi.vi
+590008	0	Project			确定关闭程序？	Are you sure to close the program?	คุณแน่ใจหรือว่าปิดโปรแกรม?	Common_MainVi.vi
+590009	0	Project			测试进行中，请勿关闭程序！	Test in progress, please do not close the program!	อย่าปิดโปรแกรมในขณะที่กำลังทดสอบอยู่!	Common_MainVi.vi
+590100	1	Project			DebugInterface文件中ApcTecTempMax,Min配置有误	Apctectempmax, min configuration error in debuginterface file	การกำหนดค่า ApcTecTempMax Minในไฟล์ DebugInterface ไม่ถูกต้อง	X_TecTune_FirstTemp.vi
+590101	1	Project			TxEyeTuneSequence配置错误	TxEyeTuneSequence is error	TxEyeTuneSequenceข้อผิดพลาดในการกำหนดค่า	X_TecTune
+590102	1	Project			PreloadData有%1%行，与%2%通道不对应	There are %1% lines in the PreloadData, which do not correspond to %2%channels DUT	PreloadData มี %1% แถว ซึ่งไม่สอดคล้องกับ %2%channel	X_DspTune
+590103	1	Project			DebugInterface中未配置BiasDAC，无法判断ApiType	There is no biasdac configured in debuginterface to judge apitype	ไม่ได้กำหนดค่า BiasDAC ใน DebugInterface และไม่สามารถตัดสิน ApiType ได้	X_DspTune
+590104	1	Project			脚本版本为%1%，最低版本为%2%\n路径：%3%	Scrtip version is %1%,need %2%\nPath:%3%	เวอร์ชันสคริปต์คือ %1% เวอร์ชันต่ำสุดคือ %2%\n Path: %3%	DspTune
+590105	1	Project			TuningDll版本为%1%，最低版本为%2%\n路径：%3%	TuningDll version is %1%,need %2%\nPath:%3%	TuningDllเวอร์ชัน %1% เวอร์ชันต่ำสุดคือ %2%\n Path: %3%	DspTune
+590106	1	Project			DspTune文件不存在，路径：%3%	DspTune file does not exist,Path:%3%	ไม่มีไฟล์ DspTune เส้นทาง: %3%	DspTune
+590107	1	Project			通道%1%执行%2% %3%操作时失败\n写的值：%4%\n写的值(十六进制)：%5%\n读取的值(十六进制)：%6%\n读取的值：%7%	Channel%1% %2% %3% fail\nWrite Value: %4%\nHex Write: %5%\nHex Read: %6%\nRead Value: %7%	ช่อง %1% ล้มเหลวขณะดำเนินการ %2% %3%\n ค่าเขียน: %4%\n ค่าที่เขียน (เลขฐานสิบหก): %5%\n ค่าที่อ่านได้ (เลขฐานสิบหก): %6%\n อ่านค่า: %7%	FR4 ATS EyeTuneNRZ
+590108	0	Project			请输入分光器各通道的光损耗值！	Please enter the insertion loss value of each channel of the CWDM device!	โปรดป้อนค่าการสูญเสียแสงของแต่ละช่องสัญญาณของตัวแยกแสง!	400G FR4_Offset
+590109	0	Project			将Tx端光纤复位，准备量测光功率，以计算DcaOffset	Reset the Tx fiber and prepare to measure the optical power	ตั้งค่า TX สิ้นสุดไฟเบอร์และเตรียมวัดพลังงานแสงเพื่อคำนวณ DcaOffset	C_TxOffset_Offline
+590110	0	Project			将LS%1%的TxChannel%2%接入光功率计	Please connect the fiber of LS%1%'s Tx Channel%2% to the OPM!	เชื่อมต่อ txchannell %2% ของ LS %1% เปอร์เซ็นต์กับเครื่องวัดแสง	C_RxOffset_Offline
+590111	1	Project			DebugInterface文件中缺少PolitityDAC相关配置信息	The PolitityDAC configuration information is missing in the DebugInterface file	ข้อมูลการตั้งค่าที่เกี่ยวข้องกับ PolityDAC หายไปจากไฟล์ DebugInterface	T_PolarityTest
+590112	1	Project			写入文件失败，路径：%1%	Failed to write file, path: %1%	ล้มเหลวในการเขียนไปยังแฟ้ม	File_txt_AtsOffsetSet
+590113	1	Project			机台校准Offset文件不存在，路径：%1%	Machine calibration Offset file does not exist, path: %1%	การปรับแต่งแฟ้ม Offset ไม่มีเส้นทาง %1%	File_txt_AtsOffsetSet
+590114	1	Project			AtsOffset.txt中未找到对应Slot,Channel的更新	Can not find andy Offsets	การปรับปรุงที่สอดคล้องกันสำหรับ Slot และเปลี่ยนไม่พบใน AtsOffset.txt	File_txt_AtsOffsetSet
+591115	1	Project			文件夹中得Dsp相关dll文件不全:\nInnoATJsonConvert.dll\nNewtonsoft.Json.Net35.dll	The DLL files related to DSPs in the folder are incomplete:\nInnoATJsonConvert.dll\nNewtonsoft.Json.	ไฟล์ที่เกี่ยวข้องกับ DLL ไม่สมบูรณ์ในโฟลเดอร์	DspTune_DspAT_dllCheck
+591116	1	Project			CommonSetting配置文件中Station配置站别%1%非法！	The Station configuration station %1% in the CommonSetting configuration file is illegal!	สถานีการกำหนดค่าสถานี %1% ในไฟล์การกำหนดค่า CommonSetting ผิดกฎหมาย!	Common_MainVi
+591117	0	Project			将Tx端光纤复位，准备量测Rx端光功率，以计算RxOffset	Reset the optical fiber at the Tx end and prepare to measure the optical power at the Rx end to calculate RxOffset.	รีเซ็ตใยแก้วนำแสงที่ปลาย Tx และเตรียมวัดกำลังแสงที่ปลาย Rx เพื่อคำนวณ RxOffset.	OTS_C_RxOffset1
+591118	1	Project			计算出的值不在0~1023范围内,Bias_DC_f=%1%,Mod_DC_f=%2%,HFDE_DC_f=%3%,LFDE_DC_f=%4%	The calculated value is not in the range of 0 to 1023,Bias_DC_f=%1%,Mod_DC_f=%2%,HFDE_DC_f=%3%,LFDE_DC_f=%4%	การคำนวณไม่ได้อยู่ในช่วง 0 ถึง 1023,Bias_DC_f=%1%,Mod_DC_f=%2%,HFDE_DC_f=%3%,LFDE_DC_f=%4%	X_TxEyeTune1_BiasModTarget
+595000	2	Project_OPD	Common		产品名称、站别名称或者测试计划名称为空。	The product name, station name or test plan name is Null.	ชื่อผลิตภัณฑ์ ชื่อไซต์ หรือชื่อแผนการทดสอบว่างเปล่า	OPD.vi
+595001	1	Project_OPD			AAAAA%1%	BBB%1%	CCCC%1%	AAAA
+595200	1	Project_OPD	Block		SN %1%工序错误，配置的工序为%2%，实际工序为%3%。	SN %1% station is wrong, the configured station is %2% and the actual station is %3%.	ข้อผิดพลาดของกระบวนการ SN %1% กระบวนการที่กำหนดค่าคือ %2% และกระบวนการจริงคือ %3%	MoveInStation.vi
+595201	1	Project_OPD	Block		在MES系统中获取iCord工艺路线里的SpecData失败，SN为%1%，工序为%2%，厂区代码为%3%。	Failed to obtain SpecData in iCord process route in MES system, SN is %1%, process is %2% and factory code is %3%.	การรับ SpecData ในเส้นทางกระบวนการ iCord ในระบบ MES ล้มเหลว SN คือ %1% กระบวนการคือ %2% และรหัสโรงงานคือ %3%	MoveInStation.vi
+595202	1	Project_OPD	Block		过站失败，SN为%1%，工序名称为%2%，厂区代码为%3%，物料信息为%4%，参数信息为%5%。	Failed to pass station,SN is %1%,station is %2%,factory code is %3%,material information is %4%, and parameter information is %5%.	ผ่านสถานีไม่สำเร็จ SN คือ %1% ชื่อกระบวนการคือ %2% รหัสโรงงานคือ %3% ข้อมูลวัสดุคือ %4% และข้อมูลพารามิเตอร์คือ %5%	MoveOutStation.vi
+595203	1	Project_OPD	Block		报废失败，SN为%1%，工序名称为%2%，厂区代码为%3%，报废原因为%4%。	Scrap failed,SN is %1%,station is %2%,factory code is %3% and reason for scrap is %4%.	เรื่องที่สนใจล้มเหลว, SN คือ %1%, สถานีคือ %2%, รหัสโรงงานคือ %3% และเหตุผลของเรื่องที่สนใจคือ %4%	MoveOutStation.vi
+595204	1	Project_OPD	Block		出站失败，SN为%1%，工序名称为%2%，厂区代码为%3%。	Outbound failed, SN is %1%,station is %2%,factory code is %3%.	ขาออกล้มเหลว SN คือ %1% ชื่อกระบวนการคือ %2% และรหัสโรงงานคือ %3%	MoveOutStation.vi
+595205	0	Project_OPD	Block		空纤测试，请移除TX%1%端光纤。	Test TxPower without fiber,please remove fiber at TX%1% side.	สำหรับการทดสอบไฟเบอร์เปล่า โปรดถอดไฟเบอร์ที่ปลาย TX%1%	T_ReturnLoss_OPD.vi
+595206	0	Project_OPD	Block		如下通道%1%空纤光功率超出范围，检查光纤连接后点击“OK”重测，点击“Cancel”继续测试。	The optical power of the following channel %1% is out of range. After checking the fiber connection, click "OK" to retest, and click "Cancel" to continue the test.	กำลังแสงของช่อง %1% ต่อไปนี้อยู่นอกช่วง หลังจากตรวจสอบการเชื่อมต่อไฟเบอร์ คลิก "ตกลง" เพื่อทดสอบใหม่ และคลิก "ยกเลิก" เพื่อดำเนินการทดสอบต่อ	T_ReturnLoss_OPD.vi
+595207	0	Project_OPD	Block		请连接TX%1%端光纤。	Please connect fiber at TX%1% side.	โปรดเชื่อมต่อไฟเบอร์ที่ปลาย TX%1%	T_ReturnLoss_OPD.vi
+595208	0	Project_OPD	Block		请移除RX端光纤。	Please remove fiber at RX side.	โปรดถอดไฟเบอร์ที่ปลาย RX ออก	T_Idark_OPD.vi
+595209	0	Project_OPD	Block		请连接RX端光纤。	Please connect fiber at RX side.	โปรดเชื่อมต่อใยแก้วนำแสงที่ปลาย RX	T_RxResp_OPD.vi
+595210	2	Project_OPD	Block		校准异常，关闭界面后将无法测试，请确认是否继续。	Calibration is abnormal, and test cannot be performed after closing the interface. Please confirm whether to continue.	การสอบเทียบผิดปกติ และไม่สามารถดำเนินการทดสอบได้หลังจากปิดอินเทอร์เฟซ โปรดยืนยันว่าจะดำเนินการต่อหรือไม่	C_Calibrate_OPD.vi
+595211	0	Project_OPD	Block		请将光纤接入功率计，接入后点击“OK”继续。	Please connect fiber to power meter and then click "OK" to continue.	โปรดเชื่อมต่อใยแก้วนำแสงกับมิเตอร์ไฟฟ้า จากนั้นคลิก "ตกลง" เพื่อดำเนินการต่อ่	C_RxOffset_OPD.vi
+595212	0	Project_OPD	Block		请输入各通道功率，输入后点击“OK”继续。	Please keyin power of each channel, and click "OK" to continue.	กรุณาป้อนพลังงานของแต่ละช่อง และคลิก "ตกลง" เพื่อดำเนินการต่อ	C_RxOffset_OPD.vi
+595213	1	Project_OPD	Block		%1%文件中不存在,请先录入%2%。	The %1% file does not exist, please keyin %2% first.	ไม่มีไฟล์ %1% โปรดป้อน %2% ก่อน	MaterialCheck.vi
+595214	0	Project_OPD	Block		请手动输入各通道%1%光功率。	Please manually input %1% optical power of each channel.	โปรดป้อนกำลังแสง %1% ของแต่ละช่องด้วยตัวเอง	C_Calibrate_OPD.vi
+595215	1	Project_OPD	Block		IPSN比对失败，录入的IPSN=%1%，读取的IPSN=%2%。	IPSN comparison failed, input IPSN=%1%, read IPSN=%2%.	การเปรียบเทียบ IPSN ล้มเหลว, IPSN=%1% ที่ป้อน, IPSN ที่อ่าน=%2%	CompareSn.vi
+595216	0	Project_OPD	Block		请调整光轴位置使出光调整至预置范围内。	Please adjust the position of the optical axis to adjust TxPower to the preset range.	โปรดปรับตำแหน่งของแกนออปติคัลเพื่อปรับแสงเอาต์พุตให้อยู่ในช่วงที่ตั้งไว้ล่วงหน้า	LD_Lens_AA_SIPH.vi
+595217	0	Project_OPD	Block		请调整Lens位置后进行Lens耦合。	Please adjust the Lens position and start Lens coupling.	โปรดปรับตำแหน่งเลนส์และดำเนินการเชื่อมต่อเลนส์	LD_Lens_AA_SIPH.vi
+595218	1	Project_OPD	Block		未找到测试项%1%	Test item %1% not found	ไม่พบรายการทดสอบ %1%	T_DeltaValue
+595219	1	Project_OPD	Block		%1%配置错误。	%1% configuration error.	%1% ข้อผิดพลาดในการกำหนดค่า	GetSetOBSn.vi
+595220	1	Project_OPD	Block		读取的%1%=%2%，长度为%3%，配置的长度为%4%，长度错误。	Read %1%=%2%, length is %3%,configured length is %4%, the length is wrong.	อ่าน %1%=%2% ความยาวคือ %3% ความยาวที่กำหนดค่าไว้คือ %4% ความยาวไม่ถูกต้อง	GetSetOBSn.vi
+595221	0	Project_OPD	Block		请确认是否已松开夹爪。	Please confirm whether the clamping jaw has been released.	โปรดยืนยันว่าได้ปลดกรามหนีบแล้วหรือไม่	TRX_AA.vi
+595222	1	Project_OPD	Block		SN %1%工单错误，配置的工单为%2%，实际工单为%3%。	SN %1% work order is wrong, the configured work order is %2% and the actual work order is %3%.	SN %1% ใบสั่งงานไม่ถูกต้อง ใบสั่งงานที่กำหนดค่าไว้คือ %2% และใบสั่งงานจริงคือ %3%	MoveInStation.vi
+595223	1	Project_OPD	Block		SN %1%项目信息错误，选择的项目为%2%，实际项目为%3%。	SN %1% project information is wrong, the selected project is %2%, and the actual project is %3%.	ข้อมูลโครงการ SN %1% ผิดพลาด โครงการที่เลือกคือ %2% และโครงการจริงคือ %3%	MoveInStation.vi
+595224	1	Project_OPD	Block		衰减器监控光源出光小于设定阈值，请检查光源	The attenuator monitors that the light output from the light source is less than the set threshold. Please check the light source.	ตัวลดทอนจะตรวจสอบแหล่งกำเนิดแสง แสงที่ส่งออกน้อยกว่าเกณฑ์ที่ตั้งไว้ โปรดตรวจสอบแหล่งกำเนิดแสง	T_Overload_OPD.vi
+595225	1	Project_OPD	Block		设置%1%模式失败，写入值=%2%，回读值=%3%。	Failed to set %1% mode, write value = %2%, read back value = %3%.	ไม่สามารถตั้งค่าโหมด %1% ค่าเขียน=%2% ค่าการอ่านกลับ=%3%	X_SetWorkMode
+595700	0	Project_OPD	SubVI		未录入胶水或棱镜信息，将无法测试，请录入。	It will not be able to test because the glue or prism information is not entered,please input.	หากไม่ได้ป้อนข้อมูลกาวหรือปริซึม จะไม่สามารถทดสอบได้ โปรดป้อน	InputAndCheckMaterial.vi
+595701	1	Project_OPD	SubVI		未在文件中找到胶水SN信息。	Glue SN information not found in the file.	ไม่พบข้อมูล SN ของกาวในไฟล์	InputAndCheckMaterial.vi
+595702	1	Project_OPD	SubVI		未在%1%文件中找到%2%SN信息。	%2%SN information not found in %1% file.	ไม่พบข้อมูล %2%SN ในไฟล์ %1%	InputAndCheckMaterial.vi
+595703	0	Project_OPD	SubVI		胶水条码为空，请录入。	The GlueSN is null, please input it.	บาร์โค้ดกาวว่างเปล่า โปรดป้อน	InputAndCheckMaterial.vi
+595704	2	Project_OPD	SubVI		胶水或棱镜编号检查失败，若点击“继续”按键，程序将停止运行，请确认。	The glue or prism SN check failed.If "Continue" button clicked, the program will stop running. Please confirm.	กาว หรือหมายเลขปริปริมาตรล้มเหลวหากคลิกปุ่ม "ดำเนินการต่อไป" "โปรแกรมจะหยุดทำงานโปรดยืนยัน"	InputAndCheckMaterial.vi
+595705	0	Project_OPD	SubVI		确定取消选择产品、工序及测试计划？	Are you sure you want to cancel the selection of products, processes and test plans?	คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการเลือกผลิตภัณฑ์ กระบวนการ และแผนการทดสอบ	Sub_SelectProduct.vi
+595706	0	Project_OPD	SubVI		未选择登录类别。	No login category selected.	ไม่ได้เลือกประเภทการเข้าสู่ระบบ	Login_OPD.vi
+595707	0	Project_OPD	SubVI		是否取消登录？	Do you want to cancel login?	คุณต้องการยกเลิกล็อกอินหรือไม่?	Login_OPD.vi
+595708	1	Project_OPD	SubVI		胶水及透镜使用次数检查均未配置，请配置。	Glue and lens check are not configured, please configure.	ไม่ได้กำหนดค่าการตรวจสอบการใช้กาวและเลนส์ โปรดกำหนดค่า	Sub_InputAndCheckMaterial.vi
+595709	0	Project_OPD	SubVI		强制关闭将不能继续后续测试，请确认是否关闭。	Forced shutdown will not continue test, please confirm whether to close it.	การปิดเครื่องโดยบังคับจะไม่อนุญาตให้มีการทดสอบในภายหลัง โปรดยืนยันว่าจะปิดหรือไม่	ReadCalibConfig.vi
+595710	1	Project_OPD	SubVI		未找到SampleSn配置。	SampleSn configuration not found.	ไม่พบการกำหนดค่า SampleSn	ReadCalibConfig.vi
+595711	1	Project_OPD	SubVI		校验时间超时，需要重新校验。	Calibration time has expired and it need to calibrate again.	หมดเวลาการตรวจสอบและต้องมีการยืนยันอีกครั้ง	ReadCalibConfig.vi
+595712	1	Project_OPD	SubVI		机种与校验不匹配，需要重新校验。	Product can't match calibration and it need to calibrate again.	โมเดลไม่ตรงกับการปรับเทียบและจำเป็นต้องปรับเทียบใหม่	ReadCalibConfig.vi
+595713	1	Project_OPD	SubVI		站别与校验不匹配，需要重新校验。	Station can't match calibration and it need to calibrate again.	ประเภทของสถานีไม่ตรงกับการปรับเทียบและจำเป็นต้องปรับเทียบใหม่	ReadCalibConfig.vi
+595714	1	Project_OPD	SubVI		光纤与校验不匹配，需要重新校验。	Fiber can't match calibration and it need to calibrate again.	ไฟเบอร์ไม่ตรงกับการปรับเทียบและจำเป็นต้องปรับเทียบใหม่	ReadCalibConfig.vi
+595715	0	Project_OPD	SubVI		本次符合规则，不需要重新校验。可以核对参数后直接点击退出按键，或者手动输入校验值后点击退出按键。若需重新校验，请按流程校验。	No need to calibrate any more.You can click Exit button after checking parameters or click Exit button after inputing and saving calibration value.If you wanna calibrate again,please follow formal process.	ครั้งนี้เป็นไปตามกฎและไม่ต้องตรวจสอบซ้ำ คุณสามารถคลิกปุ่มออกได้โดยตรงหลังจากตรวจสอบพารามิเตอร์ หรือป้อนค่าการตรวจสอบด้วยตนเองแล้วคลิกปุ่มออก หากจำเป็นต้องทำการปรับเทียบใหม่ โปรดตรวจสอบตามขั้นตอน	ReadCalibConfig.vi
+595716	1	Project_OPD	SubVI		SampleSn=%1%，%2%，请更换Sample。	SampleSn=%1%, %2%, please replace Sample.	SampleSn=%1%, %2% โปรดแทนที่ตัวอย่าง	SampleCheck.vi
+595717	1	Project_OPD	SubVI		SampleSn=%1%，已经过期，请更换Sample。	SampleSn=%1%, has expired, please replace Sample.	SampleSn=%1% หมดอายุแล้ว โปรดเปลี่ยนตัวอย่าง	SampleCheck.vi
+595718	1	Project_OPD	SubVI		保存Rx校准数据失败，错误信息为%1%。	Failed to save Rx calibration data with error message %1%.	บันทึกข้อมูลการสอบเทียบ Rx ล้มเหลวโดยมีข้อความแสดงข้อผิดพลาด %1%	CalibrateRx_OPD.vi
+595719	1	Project_OPD	SubVI		请输入各通道光源值。	Failed to save Rx calibration data with error message %1%.	บันทึกข้อมูลการสอบเทียบ Rx ล้มเหลวโดยมีข้อความแสดงข้อผิดพลาด %1%	CalibrateTx_OPD.vi
+595720	1	Project_OPD	SubVI		保存Tx校准数据失败，错误信息为%1%。	Failed to save Rx calibration data with error message %1%.	บันทึกข้อมูลการสอบเทียบ Rx ล้มเหลวโดยมีข้อความแสดงข้อผิดพลาด %1%	CalibrateTx_OPD.vi
+595721	0	Project_OPD	SubVI		界面将关闭，请确认。	User interface will close, please confirm.	อินเทอร์เฟซจะปิด โปรดยืนยัน	InputAndCheckMaterial.vi
+595722	2	Project_OPD	SubVI		启用了调整块，但是未选择调整块方向和角度，请选择。	Adapter is enabled, but AdapterDirection and AdapterAngle are not selected, please select it.	เปิดใช้งานสปินเนอร์ แต่ไม่ได้เลือกทิศทางและมุมของสปินเนอร์ ให้เลือก	Sub_TX_AA.vi
+595723	1	Project_OPD	SubVI		%1%使用次数已超过上限，请更换。	The usage of %1% has exceeded the upper limit, please replace it.	การใช้งาน %1% เกินขีดจำกัดสูงสุด โปรดแทนที่	Sub_UpdateMaterialInfo.vi
+595724	0	Project_OPD	SubVI		请确保DutTx端通道%1%连接至功率计。	Please make sure that DutTx channel %1% is connected to power meter.	โปรดตรวจสอบว่าช่อง DutTx %1% เชื่อมต่อกับมิเตอร์ไฟฟ้าแล้ว	CalibrateTx_OPD.vi
+595725	1	Project_OPD	SubVI		从iCord加载如下差值公式异常：\n%1%	Loading the following difference formula from iCord is abnormal:\n%1%.	การโหลดสูตรความแตกต่างต่อไปนี้จาก iCord ผิดปกติ:\n%1%	Sub_SearchAndCoverFormulaInTestplan.vi
+595726	1	Project_OPD	SubVI		未找到%1%\n，路径:%2%	%1% not found\n, path: %2%	%1% ไม่พบ\n, เส้นทาง:%2%	Sub_CheckDllVersion.vi
+595727	1	Project_OPD	SubVI		未在测试计划中找到如下段或键：\n%1%	The following section or key was not found in the test plan:\n%1%	ไม่พบส่วนหรือคีย์ต่อไปนี้ในแผนการทดสอบ:\n%1%	Sub_SearchAndCoverSectionInTestplan.vi
+595728	0	Project_OPD	SubVI		界面将关闭，请确认是否还需要调整光轴。	User interface will close. Please confirm whether the optical axis still needs to be adjusted.	อินเทอร์เฟซจะปิด โปรดยืนยันว่ายังจำเป็นต้องปรับแกนลำแสงหรือไม่	ManualHeaterTune.vi
+595729	1	Project_OPD	SubVI		%1%已使用过%2%天，大于规格上限%3%！	%1% has been used for %2% days, which is %3% greater than the upper specification limit!	%1% ถูกใช้เป็นเวลา %2% วัน ซึ่งมากกว่าขีดจำกัดข้อกำหนดด้านบน %3%!	Sub_CheckMaterialSn.vi
+595730	0	Project_OPD	SubVI		请断开跳线，清洁端面，并重新测试。	Please disconnect the jumper, clean the end face, and retest.	โปรดถอดจัมเปอร์ออก ทำความสะอาดส่วนปลาย และทดสอบอีกครั้ง	SampleTestTRx_OPD.vi
+595731	0	Project_OPD	SubVI		请更换跳线，并重新校验。	Please replace the jumper and re-calibrate.	กรุณาเปลี่ยนจัมเปอร์และปรับเทียบอีกครั้ง	SampleTestTRx_OPD.vi
+595732	2	Project_OPD	SubVI		存在Overload不在范围内的通道，详细信息为：\n%1%,\n是否继续？	Overload is out of the range for several channels. The details are:\n%1%, \nDo you want to continue?	มีช่องที่ Overload ไม่อยู่ในช่วง รายละเอียดคือ:\n%1%,\nคุณต้องการดำเนินการต่อหรือไม่?	Sub_TestOverloadWithVOADut_OPD.vi
+595733	2	Project_OPD	SubVI		系统错误，错误信息为：\n%1%,\n是否继续？	System error, error message:\n%1%,\nDo you want to continue?	ข้อผิดพลาดของระบบ ข้อความแสดงข้อผิดพลาด:\n%1%,\nคุณต้องการดำเนินการต่อหรือไม่?	Sub_TestOverloadWithVOADut_OPD.vi
+595734	2	Project_OPD	SubVI		%1%不能为空，请输入正确的信息。	%1% cannot be empty, please enter the correct information.	%1% ไม่สามารถเว้นว่างได้ โปรดป้อนข้อมูลที่ถูกต้อง	OPD test system.vi
+595735	1	Project_OPD	SubVI		DSPTemp超过阈值，请检查物料。	DSPTemp exceeds the threshold, please check DUT.	DSPTemp เกินเกณฑ์ โปรดตรวจสอบวัสดุ	Sub_MediaSideBer.vi
+595736	0	Project_OPD	SubVI		本通道Overload测试完成，详细信息为：\n%1%,\n是否继续？	The overload test of this channel is completed. The detailed information is:\n%1%,\nDo you want to continue?	การทดสอบโอเวอร์โหลดของช่องนี้เสร็จสมบูรณ์ ข้อมูลโดยละเอียดคือ:\n%1%\nคุณต้องการดำเนินการต่อหรือไม่	Sub_TestOverloadWithVOADut_OPD.vi
+595737	0	Project_OPD	SubVI		请注意：选择的项目未配置项目号。	Please note: The selected project does not have a project code configured.	โปรดทราบ: โครงการที่เลือกไม่มีการกำหนดค่าหมายเลขโครงการ	OPD test system.vi
+595738	2	Project_OPD	SubVI		警告：选择的项目与其他项目共用一个项目号，请谨慎选择。	Warning: The selected project shares the same project code with other projects, please select carefully.	คำเตือน: โครงการที่เลือกใช้หมายเลขโครงการร่วมกับโครงการอื่น โปรดเลือกอย่างระมัดระวัง	OPD test system.vi

@@ -30,11 +30,19 @@
             <SourceDllPath>$(SolutionDir)Vendor\MotionCard\dll64\LTDMC.dll</SourceDllPath>
             <TargetDir>$(MainOutput)</TargetDir>
         </PropertyGroup>
-        <Copy
-            SourceFiles="$(SourceDllPath)"
-            DestinationFolder="$(TargetDir)"
-            SkipUnchangedFiles="true"
-            OverwriteReadOnlyFiles="true"
-            Condition="Exists('$(SourceDllPath)')" />
+        <Copy SourceFiles="$(SourceDllPath)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Condition="Exists('$(SourceDllPath)')" />
+    </Target>
+
+    <Target Name="CopyIspBoardll" BeforeTargets="Build">
+        <PropertyGroup>
+            <SolutionDir>$(SolutionDir)</SolutionDir>
+            <SourceDllPaths>
+                $(SolutionDir)Vendor\ISPBoard\dll64\CH375DLL.dll;
+                $(SolutionDir)Vendor\ISPBoard\dll64\FOL_MsgCodes.dll;
+                $(SolutionDir)Vendor\ISPBoard\dll64\RdOpticalDutInterface_LV2019_64b.dll;
+            </SourceDllPaths>
+            <TargetDir>$(MainOutput)</TargetDir>
+        </PropertyGroup>
+        <Copy SourceFiles="$(SourceDllPaths)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Condition="Exists('$(SolutionDir)Vendor\ISPBoard\dll64\CH375DLL.dll')  Or&#xD;&#xA;            Exists('$(SolutionDir)Vendor\ISPBoard\dll64\FOL_MsgCodes.dll') Or&#xD;&#xA;            Exists('$(SolutionDir)Vendor\ISPBoard\dll64\RdOpticalDutInterface_LV2019_64b.dll')" />
     </Target>
 </Project>

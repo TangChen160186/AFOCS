@@ -64,6 +64,7 @@
       <ProjectReference Include="..\AFOCS.Framework\AFOCS.Framework.csproj" />
       <ProjectReference Include="..\AFOCS.Infrastructure\AFOCS.Infrastructure.csproj" />
         <ProjectReference Include="..\AFOCS.FlowNodeEditor\AFOCS.FlowNodeEditor.csproj" />
+        <ProjectReference Include="..\ISPBoard\ISPBoard.vcxproj" />
     </ItemGroup>
     <ItemGroup>
       <Reference Include="MvCameraControl.Net">
