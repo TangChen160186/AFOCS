@@ -11,7 +11,7 @@ namespace AFOCS.Infrastructure
 
         /// <summary>工位1按钮1 | X00</summary>
         Left_Button1 = 0,
-        /// <summary>工位1按钮2 | X01</summary>
+        /// <summary>工位1按钮2 | X01</summary
         Left_Button2 = 1,
         /// <summary>工位1按钮3 | X02</summary>
         Left_Button3 = 2,

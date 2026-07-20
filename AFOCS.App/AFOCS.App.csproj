@@ -43,6 +43,20 @@
 
         <Page Include="App.xaml" />
     </ItemGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+        <OutputPath>$(MainOutput)\</OutputPath>
+        <WarningLevel>3</WarningLevel>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <!--<PropertyGroup>
+        <ApplicationIcon>favicon.ico</ApplicationIcon>
+    </PropertyGroup>-->
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+        <OutputPath>$(MainOutput)\</OutputPath>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
     <ItemGroup>
       <ProjectReference Include="..\AFOCS.Communication\AFOCS.Communication.csproj" />
       <ProjectReference Include="..\AFOCS.Core\AFOCS.Core.csproj" />

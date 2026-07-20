@@ -21,5 +21,20 @@
         <Reference Include="MvCameraControl.Net">
             <HintPath>..\Vendor\Camera\win64\MvCameraControl.Net.dll</HintPath>
         </Reference>
+      
     </ItemGroup>
+
+    <Target Name="CopyLTDMCDll" BeforeTargets="Build">
+        <PropertyGroup>
+            <SolutionDir>$(SolutionDir)</SolutionDir>
+            <SourceDllPath>$(SolutionDir)Vendor\MotionCard\dll64\LTDMC.dll</SourceDllPath>
+            <TargetDir>$(MainOutput)</TargetDir>
+        </PropertyGroup>
+        <Copy
+            SourceFiles="$(SourceDllPath)"
+            DestinationFolder="$(TargetDir)"
+            SkipUnchangedFiles="true"
+            OverwriteReadOnlyFiles="true"
+            Condition="Exists('$(SourceDllPath)')" />
+    </Target>
 </Project>

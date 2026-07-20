@@ -5,15 +5,15 @@
     <PropertyGroup>
         <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
         <SolutionDirectory>$([System.IO.Path]::GetDirectoryName('$(DirectoryBuildPropsPath)'))</SolutionDirectory>
-        <MainOutput Condition="'$(Configuration)' == 'Debug'">$(SolutionDirectory)\ControlConnection.App\bin\Debug</MainOutput>
-        <MainOutput Condition="'$(Configuration)' == 'Release'">$(SolutionDirectory)\ControlConnection.App\bin\Release</MainOutput>
-        <PluginOutput>$(MainOutput)\Plugins</PluginOutput>
-        <Obfuscate Condition="'$(Configuration)' != 'Debug'">true</Obfuscate>
+        <MainOutput Condition="'$(Configuration)' == 'Debug'">$(SolutionDirectory)\AFOCS.App\bin\Debug</MainOutput>
+        <MainOutput Condition="'$(Configuration)' == 'Release'">$(SolutionDirectory)\AFOCS.App\bin\Release</MainOutput>
+        <!--<PluginOutput>$(MainOutput)\Plugins</PluginOutput>
+        <Obfuscate Condition="'$(Configuration)' != 'Debug'">true</Obfuscate>-->
     </PropertyGroup>
 
-<!--
+
     <PropertyGroup>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     </PropertyGroup>
-    -->
+    
 </Project>

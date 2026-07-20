@@ -4,6 +4,7 @@ using System.Windows;
 using AFOCS.Devices;
 using AFOCS.Devices.Implementation;
 using AFOCS.Framework.Framework.Services;
+using AFOCS.Infrastructure;
 using Caliburn.Micro;
 using Serilog;
 
@@ -65,6 +66,8 @@ namespace AFOCS.App.ViewModels
         [Import] private IWindowManager _windowManager = null!;
 
         [Import] private IMainWindow _mainWindow = null!;
+
+        [Import] private IIOMonitorService _ioMonitorService;
         protected override Task OnActivatedAsync(CancellationToken cancellationToken)
         {
             InitializeDevices();
@@ -103,6 +106,7 @@ namespace AFOCS.App.ViewModels
                     }
                 }
 
+                _ioMonitorService.Start();
                 await FinalizeInitialization();
             }
             catch (Exception ex)
@@ -131,7 +135,7 @@ namespace AFOCS.App.ViewModels
                 //_cameraLeftDown,
                 //_cameraRightUp,
                 //_cameraRightDown,
-                //_leadShineMotionCard,
+                _leadShineMotionCard,
             ];
             return devices;
         }
