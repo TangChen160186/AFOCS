@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -36,13 +36,10 @@
     <Target Name="CopyIspBoardll" BeforeTargets="Build">
         <PropertyGroup>
             <SolutionDir>$(SolutionDir)</SolutionDir>
-            <SourceDllPaths>
-                $(SolutionDir)Vendor\ISPBoard\dll64\CH375DLL.dll;
-                $(SolutionDir)Vendor\ISPBoard\dll64\FOL_MsgCodes.dll;
-                $(SolutionDir)Vendor\ISPBoard\dll64\RdOpticalDutInterface_LV2019_64b.dll;
-            </SourceDllPaths>
-            <TargetDir>$(MainOutput)</TargetDir>
         </PropertyGroup>
-        <Copy SourceFiles="$(SourceDllPaths)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Condition="Exists('$(SolutionDir)Vendor\ISPBoard\dll64\CH375DLL.dll')  Or&#xD;&#xA;            Exists('$(SolutionDir)Vendor\ISPBoard\dll64\FOL_MsgCodes.dll') Or&#xD;&#xA;            Exists('$(SolutionDir)Vendor\ISPBoard\dll64\RdOpticalDutInterface_LV2019_64b.dll')" />
+        <Copy SourceFiles="$(SolutionDir)Vendor\ISPBoard\dll64\CH375DLL.dll" DestinationFolder="$(MainOutput)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Condition="Exists('$(SolutionDir)Vendor\ISPBoard\dll64\CH375DLL.dll')" />
+        <Copy SourceFiles="$(SolutionDir)Vendor\ISPBoard\dll64\FOL_MsgCodes.dll" DestinationFolder="$(MainOutput)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Condition="Exists('$(SolutionDir)Vendor\ISPBoard\dll64\FOL_MsgCodes.dll')" />
+        <Copy SourceFiles="$(SolutionDir)Vendor\ISPBoard\dll64\RdOpticalDutInterface_LV2019_64b.dll" DestinationFolder="$(MainOutput)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Condition="Exists('$(SolutionDir)Vendor\ISPBoard\dll64\RdOpticalDutInterface_LV2019_64b.dll')" />
+        <Copy SourceFiles="$(SolutionDir)ISPBoard\x64\$(Configuration)\ISPBoard.dll" DestinationFolder="$(MainOutput)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Condition="Exists('$(SolutionDir)ISPBoard\x64\$(Configuration)\ISPBoard.dll')" />
     </Target>
 </Project>

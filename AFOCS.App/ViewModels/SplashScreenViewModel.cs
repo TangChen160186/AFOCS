@@ -62,6 +62,7 @@ namespace AFOCS.App.ViewModels
         [Import] private OpticalPowerMeterLeft _opticalPowerMeterLeft = null!;
         [Import] private OpticalPowerMeterRight _opticalPowerMeterRight = null!;
 
+        [Import] private ISPBoardDevice _boardDevice = null!;
 
         [Import] private IWindowManager _windowManager = null!;
 
@@ -106,6 +107,7 @@ namespace AFOCS.App.ViewModels
                     }
                 }
 
+                var nm = _boardDevice.DutReadWriteAsync(0, 1, 1, "RX", 0);
                 await _ioService.StartMonitor();
                 await FinalizeInitialization();
             }
@@ -135,7 +137,9 @@ namespace AFOCS.App.ViewModels
                 //_cameraLeftDown,
                 //_cameraRightUp,
                 //_cameraRightDown,
-                _leadShineMotionCard,
+                //_leadShineMotionCard,
+                _boardDevice
+
             ];
             return devices;
         }

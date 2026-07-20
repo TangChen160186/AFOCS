@@ -1,58 +1,6 @@
 #include "IspBoard.h"
 #include <cstring>
-#include <windows.h>
-#include <objbase.h> // CoTaskMemAlloc
-
-// ============================================================================
-// 内存管理说明:
-// 本 DLL 使用 CoTaskMemAlloc 分配所有输出内存，C# 端可通过
-// Marshal.FreeCoTaskMem / Marshal.PtrToStringAnsi 等方式释放和读取。
-// LStr 结构: [int32 cnt][uChar data[cnt]]
-// ============================================================================
-
-// 分配一个空的 LStrHandle (空字符串，表示无错误)
-static void AllocEmptyLStr(LStrHandle *h)
-{
-    *h = (LStrHandle)CoTaskMemAlloc(sizeof(LStr));
-    if (*h) {
-        memset(*h, 0, sizeof(LStr));
-    }
-}
-
-// 分配一个带错误消息的 LStrHandle
-static void AllocErrorLStr(LStrHandle *h, const char *msg)
-{
-    int32 len = (int32)strlen(msg);
-    *h = (LStrHandle)CoTaskMemAlloc(sizeof(LStr) + len);
-    if (*h) {
-        (**h)->cnt = len;
-        memcpy((**h)->str, msg, len);
-    }
-}
-
-// 读取 LStrHandle 输入字符串为 C 字符串
-static const char* ReadLStr(LStrHandle h)
-{
-    if (!h || !*h) return "";
-    static char buf[4096];
-    int32 len = (**h).cnt;
-    if (len > 4095) len = 4095;
-    memcpy(buf, (**h).str, len);
-    buf[len] = '\0';
-    return buf;
-}
-
-// 创建一个 LStrHandle (用于数组元素)
-static LStrHandle CreateLStr(const char *str)
-{
-    int32 len = (int32)strlen(str);
-    LStrHandle h = (LStrHandle)CoTaskMemAlloc(sizeof(LStr) + len);
-    if (h) {
-        (*h)->cnt = len;
-        memcpy((*h)->str, str, len);
-    }
-    return h;
-}
+#include <cstdio>
 
 // ============================================================================
 // 全局状态
@@ -63,237 +11,259 @@ static struct {
 } g_state;
 
 // ============================================================================
-// InterfaceInitialEx_C
-// 通过产品配置文件初始化设备接口
-//
-// C# 调用示例:
-//   [DllImport("ISPBoard.dll", CallingConvention = CallingConvention.StdCall)]
-//   static extern void InterfaceInitialEx_C(
-//       IntPtr productCfgFile,    // LStrHandle (输入字符串)
-//       ref IntPtr appNames,      // TD1Hdl* (输出: 字符串数组)
-//       ref IntPtr deviceVisa,    // TD6Hdl* (输出: VISA地址数组)
-//       ref IntPtr errInfo);      // LStrHandle* (输出: 错误信息, 空=成功)
+// 内部辅助函数
 // ============================================================================
-extern "C" void __stdcall InterfaceInitialEx_C(
-    LStrHandle *ProductCfgFile,
-    TD1Hdl     *AppNames,
-    TD6Hdl     *DeviceVisa,
-    LStrHandle *ErrInfo)
+
+static bool WriteStrToBuf(char* buf, int bufSize, int* outLen, const char* str)
 {
-    // 读取配置文件内容
-    const char* cfgContent = "";
-    if (ProductCfgFile && *ProductCfgFile) {
-        cfgContent = ReadLStr(*ProductCfgFile);
+    if (!buf || !outLen) return false;
+    int len = (int)strlen(str);
+    if (bufSize > 0 && len < bufSize) {
+        memcpy(buf, str, len);
+        buf[len] = '\0';
     }
+    *outLen = len + 1; // 包含 null 终止符
+    return true;
+}
+
+static bool WriteMultiStrToBuf(char* buf, int bufSize, int* outLen,
+    const char** strs, int strCount)
+{
+    if (!buf || !outLen) return false;
+
+    int total = 0;
+    for (int i = 0; i < strCount; i++) {
+        int len = (int)strlen(strs[i]) + 1; // +1 for null terminator
+        if (bufSize > 0 && total + len <= bufSize) {
+            memcpy(buf + total, strs[i], len);
+        }
+        total += len;
+    }
+
+    if (bufSize > 0 && total < bufSize)
+        buf[total] = '\0'; // double null terminate
+    if (total + 1 <= bufSize)
+        total += 1; // final null terminator
+
+    *outLen = total;
+    return true;
+}
+
+static void FormatErrorCode(char* buf, int bufSize, int* outLen,
+    int errCode, const char* msg)
+{
+    if (!buf || !outLen) return;
+    int len = snprintf(buf, bufSize, "%d|%s", errCode, msg);
+    *outLen = (len < bufSize) ? len + 1 : bufSize;
+}
+
+// ============================================================================
+// ISP_Initialize
+// 初始化 ISP Board，加载产品配置文件
+//
+// 参数:
+//   productCfgFile    [in]  产品配置文件内容（JSON 字符串）
+//   appNamesBuf       [out] 应用名称缓冲区（多个以 \0 分隔，双 \0 结尾）
+//   appNamesBufSize   [in]  缓冲区大小（字节），传0可先查询所需大小
+//   appNamesLen       [out] 实际写入长度（含终止符），总是被设置
+//   deviceVisaBuf     [out] VISA 地址缓冲区（格式同 appNames）
+//   deviceVisaBufSize [in]  缓冲区大小
+//   deviceVisaLen     [out] 实际写入长度
+//   errBuf            [out] 错误信息缓冲区
+//   errBufSize        [in]  错误信息缓冲区大小
+//   errLen            [out] 错误信息长度
+//
+// 返回值: 0=成功, 非0=失败
+// ============================================================================
+extern "C" int __stdcall ISP_Initialize(
+    const char* productCfgFile,
+    char*       appNamesBuf,      int appNamesBufSize,   int* appNamesLen,
+    char*       deviceVisaBuf,    int deviceVisaBufSize, int* deviceVisaLen,
+    char*       errBuf,           int errBufSize,        int* errLen)
+{
     // TODO: 解析 ProductCfgFile 中的 JSON/XML 配置
     // TODO: 根据配置初始化硬件接口 (VISA/串口/TCP等)
 
-    // --- 分配 AppNames (TD1: 字符串数组) ---
+    // --- 输出 AppNames ---
     {
-        const int32 nameCount = 1; // TODO: 从配置文件中读取
-        size_t structSize = sizeof(int32_t) + nameCount * sizeof(LStrHandle);
-
-        *AppNames = (TD1Hdl)CoTaskMemAlloc(sizeof(TD1) + (nameCount - 1) * sizeof(LStrHandle));
-        if (!*AppNames) {
-            AllocErrorLStr(ErrInfo, "Failed to allocate AppNames");
-            return;
-        }
-        memset(*AppNames, 0, sizeof(TD1) + (nameCount - 1) * sizeof(LStrHandle));
-        (**AppNames)->dimSize = nameCount;
-
-        // TODO: 从配置加载实际 App 名称
-        (**AppNames)->String[0] = CreateLStr("DefaultApp");
+        const char* apps[] = { "DefaultApp" };
+        WriteMultiStrToBuf(appNamesBuf, appNamesBufSize, appNamesLen,
+            apps, sizeof(apps) / sizeof(apps[0]));
     }
 
-    // --- 分配 DeviceVisa (TD6: VISA地址字符串数组) ---
+    // --- 输出 DeviceVisa ---
     {
-        const int32 devCount = 1; // TODO: 从配置文件中读取
-        *DeviceVisa = (TD6Hdl)CoTaskMemAlloc(sizeof(TD6) + (devCount - 1) * sizeof(LStrHandle));
-        if (!*DeviceVisa) {
-            AllocErrorLStr(ErrInfo, "Failed to allocate DeviceVisa");
-            return;
-        }
-        memset(*DeviceVisa, 0, sizeof(TD6) + (devCount - 1) * sizeof(LStrHandle));
-        (**DeviceVisa)->dimSize = devCount;
-
-        // TODO: 从配置加载实际 VISA 地址
-        (**DeviceVisa)->DeviceVisa[0] = CreateLStr("TCPIP0::127.0.0.1::5025::SOCKET");
+        const char* visas[] = { "TCPIP0::127.0.0.1::5025::SOCKET" };
+        WriteMultiStrToBuf(deviceVisaBuf, deviceVisaBufSize, deviceVisaLen,
+            visas, sizeof(visas) / sizeof(visas[0]));
     }
+
+    // --- 错误信息（空=成功） ---
+    WriteStrToBuf(errBuf, errBufSize, errLen, "");
 
     g_state.initialized = true;
-    AllocEmptyLStr(ErrInfo);
+    return 0;
 }
 
 // ============================================================================
-// DutEnterEngEx
+// ISP_EnterEngMode
 // 进入/退出工程模式
 //
-// C# 调用示例:
-//   [DllImport("ISPBoard.dll", CallingConvention = CallingConvention.StdCall)]
-//   static extern void DutEnterEngEx(
-//       uint devIndex,            // 设备索引
-//       byte enterEng,            // 0=退出, 非0=进入
-//       ref IntPtr engStatus,     // TD9Hdl* (输出: uint8数组, dimSize+data)
-//       ref IntPtr errInfo);      // LStrHandle* (输出: 错误信息)
+// 参数:
+//   devIndex      [in]  设备索引
+//   enterEng      [in]  0=退出工程模式, 非0=进入工程模式
+//   engStatusBuf  [out] 工程模式状态字节数组
+//   engStatusBufSize [in] 缓冲区大小
+//   engStatusLen  [out] 实际长度
+//   errBuf        [out] 错误信息缓冲区
+//   errBufSize    [in]  缓冲区大小
+//   errLen        [out] 错误信息长度
+//
+// 返回值: 0=成功, 非0=失败
 // ============================================================================
-extern "C" void __stdcall DutEnterEngEx(
-    uint32_t   DevIndex,
-    uint8_t    EnterEng,
-    TD9Hdl    *EngStatus,
-    LStrHandle *ErrInfo)
+extern "C" int __stdcall ISP_EnterEngMode(
+    uint32_t    devIndex,
+    uint8_t     enterEng,
+    uint8_t*    engStatusBuf,    int engStatusBufSize, int* engStatusLen,
+    char*       errBuf,          int errBufSize,       int* errLen)
 {
     if (!g_state.initialized) {
-        AllocErrorLStr(ErrInfo, "Interface not initialized");
-        return;
+        FormatErrorCode(errBuf, errBufSize, errLen, -1, "Interface not initialized");
+        return -1;
     }
 
     // TODO: 通过 VISA/串口 发送工程模式命令
-    // EnterEng: 0 = 退出工程模式, 非0 = 进入工程模式
-    // DevIndex: 设备索引
 
-    // --- 分配 EngStatus (TD9: uint8数组, 结构=[dimSize][data...]) ---
+    // --- 输出 EngStatus ---
     {
-        const int32 statusCount = 4; // TODO: 根据实际状态数量调整
-        *EngStatus = (TD9Hdl)CoTaskMemAlloc(sizeof(TD9) + (statusCount - 1) * sizeof(uint8_t));
-        if (!*EngStatus) {
-            AllocErrorLStr(ErrInfo, "Failed to allocate EngStatus");
-            return;
-        }
-        memset(*EngStatus, 0, sizeof(TD9) + (statusCount - 1) * sizeof(uint8_t));
-        (**EngStatus)->dimSize = statusCount;
+        const int statusCount = 4; // TODO: 根据实际状态数量调整
+        uint8_t status[4];
+        for (int i = 0; i < statusCount; i++)
+            status[i] = enterEng ? (uint8_t)1 : (uint8_t)0;
 
-        // TODO: 填充实际工程模式状态
-        for (int32 i = 0; i < statusCount; i++) {
-            (**EngStatus)->_[i] = EnterEng ? (uint8_t)1 : (uint8_t)0;
-        }
+        int copyLen = (statusCount < engStatusBufSize) ? statusCount : engStatusBufSize;
+        if (engStatusBuf && copyLen > 0)
+            memcpy(engStatusBuf, status, copyLen);
+        if (engStatusLen)
+            *engStatusLen = statusCount;
     }
 
-    AllocEmptyLStr(ErrInfo);
+    WriteStrToBuf(errBuf, errBufSize, errLen, "");
+    return 0;
 }
 
 // ============================================================================
-// DutHeaterScanEx
-// 加热器扫描
+// ISP_DutReadWrite
+// DUT 寄存器读写
 //
-// C# 调用示例:
-//   [DllImport("ISPBoard.dll", CallingConvention = CallingConvention.StdCall)]
-//   static extern void DutHeaterScanEx(
-//       uint devIndex,
-//       byte dutSlot, byte dutChannel,
-//       IntPtr appName,          // LStrHandle (输入)
-//       IntPtr dataIn,           // TD2Hdl (输入: uint16数组)
-//       ref IntPtr mpdOutADC,    // TD5Hdl* (输出: uint16数组)
-//       ref IntPtr mpdInADC,     // TD2Hdl* (输出: uint16数组)
-//       ref IntPtr errInfo);     // LStrHandle* (输出)
+// 参数:
+//   devIndex      [in]  设备索引
+//   dutSlot       [in]  DUT 插槽号
+//   dutChannel    [in]  DUT 通道号
+//   appName       [in]  应用名称（null-terminated）
+//   operation     [in]  操作类型 (0=读, 1=写, 其他=自定义)
+//   dataIn        [in]  写入数据（写操作时有效，可为 NULL）
+//   dataInLen     [in]  dataIn 的元素个数
+//   dataOutBuf    [out] 读取数据缓冲区
+//   dataOutBufSize [in] 缓冲区能容纳的元素个数
+//   dataOutLen    [out] 实际输出元素个数
+//   errBuf        [out] 错误信息缓冲区
+//   errBufSize    [in]  缓冲区大小
+//   errLen        [out] 错误信息长度
+//
+// 返回值: 0=成功, 非0=失败
 // ============================================================================
-extern "C" void __stdcall DutHeaterScanEx(
-    uint32_t   DevIndex,
-    uint8_t    DutSlot,
-    uint8_t    DutChannel,
-    LStrHandle *AppName,
-    TD2Hdl    *DataIn,
-    TD5Hdl    *MpdOutADC,
-    TD2Hdl    *MpdInADC,
-    LStrHandle *ErrInfo)
+extern "C" int __stdcall ISP_DutReadWrite(
+    uint32_t     devIndex,
+    uint8_t      dutSlot,
+    uint8_t      dutChannel,
+    const char*  appName,
+    uint16_t     operation,
+    const uint16_t* dataIn,     int dataInLen,
+    uint16_t*    dataOutBuf,    int dataOutBufSize, int* dataOutLen,
+    char*        errBuf,        int errBufSize,     int* errLen)
 {
     if (!g_state.initialized) {
-        AllocErrorLStr(ErrInfo, "Interface not initialized");
-        return;
+        FormatErrorCode(errBuf, errBufSize, errLen, -1, "Interface not initialized");
+        return -1;
     }
-
-    const char* appName = AppName && *AppName ? ReadLStr(*AppName) : "";
-    int32 inCount = (DataIn && *DataIn) ? (**DataIn)->dimSize : 0;
-
-    // TODO: 通过 VISA/串口 执行加热器扫描
-    // DutSlot: DUT插槽号, DutChannel: DUT通道号
-    // DataIn: 加热器控制参数 (uint16数组), 返回 MpdOutADC, MpdInADC
-
-    // --- 分配 MpdOutADC (TD5: uint16数组) ---
-    {
-        const int32 adcCount = inCount > 0 ? inCount : 8;
-        *MpdOutADC = (TD5Hdl)CoTaskMemAlloc(sizeof(TD5) + (adcCount - 1) * sizeof(uint16_t));
-        if (!*MpdOutADC) {
-            AllocErrorLStr(ErrInfo, "Failed to allocate MpdOutADC");
-            return;
-        }
-        memset(*MpdOutADC, 0, sizeof(TD5) + (adcCount - 1) * sizeof(uint16_t));
-        (**MpdOutADC)->dimSize = adcCount;
-        // TODO: 填充实际 ADC 数据
-    }
-
-    // --- 分配 MpdInADC (TD2: uint16数组) ---
-    {
-        const int32 adcCount = inCount > 0 ? inCount : 8;
-        *MpdInADC = (TD2Hdl)CoTaskMemAlloc(sizeof(TD2) + (adcCount - 1) * sizeof(uint16_t));
-        if (!*MpdInADC) {
-            AllocErrorLStr(ErrInfo, "Failed to allocate MpdInADC");
-            return;
-        }
-        memset(*MpdInADC, 0, sizeof(TD2) + (adcCount - 1) * sizeof(uint16_t));
-        (**MpdInADC)->dimSize = adcCount;
-        // TODO: 填充实际 ADC 数据
-    }
-
-    AllocEmptyLStr(ErrInfo);
-}
-
-// ============================================================================
-// DutReadWriteEx
-// DUT寄存器读写
-//
-// C# 调用示例:
-//   [DllImport("ISPBoard.dll", CallingConvention = CallingConvention.StdCall)]
-//   static extern void DutReadWriteEx(
-//       uint devIndex,
-//       byte dutSlot, byte dutChannel,
-//       IntPtr appName,          // LStrHandle (输入)
-//       ushort operation,        // 操作类型
-//       IntPtr dataIn,           // TD2Hdl (输入: uint16数组)
-//       ref IntPtr dataOut,      // TD2Hdl* (输出: uint16数组)
-//       ref IntPtr errInfo);     // LStrHandle* (输出)
-// ============================================================================
-extern "C" void __stdcall DutReadWriteEx(
-    uint32_t   DevIndex,
-    uint8_t    DutSlot,
-    uint8_t    DutChannel,
-    LStrHandle *AppName,
-    uint16_t   Operation,
-    TD2Hdl    *DataIn,
-    TD2Hdl    *DataOut,
-    LStrHandle *ErrInfo)
-{
-    if (!g_state.initialized) {
-        AllocErrorLStr(ErrInfo, "Interface not initialized");
-        return;
-    }
-
-    const char* appName = AppName && *AppName ? ReadLStr(*AppName) : "";
-    int32 inCount = (DataIn && *DataIn) ? (**DataIn)->dimSize : 0;
 
     // TODO: 通过 VISA/串口 执行寄存器读写
-    // Operation: 0=读, 1=写, 其他=自定义操作
-    // DataIn: 写入数据 (写操作时有效)
 
-    // --- 分配 DataOut (TD2: uint16数组) ---
+    // --- 输出 DataOut ---
     {
-        const int32 outCount = inCount > 0 ? inCount : 16;
-        *DataOut = (TD2Hdl)CoTaskMemAlloc(sizeof(TD2) + (outCount - 1) * sizeof(uint16_t));
-        if (!*DataOut) {
-            AllocErrorLStr(ErrInfo, "Failed to allocate DataOut");
-            return;
-        }
-        memset(*DataOut, 0, sizeof(TD2) + (outCount - 1) * sizeof(uint16_t));
-        (**DataOut)->dimSize = outCount;
-        // TODO: 填充实际读取数据
+        const int outCount = dataInLen > 0 ? dataInLen : 16;
+        int copyLen = (outCount < dataOutBufSize) ? outCount : dataOutBufSize;
+        if (dataOutBuf && copyLen > 0)
+            memset(dataOutBuf, 0, copyLen * sizeof(uint16_t)); // TODO: 填充实际数据
+        if (dataOutLen)
+            *dataOutLen = outCount;
     }
 
-    AllocEmptyLStr(ErrInfo);
+    WriteStrToBuf(errBuf, errBufSize, errLen, "");
+    return 0;
 }
 
 // ============================================================================
-// 释放内存辅助函数 (C# 端使用 Marshal.FreeCoTaskMem 手动释放)
+// ISP_HeaterScan
+// 加热器扫描
 //
-// 注意: 所有通过本 DLL 分配的输出参数均使用 CoTaskMemAlloc，
-// C# 端使用 Marshal.FreeCoTaskMem(ptr) 释放顶层 handle。
-// 嵌套 LStrHandle (如 TD1 中的字符串) 需先逐个释放。
+// 参数:
+//   devIndex      [in]  设备索引
+//   dutSlot       [in]  DUT 插槽号
+//   dutChannel    [in]  DUT 通道号
+//   appName       [in]  应用名称
+//   dataIn        [in]  加热器控制参数（uint16 数组）
+//   dataInLen     [in]  dataIn 的元素个数
+//   mpdOutBuf     [out] MPD 输出 ADC 缓冲区
+//   mpdOutBufSize [in]  缓冲区大小
+//   mpdOutLen     [out] 实际元素个数
+//   mpdInBuf      [out] MPD 输入 ADC 缓冲区
+//   mpdInBufSize  [in]  缓冲区大小
+//   mpdInLen      [out] 实际元素个数
+//   errBuf        [out] 错误信息缓冲区
+//   errBufSize    [in]  缓冲区大小
+//   errLen        [out] 错误信息长度
+//
+// 返回值: 0=成功, 非0=失败
 // ============================================================================
+extern "C" int __stdcall ISP_HeaterScan(
+    uint32_t     devIndex,
+    uint8_t      dutSlot,
+    uint8_t      dutChannel,
+    const char*  appName,
+    const uint16_t* dataIn,     int dataInLen,
+    uint16_t*    mpdOutBuf,     int mpdOutBufSize, int* mpdOutLen,
+    uint16_t*    mpdInBuf,      int mpdInBufSize,  int* mpdInLen,
+    char*        errBuf,        int errBufSize,    int* errLen)
+{
+    if (!g_state.initialized) {
+        FormatErrorCode(errBuf, errBufSize, errLen, -1, "Interface not initialized");
+        return -1;
+    }
+
+    // TODO: 通过 VISA/串口 执行加热器扫描
+
+    // --- 输出 MpdOutADC ---
+    {
+        const int outCount = dataInLen > 0 ? dataInLen : 8;
+        int copyLen = (outCount < mpdOutBufSize) ? outCount : mpdOutBufSize;
+        if (mpdOutBuf && copyLen > 0)
+            memset(mpdOutBuf, 0, copyLen * sizeof(uint16_t)); // TODO: 填充实际数据
+        if (mpdOutLen)
+            *mpdOutLen = outCount;
+    }
+
+    // --- 输出 MpdInADC ---
+    {
+        const int outCount = dataInLen > 0 ? dataInLen : 8;
+        int copyLen = (outCount < mpdInBufSize) ? outCount : mpdInBufSize;
+        if (mpdInBuf && copyLen > 0)
+            memset(mpdInBuf, 0, copyLen * sizeof(uint16_t)); // TODO: 填充实际数据
+        if (mpdInLen)
+            *mpdInLen = outCount;
+    }
+
+    WriteStrToBuf(errBuf, errBufSize, errLen, "");
+    return 0;
+}
