@@ -67,7 +67,7 @@ namespace AFOCS.App.ViewModels
 
         [Import] private IMainWindow _mainWindow = null!;
 
-        [Import] private IIOMonitorService _ioMonitorService;
+        [Import] private IIOService _ioService;
         protected override Task OnActivatedAsync(CancellationToken cancellationToken)
         {
             InitializeDevices();
@@ -106,7 +106,7 @@ namespace AFOCS.App.ViewModels
                     }
                 }
 
-                _ioMonitorService.Start();
+                await _ioService.StartMonitor();
                 await FinalizeInitialization();
             }
             catch (Exception ex)

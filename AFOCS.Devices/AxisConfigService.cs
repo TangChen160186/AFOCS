@@ -116,7 +116,7 @@ namespace AFOCS.Devices
                 case AxisId.LeftCamUpX:
                 case AxisId.RightCamUpX:
                     config.Motion.Equiv = 1000;
-                    config.Motion.MaxVel = 50;
+                    config.Motion.MaxVel = 10;
                     config.Home.HomeMode = 33;
                     config.PulsePerRev = 20000;
                     break;

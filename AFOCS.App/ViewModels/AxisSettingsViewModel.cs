@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using AFOCS.Devices;
+using AFOCS.Devices.Implementation;
 using AFOCS.Framework.Framework.Services;
 using AFOCS.Framework.Modules.Settings;
 using AFOCS.Infrastructure;
@@ -13,6 +14,8 @@ namespace AFOCS.App.ViewModels
     public class AxisSettingsViewModel : PropertyChangedBase, ISettingsEditor
     {
         private readonly IAxisConfigService _axisConfigService;
+
+        [Import] private LeadShineMotionCard _motionCard = null!;
 
         private AxisId _selectedAxis;
         private AxisConfig _currentConfig = new();
@@ -78,6 +81,31 @@ namespace AFOCS.App.ViewModels
                 _isBusy = value;
                 NotifyOfPropertyChange();
             }
+        }
+
+        // ========== 运动测试 ==========
+
+        private double _moveDistance = 10;
+        public double MoveDistance
+        {
+            get => _moveDistance;
+            set { _moveDistance = value; NotifyOfPropertyChange(); }
+        }
+
+        private bool _movePositive = true;
+        public bool MovePositive
+        {
+            get => _movePositive;
+            set { _movePositive = value; NotifyOfPropertyChange(); NotifyOfPropertyChange(nameof(MoveDirectionText)); }
+        }
+
+        public string MoveDirectionText => _movePositive ? "正向 (+)" : "反向 (-)";
+
+        private bool _isMoving;
+        public bool IsMoving
+        {
+            get => _isMoving;
+            set { _isMoving = value; NotifyOfPropertyChange(); }
         }
 
         // ========== 运动参数 ==========
@@ -222,6 +250,60 @@ namespace AFOCS.App.ViewModels
             _currentConfig = defaults;
             RefreshAllProperties();
             StatusMessage = "已重置为默认值";
+        }
+
+        public async Task MoveTestAsync()
+        {
+            if (_motionCard == null || !_motionCard.IsConnected)
+            {
+                StatusMessage = "运动控制卡未连接";
+                return;
+            }
+
+            IsMoving = true;
+            StatusMessage = "运动中...";
+            try
+            {
+                var cfg = _currentConfig.Motion;
+                var distance = _movePositive ? _moveDistance : -_moveDistance;
+                var result = await _motionCard.MovePmoveAsync(
+                    axis: (ushort)_selectedAxis,
+                    distance: distance,
+                    equiv: 8000000,
+                    minVel: cfg.MinVel,
+                    maxVel: cfg.MaxVel,
+                    tacc: cfg.Tacc,
+                    tdec: cfg.Tdec,
+                    stopVel: cfg.StopVel,
+                    sPara: cfg.SPara);
+
+                if (result.IsSuccess)
+                    StatusMessage = "移动完成";
+                else
+                    StatusMessage = $"移动失败: {result.Message}";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"移动异常: {ex.Message}";
+            }
+            finally
+            {
+                IsMoving = false;
+            }
+        }
+
+        public async Task StopAsync()
+        {
+            if (_motionCard == null || !_motionCard.IsConnected)
+            {
+                StatusMessage = "运动控制卡未连接";
+                return;
+            }
+
+            StatusMessage = "停止中...";
+            var result = await _motionCard.StopAxisAsync((ushort)_selectedAxis);
+            StatusMessage = result.IsSuccess ? "已停止" : $"停止失败: {result.Message}";
+            IsMoving = false;
         }
 
         // ========== ISettingsEditor ==========

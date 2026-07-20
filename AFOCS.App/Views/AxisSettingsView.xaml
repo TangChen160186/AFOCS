@@ -210,11 +210,57 @@
                 <StackPanel>
                     <TextBlock Text="基础参数" FontWeight="Bold" Margin="0,0,0,8" />
                     <StackPanel Margin="0,2">
-                        <TextBlock Text="每圈脉冲数" FontSize="10"
+                        <TextBlock Text="脉冲当量" FontSize="10"
                                    Foreground="{StaticResource LabelFg}" />
                         <TextBox Text="{Binding PulsePerRev, UpdateSourceTrigger=PropertyChanged}"
                                  Width="120" HorizontalAlignment="Left" />
                     </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ========== 运动测试 ========== -->
+            <Border Background="{StaticResource SectionBg}" CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="运动测试" FontWeight="Bold" Margin="0,0,0,8" />
+                    <UniformGrid Columns="4" Rows="1">
+                        <!-- 距离 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="距离 (unit)" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <TextBox Text="{Binding MoveDistance, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F2}}" />
+                        </StackPanel>
+                        <!-- 方向 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="方向" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <CheckBox IsChecked="{Binding MovePositive}" 
+                                      Content="{Binding MoveDirectionText}"
+                                      VerticalAlignment="Center" Margin="0,4,0,0" />
+                        </StackPanel>
+                        <!-- 移动按钮 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text=" " FontSize="10" />
+                            <Button cal:Message.Attach="MoveTestAsync" Content="移动测试"
+                                    Width="80" Padding="6,3">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMoving}" Value="True">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </StackPanel>
+                        <!-- 停止按钮 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text=" " FontSize="10" />
+                            <Button cal:Message.Attach="StopAsync" Content="停止"
+                                    Width="60" Padding="6,3"
+                                    Background="#FFE53E3E" Foreground="White" />
+                        </StackPanel>
+                    </UniformGrid>
                 </StackPanel>
             </Border>
 
