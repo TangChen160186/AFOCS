@@ -9,6 +9,7 @@ using System.Windows.Media;
 using AFOCS.Devices;
 using AFOCS.Framework.Modules.Settings;
 using AFOCS.Infrastructure;
+using Gemini.Modules.Settings;
 
 namespace AFOCS.App.ViewModels
 {
@@ -38,7 +39,6 @@ namespace AFOCS.App.ViewModels
 
         public string Module { get; }
 
-        /// <summary>仅输入信号：当前高电平</summary>
         private bool _isHigh;
         public bool IsHigh
         {
@@ -46,7 +46,6 @@ namespace AFOCS.App.ViewModels
             set { _isHigh = value; OnPropertyChanged(); }
         }
 
-        /// <summary>最后变化时间</summary>
         private DateTime _lastChange = DateTime.MinValue;
         public DateTime LastChange
         {
@@ -56,13 +55,22 @@ namespace AFOCS.App.ViewModels
 
         public bool IsOutput { get; }
 
-        public IOEditItem(string name, string signalName, int bitNo, string module, bool isOutput = false)
+        private bool _activeHigh;
+        /// <summary>是否高电平有效（true=高有效，false=低有效）</summary>
+        public bool ActiveHigh
+        {
+            get => _activeHigh;
+            set { _activeHigh = value; OnPropertyChanged(); }
+        }
+
+        public IOEditItem(string name, string signalName, int bitNo, string module, bool isOutput = false, bool activeHigh = true)
         {
             Name = name;
             SignalName = signalName;
             _bitNo = bitNo;
             Module = module;
             IsOutput = isOutput;
+            _activeHigh = activeHigh;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -86,10 +94,9 @@ namespace AFOCS.App.ViewModels
 
     [Export(typeof(ISettingsEditor))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    public class IOMappingSettingsViewModel : INotifyPropertyChanged, ISettingsEditor, IDisposable
+    public class IOMappingSettingsViewModel : INotifyPropertyChanged, ISettingsEditor, ICancelableSettingsEditor, IDisposable
     {
-        private readonly IIOMappingService _mapping;
-        private readonly IIOMonitorService? _monitor;
+        private readonly IIOService _io;
 
         public string SettingsPageName => "IO 配置";
         public string SettingsPagePath => "设备配置";
@@ -113,22 +120,34 @@ namespace AFOCS.App.ViewModels
             foreach (var item in InputItems)
             {
                 if (Enum.TryParse<AllInputs>(item.SignalName, out var signal))
-                    _mapping.SetInputBitNo(signal, item.BitNo);
+                {
+                    _io.SetInputBitNo(signal, item.BitNo);
+                    _io.SetInputActiveHigh(signal, item.ActiveHigh);
+                }
             }
             foreach (var item in OutputItems)
             {
                 if (Enum.TryParse<AllOutputs>(item.SignalName, out var signal))
-                    _mapping.SetOutputBitNo(signal, item.BitNo);
+                {
+                    _io.SetOutputBitNo(signal, item.BitNo);
+                    _io.SetOutputActiveHigh(signal, item.ActiveHigh);
+                }
             }
-            _ = _mapping.SaveAsync();
+            _ = _io.SaveAsync();
+        }
+
+        public async void CancelChanges()
+        {
+            // 从磁盘重新加载配置，覆盖内存中已修改的值
+            await _io.LoadAsync();
+            // 刷新 UI 列表为配置中的值
+            LoadItems();
         }
 
         [ImportingConstructor]
-        public IOMappingSettingsViewModel(IIOMappingService mapping,
-            [Import(AllowDefault = true)] IIOMonitorService? monitor = null)
+        public IOMappingSettingsViewModel(IIOService io)
         {
-            _mapping = mapping;
-            _monitor = monitor;
+            _io = io;
 
             SaveCommand = new RelayCommand(ApplyChanges);
             ResetDefaultCommand = new RelayCommand(ResetToDefault);
@@ -136,12 +155,8 @@ namespace AFOCS.App.ViewModels
 
             LoadItems();
 
-            // 订阅 IO 状态变化
-            if (_monitor != null)
-            {
-                _monitor.InputChanged += OnInputChanged;
-                Status = _monitor.IsRunning ? "监控中" : "已停止";
-            }
+            _io.InputChanged += OnInputChanged;
+            Status = _io.IsMonitoring ? "监控中" : "已停止";
         }
 
         private void LoadItems()
@@ -149,7 +164,7 @@ namespace AFOCS.App.ViewModels
             InputItems.Clear();
             OutputItems.Clear();
 
-            var config = _mapping.GetConfig();
+            var config = _io.GetConfig();
 
             foreach (var kv in SignalNames.Module1)
                 InputItems.Add(MakeInput(kv, config, "左工位-通用(M1)"));
@@ -160,22 +175,40 @@ namespace AFOCS.App.ViewModels
             foreach (var kv in SignalNames.Module4)
                 InputItems.Add(MakeInput(kv, config, "右工位-真空(M4)"));
 
-            foreach (AllOutputs signal in Enum.GetValues<AllOutputs>())
+            foreach (var kv in SignalNames.Module5)
+                OutputItems.Add(MakeOutput(kv, config, "左工位-通用(M5)"));
+            foreach (var kv in SignalNames.Module6)
+                OutputItems.Add(MakeOutput(kv, config, "左工位-真空(M6)"));
+            foreach (var kv in SignalNames.Module7)
+                OutputItems.Add(MakeOutput(kv, config, "右工位-通用(M7)"));
+            foreach (var kv in SignalNames.Module8)
+                OutputItems.Add(MakeOutput(kv, config, "右工位-真空(M8)"));
+
+            // 监听 ActiveHigh 变化，即时刷新状态指示
+            foreach (var item in InputItems)
+                item.PropertyChanged += OnInputItemPropertyChanged;
+            foreach (var item in OutputItems)
+                item.PropertyChanged += OnOutputItemPropertyChanged;
+
+            // 读取当前输入状态
+            foreach (var item in InputItems)
             {
-                var signalName = signal.ToString();
-                var bitNo = config.Outputs.TryGetValue(signalName, out var b) ? b : (int)signal;
-                var module = GetOutputModule(signalName);
-                OutputItems.Add(new IOEditItem(signalName, signalName, bitNo, module, isOutput: true));
+                if (Enum.TryParse<AllInputs>(item.SignalName, out var signal))
+                    item.IsHigh = _io.GetState(signal);
             }
 
-            // 从监控服务读取当前输入状态
-            if (_monitor != null)
+            // 异步读取输出口当前状态
+            _ = ReadOutputStatesAsync();
+        }
+
+        private async Task ReadOutputStatesAsync()
+        {
+            foreach (var item in OutputItems)
             {
-                foreach (var item in InputItems)
-                {
-                    if (Enum.TryParse<AllInputs>(item.SignalName, out var signal))
-                        item.IsHigh = _monitor.GetState(signal);
-                }
+                if (!Enum.TryParse<AllOutputs>(item.SignalName, out var signal)) continue;
+                var logical = await _io.ReadOutputAsync(signal);
+                if (logical.HasValue)
+                    item.IsHigh = logical.Value;
             }
         }
 
@@ -183,20 +216,16 @@ namespace AFOCS.App.ViewModels
         {
             var signalName = kv.Key.ToString();
             var bitNo = config.Inputs.TryGetValue(signalName, out var b) ? b : (int)kv.Key;
-            return new IOEditItem(kv.Value, signalName, bitNo, module);
+            var activeHigh = config.InputActives.TryGetValue(signalName, out var a) ? a : true;
+            return new IOEditItem(kv.Value, signalName, bitNo, module, activeHigh: activeHigh);
         }
 
-        private static string GetOutputModule(string signalName)
+        private static IOEditItem MakeOutput(KeyValuePair<AllOutputs, string> kv, IOMappingConfig config, string module)
         {
-            if (signalName.StartsWith("Right_"))
-                return signalName.Contains("Vacuum") || signalName.Contains("UVLight") ||
-                       signalName.Contains("FixtureVacuum") || signalName.Contains("GripperUV") ||
-                       signalName.Contains("Heat") || signalName.Contains("Controller")
-                    ? "右工位-真空(M8)" : "右工位-通用(M7)";
-            return signalName.Contains("Vacuum") || signalName.Contains("UVLight") ||
-                   signalName.Contains("GripperUV") || signalName.Contains("Heat") ||
-                   signalName.Contains("Controller")
-                ? "左工位-真空(M6)" : "左工位-通用(M5)";
+            var signalName = kv.Key.ToString();
+            var bitNo = config.Outputs.TryGetValue(signalName, out var b) ? b : (int)kv.Key;
+            var activeHigh = config.OutputActives.TryGetValue(signalName, out var a) ? a : true;
+            return new IOEditItem(kv.Value, signalName, bitNo, module, isOutput: true, activeHigh: activeHigh);
         }
 
         private void OnInputChanged(object? sender, IOStateChangedEventArgs e)
@@ -206,9 +235,30 @@ namespace AFOCS.App.ViewModels
 
             item.IsHigh = e.NewValue;
             item.LastChange = e.Timestamp;
+            Status = _io.IsMonitoring ? "监控中" : "已停止";
+        }
 
-            if (_monitor != null)
-                Status = _monitor.IsRunning ? "监控中" : "已停止";
+        private void OnInputItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(IOEditItem.ActiveHigh)) return;
+            if (sender is not IOEditItem item) return;
+            if (!Enum.TryParse<AllInputs>(item.SignalName, out var signal)) return;
+
+            _io.SetInputActiveHigh(signal, item.ActiveHigh);
+            item.IsHigh = _io.GetState(signal);
+        }
+
+        private async void OnOutputItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(IOEditItem.ActiveHigh)) return;
+            if (sender is not IOEditItem item) return;
+            if (!Enum.TryParse<AllOutputs>(item.SignalName, out var signal)) return;
+
+            _io.SetOutputActiveHigh(signal, item.ActiveHigh);
+
+            var logical = await _io.ReadOutputAsync(signal);
+            if (logical.HasValue)
+                item.IsHigh = logical.Value;
         }
 
         private async void ToggleOutput(string? signalName)
@@ -216,31 +266,46 @@ namespace AFOCS.App.ViewModels
             if (signalName == null) return;
             if (!Enum.TryParse<AllOutputs>(signalName, out var signal)) return;
 
-            // 查找当前项切换显示状态
             var item = OutputItems.FirstOrDefault(x => x.SignalName == signalName);
             var newState = item != null && !item.IsHigh;
-            await _mapping.WriteOutputAsync(signal, newState);
+            await _io.WriteOutputAsync(signal, newState);
             if (item != null) item.IsHigh = newState;
         }
 
         private void ResetToDefault()
         {
+            // 临时解绑，防止 ActiveHigh 变更触发同步到服务
+            foreach (var item in InputItems)
+                item.PropertyChanged -= OnInputItemPropertyChanged;
+            foreach (var item in OutputItems)
+                item.PropertyChanged -= OnOutputItemPropertyChanged;
+
             foreach (var item in InputItems)
             {
-                if (Enum.TryParse<AllInputs>(item.SignalName, out var signal))
-                    item.BitNo = (int)signal;
+                if (Enum.TryParse<AllInputs>(item.SignalName, out var _))
+                {
+                    item.BitNo = (int)Enum.Parse<AllInputs>(item.SignalName);
+                    item.ActiveHigh = true;
+                }
             }
             foreach (var item in OutputItems)
             {
-                if (Enum.TryParse<AllOutputs>(item.SignalName, out var signal))
-                    item.BitNo = (int)signal;
+                if (Enum.TryParse<AllOutputs>(item.SignalName, out var _))
+                {
+                    item.BitNo = (int)Enum.Parse<AllOutputs>(item.SignalName);
+                    item.ActiveHigh = true;
+                }
             }
+
+            foreach (var item in InputItems)
+                item.PropertyChanged += OnInputItemPropertyChanged;
+            foreach (var item in OutputItems)
+                item.PropertyChanged += OnOutputItemPropertyChanged;
         }
 
         public void Dispose()
         {
-            if (_monitor != null)
-                _monitor.InputChanged -= OnInputChanged;
+            _io.InputChanged -= OnInputChanged;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

@@ -12,6 +12,12 @@ namespace AFOCS.Devices
         /// <summary>输出信号 → 位号 映射</summary>
         public Dictionary<string, int> Outputs { get; set; } = [];
 
+        /// <summary>输入信号 → 是否高电平有效（true=高有效，false=低有效），默认 true</summary>
+        public Dictionary<string, bool> InputActives { get; set; } = [];
+
+        /// <summary>输出信号 → 是否高电平有效（true=高有效，false=低有效），默认 true</summary>
+        public Dictionary<string, bool> OutputActives { get; set; } = [];
+
         /// <summary>生成默认映射（从枚举值读取）</summary>
         public static IOMappingConfig CreateDefault()
         {
@@ -20,11 +26,13 @@ namespace AFOCS.Devices
             foreach (var signal in Enum.GetValues<Infrastructure.AllInputs>())
             {
                 config.Inputs[signal.ToString()] = (int)signal;
+                config.InputActives[signal.ToString()] = true;
             }
 
             foreach (var signal in Enum.GetValues<Infrastructure.AllOutputs>())
             {
                 config.Outputs[signal.ToString()] = (int)signal;
+                config.OutputActives[signal.ToString()] = true;
             }
 
             return config;

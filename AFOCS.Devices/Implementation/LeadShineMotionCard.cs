@@ -804,6 +804,17 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
     }
 
     /// <summary>
+    /// 读取指定输出口当前电平
+    /// </summary>
+    public async Task<Result<bool>> ReadOutbitAsync(ushort bitNo)
+    {
+        short level = LTDMC.dmc_read_outbit(_cardNo, bitNo);
+        if (level < 0)
+            return Result<bool>.Fail($"读取输出口 {bitNo} 失败");
+        return Result<bool>.Success(level == 1);
+    }
+
+    /// <summary>
     /// 设置指定输出口电平
     /// </summary>
     public async Task<Result> WriteOutbitAsync(ushort bitNo, bool on)

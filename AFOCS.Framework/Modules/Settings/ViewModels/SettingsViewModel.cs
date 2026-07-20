@@ -2,6 +2,7 @@ using System.ComponentModel.Composition;
 using AFOCS.Framework.Framework;
 using AFOCS.Framework.Properties;
 using Caliburn.Micro;
+using Gemini.Modules.Settings;
 
 namespace AFOCS.Framework.Modules.Settings.ViewModels
 {
@@ -11,6 +12,7 @@ namespace AFOCS.Framework.Modules.Settings.ViewModels
     {
         private IEnumerable<ISettingsEditorAsync> _settingsEditors;
         private SettingsPageViewModel _selectedPage;
+        private bool _saved;
 
         public SettingsViewModel()
         {
@@ -101,9 +103,25 @@ namespace AFOCS.Framework.Modules.Settings.ViewModels
                 await settingsEditor.ApplyChangesAsync();
             }
 
+            _saved = true;
             await TryCloseAsync(true);
         }
 
         public Task Cancel() => TryCloseAsync(false);
+
+        public override async Task<bool> CanCloseAsync(CancellationToken cancellationToken)
+        {
+            if (_saved) return true;
+
+            foreach (var editor in _settingsEditors)
+            {
+                if (editor is SettingsEditorWrapper wrapper && wrapper.ViewModel is ICancelableSettingsEditor c1)
+                    c1.CancelChanges();
+                else if (editor is ICancelableSettingsEditor c2)
+                    c2.CancelChanges();
+            }
+
+            return true;
+        }
     }
 }

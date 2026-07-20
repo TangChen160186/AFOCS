@@ -29,12 +29,13 @@
             </CollectionViewSource.GroupDescriptions>
         </CollectionViewSource>
 
-        <!-- 输入行：状态灯 + 名称 + 位号 -->
+        <!-- 输入行：状态灯 + 名称 + 位号 + 有效电平 -->
         <DataTemplate x:Key="InputRowTemplate">
             <Grid Margin="2,1" Height="22">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="10" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="44" />
                     <ColumnDefinition Width="44" />
                 </Grid.ColumnDefinitions>
                 <Ellipse Grid.Column="0" Width="7" Height="7" VerticalAlignment="Center"
@@ -47,15 +48,20 @@
                          FontSize="11" VerticalContentAlignment="Center"
                          HorizontalContentAlignment="Center"
                          Width="44" Height="20" />
+                <CheckBox Grid.Column="3" IsChecked="{Binding ActiveHigh}"
+                          VerticalAlignment="Center" HorizontalAlignment="Center"
+                          Width="44" Height="20"
+                          ToolTip="高电平有效" />
             </Grid>
         </DataTemplate>
 
-        <!-- 输出行：名称 + 状态按钮 + 位号 -->
+        <!-- 输出行：名称 + 状态按钮 + 位号 + 有效电平 -->
         <DataTemplate x:Key="OutputRowTemplate">
             <Grid Margin="2,1" Height="22">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="36" />
+                    <ColumnDefinition Width="44" />
                     <ColumnDefinition Width="44" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="11"
@@ -86,6 +92,10 @@
                          FontSize="11" VerticalContentAlignment="Center"
                          HorizontalContentAlignment="Center"
                          Width="44" Height="20" />
+                <CheckBox Grid.Column="3" IsChecked="{Binding ActiveHigh}"
+                          VerticalAlignment="Center" HorizontalAlignment="Center"
+                          Width="44" Height="20"
+                          ToolTip="高电平有效" />
             </Grid>
         </DataTemplate>
 
