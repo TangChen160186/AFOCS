@@ -98,6 +98,7 @@ namespace AFOCS.Devices
     public class AxisStateService(
         IMotionControlCard motionCard,
         IAxisConfigService axisConfigService,
+        ISmcGripper smcGripper,
         ILogger logger) : IAxisStateService, IDisposable
     {
         private CancellationTokenSource? _cts;
@@ -306,18 +307,26 @@ namespace AFOCS.Devices
             return Task.CompletedTask;
         }
 
-        // ---- 夹爪（暂未实现） ----
+        // ---- 夹爪 ----
 
-        public Task GripperGraspAsync(GripperId gripper)
+        public async Task GripperGraspAsync(GripperId gripper)
         {
-            logger.Warning("夹爪 {Gripper} 夹紧暂未实现", gripper);
-            return Task.CompletedTask;
+            var result = await smcGripper.Start(gripper);
+            if (!result.IsSuccess)
+                logger.Warning("夹爪 {Gripper} 定位失败: {Error}", gripper, result.Message);
         }
 
-        public Task GripperReleaseAsync(GripperId gripper)
+        public async Task GripperReleaseAsync(GripperId gripper)
         {
-            logger.Warning("夹爪 {Gripper} 松开暂未实现", gripper);
-            return Task.CompletedTask;
+            var statusResult = await smcGripper.GetStatusAsync(gripper);
+            if (statusResult.IsSuccess)
+            {
+                logger.Information("夹爪 {Gripper} 当前状态: 0x{Status:X4}", gripper, statusResult.Data);
+            }
+            else
+            {
+                logger.Warning("夹爪 {Gripper} 读取状态失败: {Error}", gripper, statusResult.Message);
+            }
         }
 
         // ---- 名称映射 ----

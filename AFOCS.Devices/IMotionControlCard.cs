@@ -23,5 +23,14 @@ namespace AFOCS.Devices
 
         /// <summary>读取轴当前速度（unit/s）</summary>
         Task<Result<double>> GetSpeedAsync(ushort axis);
+
+
+        // --- PDO 读写（按 OD 地址直接操作） ---
+
+        /// <summary>写从站 RxPDO（按 index/subindex 指定 OD 地址）</summary>
+        Task<Result> WriteRxPDOAsync(ushort slaveAddr, ushort index, ushort subIndex, ushort bitLength, int value);
+
+        /// <summary>读从站 TxPDO（按 index/subindex 指定 OD 地址）</summary>
+        Task<Result<int>> ReadTxPDOAsync(ushort slaveAddr, ushort index, ushort subIndex, ushort bitLength);
     }
 }

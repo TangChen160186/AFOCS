@@ -847,6 +847,51 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
             return Result.Fail($"设置软限位失败, error code: {ret}");
         return Result.Success();
     }
+
+    // --- PDO 读写（按 OD 地址直接操作） ---
+
+    /// <summary>写从站 RxPDO（按 index/subindex 指定 OD 地址）</summary>
+    public async Task<Result> WriteRxPDOAsync(ushort slaveAddr, ushort index, ushort subIndex, ushort bitLength, int value)
+    {
+        if (!IsConnected) return Result.Fail("板卡未连接");
+        var data = BitConverter.GetBytes(value);
+        var ret = LTDMC.nmc_write_rxpdo(_cardNo, EthercatPort, slaveAddr, index, subIndex, bitLength, data);
+        if (ret != 0)
+            return Result.Fail($"写RxPDO从站{slaveAddr} 0x{index:X4}:{subIndex} 失败, error code: {ret}");
+        return Result.Success();
+    }
+
+    /// <summary>读从站 TxPDO（按 index/subindex 指定 OD 地址）</summary>
+    public async Task<Result<int>> ReadTxPDOAsync(ushort slaveAddr, ushort index, ushort subIndex, ushort bitLength)
+    {
+        if (!IsConnected) return Result<int>.Fail("板卡未连接");
+        var data = new byte[bitLength/8];
+        var ret = LTDMC.nmc_read_txpdo(_cardNo, EthercatPort, slaveAddr, index, subIndex, bitLength, data);
+        if (ret != 0)
+            return Result<int>.Fail($"读TxPDO从站{slaveAddr} 0x{index:X4}:{subIndex} 失败, error code: {ret}");
+        return Result<int>.Success(BytesToInt(data));
+    }
+    public static int BytesToInt(byte[] bytes, bool useLowBytes = true)
+    {
+        if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
+        // 创建4字节缓冲区
+        byte[] buffer = new byte[4];
+
+        if (bytes.Length >= 4)
+        {
+            // 取低4字节（索引0-3）或高4字节（末尾4字节）
+            int startIndex = useLowBytes ? 0 : bytes.Length - 4;
+            Array.Copy(bytes, startIndex, buffer, 0, 4);
+        }
+        else
+        {
+            // 不足4字节，复制到低位，高位自动补0
+            Array.Copy(bytes, 0, buffer, 0, bytes.Length);
+        }
+
+        return BitConverter.ToInt32(buffer, 0);
+    }
     public void Dispose()
     {
         // 关闭板卡，释放资源

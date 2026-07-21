@@ -64,11 +64,12 @@ namespace AFOCS.App.ViewModels
 
         [Import] private ISPBoardDevice _boardDevice = null!;
 
+        [Import] private ISmcGripper _smcGripper = null!;
         [Import] private IWindowManager _windowManager = null!;
 
         [Import] private IMainWindow _mainWindow = null!;
 
-        [Import] private IIOService _ioService;
+        [Import] private IIOService _ioService = null!;
         protected override Task OnActivatedAsync(CancellationToken cancellationToken)
         {
             InitializeDevices();
@@ -110,6 +111,12 @@ namespace AFOCS.App.ViewModels
                 var nm = _boardDevice.DutReadWriteAsync(0, 1, 1, "RX", 0);
                 await _ioService.StartMonitor();
                 await FinalizeInitialization();
+                await _smcGripper.EnablePushForceAsync(GripperId.LeftCouplingRGripper);
+                await _smcGripper.EnableAsync(GripperId.LeftCouplingRGripper);
+                await _smcGripper.AlarmResetAsync(GripperId.LeftCouplingRGripper);
+                await _smcGripper.ReleaseAsync(GripperId.LeftCouplingRGripper, 100, 1000);
+                await _smcGripper.GripAsync(GripperId.LeftCouplingRGripper, 100, 500, 80, 80, 500);
+                
             }
             catch (Exception ex)
             {
@@ -137,9 +144,9 @@ namespace AFOCS.App.ViewModels
                 //_cameraLeftDown,
                 //_cameraRightUp,
                 //_cameraRightDown,
-                //_leadShineMotionCard,
-                _boardDevice
-
+                _leadShineMotionCard,
+                //_boardDevice,
+                _smcGripper,
             ];
             return devices;
         }
