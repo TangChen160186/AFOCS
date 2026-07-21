@@ -1,6 +1,6 @@
 LIBRARY ISPBoard
 EXPORTS
-    ISP_Initialize
-    ISP_EnterEngMode
-    ISP_DutReadWrite
-    ISP_HeaterScan
+    IspInterfaceInitialEx_c
+    IspDutReadWriteEx
+    IspFormularCalc
+    IspDutHeaterScanEx

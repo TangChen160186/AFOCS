@@ -131,6 +131,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>ISPBoard.def</ModuleDefinitionFile>
+      <AdditionalDependencies>$(SolutionDir)\Vendor\ISPBoard\lib\RdOpticalDutInterface_LV2019_64b.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -150,6 +151,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>ISPBoard.def</ModuleDefinitionFile>
+      <AdditionalDependencies>$(SolutionDir)\Vendor\ISPBoard\lib\RdOpticalDutInterface_LV2019_64b.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
