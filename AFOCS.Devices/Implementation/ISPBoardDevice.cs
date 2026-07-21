@@ -1,6 +1,6 @@
-using System.ComponentModel.Composition;
 using AFOCS.Infrastructure;
 using Serilog;
+using System.ComponentModel.Composition;
 
 namespace AFOCS.Devices.Implementation
 {
@@ -11,6 +11,13 @@ namespace AFOCS.Devices.Implementation
     {
         /// <summary>产品配置文件路径</summary>
         public string ProductCfgFilePath { get; set; } = "ProductCfg.json";
+        //public string RxAdcAppName { get; set; } = "RxADC";
+        //public string MpdInAppName { get; set; } = "MPDInADC";
+        //public string MpdInCoeffName { get; set; } = "MPDInADCCoeff";
+        //public string MpdOutAppName { get; set; } = "MPDOutADC";
+        //public string MpdOutCoeffAppName { get; set; } = "MPDOutADCCoeff";
+        //public string IpsnAppName { get; set; } = "IPSN";
+        //public string RxAdcFormulaAppName { get; set; } = "RxADC_R";
     }
 
     /// <summary>
@@ -32,7 +39,8 @@ namespace AFOCS.Devices.Implementation
         // ====================================================================
         // IDevice 接口
         // ====================================================================
-
+        
+        
         public async Task<Result> InitializeAsync(CancellationToken token = default)
         {
             var config = await configService.LoadAsync<ISPBoardConfig>();
@@ -40,10 +48,12 @@ namespace AFOCS.Devices.Implementation
             await configService.SaveAsync(config);
 
             var r = await InitializeAsync(config.ProductCfgFilePath, token);
+
             return r.IsSuccess
                 ? Result.Success(r.Message)
                 : Result.Fail(r.Code, r.Message, r.Exception);
         }
+
 
         public async Task<Result<IspInitResult>> InitializeAsync(string productCfgFilePath, CancellationToken token = default)
         {
