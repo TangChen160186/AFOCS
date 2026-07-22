@@ -109,13 +109,18 @@ namespace AFOCS.App.ViewModels
                 }
 
                 var nm = _boardDevice.DutReadWriteAsync(0, 1, 1, "RX", 0);
-                await _ioService.StartMonitor();
+                await _ioService.StartMonitor(); 
                 await FinalizeInitialization();
-                await _smcGripper.EnablePushForceAsync(GripperId.LeftCouplingRGripper);
-                await _smcGripper.EnableAsync(GripperId.LeftCouplingRGripper);
-                await _smcGripper.AlarmResetAsync(GripperId.LeftCouplingRGripper);
-                await _smcGripper.ReleaseAsync(GripperId.LeftCouplingRGripper, 100, 1000);
-                await _smcGripper.GripAsync(GripperId.LeftCouplingRGripper, 100, 500, 80, 80, 500);
+                await _smcGripper.EnablePushForceAsync(GripperId.RightCouplingRGripper);
+                await _smcGripper.AlarmResetAsync(GripperId.RightCouplingRGripper);
+                await _smcGripper.EnableAsync(GripperId.RightCouplingRGripper);
+                await Task.Delay(1000);
+                var s = await _smcGripper.IsEnabledAsync(GripperId.RightCouplingRGripper);
+                await _smcGripper.AlarmResetAsync(GripperId.RightCouplingRGripper);
+                var s1 = await _smcGripper.IsEnabledAsync(GripperId.RightCouplingRGripper);
+                await _smcGripper.HomeAsync(GripperId.RightCouplingRGripper);
+                await _smcGripper.ReleaseAsync(GripperId.RightCouplingRGripper, 100, 1000);
+                await _smcGripper.GripAsync(GripperId.RightCouplingRGripper, 100, 500, 80, 80, 500);
                 
             }
             catch (Exception ex)

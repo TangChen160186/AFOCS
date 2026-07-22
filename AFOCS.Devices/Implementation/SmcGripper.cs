@@ -92,6 +92,7 @@ public class SmcGripper(
     private const ushort OdControlWord = 0x7010; // RxPDO 控制字（使能等）
     private const ushort OdPushForce = 0x7011;  // RxPDO 推理推力
     private const ushort OdControl = 0x7012;    // RxPDO 控制字（启动/复位）
+
     private const ushort OdSpeed = 0x7021;       // RxPDO 速度
     private const ushort OdPosition = 0x7022;    // RxPDO 动作位置
     private const ushort OdForceUpper = 0x7025;  // RxPDO 推力上限
@@ -169,9 +170,15 @@ public class SmcGripper(
 
             // 步骤3: 延时 50ms
             await Task.Delay(50);
-
+            var m1 = await IsEnabledAsync(gripperId);
+             await EnableAsync(gripperId);
+             var m2 = await IsEnabledAsync(gripperId);
             // 步骤4: RxPDO 写 0x7012:00 = 0，复位
             var resetResult = await motionCard.WriteRxPDOAsync(slaveAddr, OdControl, OdSubIndex, OdBitLen8, 0);
+            var m3 = await IsEnabledAsync(gripperId);
+            await EnableAsync(gripperId);
+            var m4 = await IsEnabledAsync(gripperId);
+            var m = await IsEnabledAsync(gripperId);
             if (!resetResult.IsSuccess)
                 return Result.Fail($"夹爪 {gripperId} 复位失败: {resetResult.Message}");
 
