@@ -70,6 +70,7 @@ namespace AFOCS.App.ViewModels
         [Import] private IMainWindow _mainWindow = null!;
 
         [Import] private IIOService _ioService = null!;
+        [Import] private IPressureSensor _pressureSensor = null!;
         protected override Task OnActivatedAsync(CancellationToken cancellationToken)
         {
             InitializeDevices();
@@ -108,20 +109,30 @@ namespace AFOCS.App.ViewModels
                     }
                 }
 
-                var nm = _boardDevice.DutReadWriteAsync(0, 1, 1, "RX", 0);
-                await _ioService.StartMonitor(); 
+                //while (true)
+                //{
+                //   var s = await _pressureSensor.ReadAllAsync(PressureSensorId.LeftDispensePressure);
+                   
+                //   Console.WriteLine(s.Data);
+
+                //   Thread.Sleep(100);
+                //}
+                ///var nm = _boardDevice.DutReadWriteAsync(0, 1, 1, "RX", 0);
+                await _ioService.StartMonitor();
                 await FinalizeInitialization();
-                await _smcGripper.EnablePushForceAsync(GripperId.RightCouplingRGripper);
-                await _smcGripper.AlarmResetAsync(GripperId.RightCouplingRGripper);
-                await _smcGripper.EnableAsync(GripperId.RightCouplingRGripper);
+                //await _smcGripper.EnablePushForceAsync(GripperId.RightCouplingLGripper);
+                await _smcGripper.AlarmResetAsync(GripperId.RightCouplingLGripper);
+                await _smcGripper.EnableAsync(GripperId.RightCouplingLGripper);
                 await Task.Delay(1000);
-                var s = await _smcGripper.IsEnabledAsync(GripperId.RightCouplingRGripper);
-                await _smcGripper.AlarmResetAsync(GripperId.RightCouplingRGripper);
-                var s1 = await _smcGripper.IsEnabledAsync(GripperId.RightCouplingRGripper);
-                await _smcGripper.HomeAsync(GripperId.RightCouplingRGripper);
-                await _smcGripper.ReleaseAsync(GripperId.RightCouplingRGripper, 100, 1000);
-                await _smcGripper.GripAsync(GripperId.RightCouplingRGripper, 100, 500, 80, 80, 500);
-                
+                var s2 = await _smcGripper.IsEnabledAsync(GripperId.RightCouplingLGripper);
+                await _smcGripper.AlarmResetAsync(GripperId.RightCouplingLGripper);
+                var s1 = await _smcGripper.IsEnabledAsync(GripperId.RightCouplingLGripper);
+                //await _smcGripper.HomeAsync(GripperId.RightCouplingLGripper);
+                await _smcGripper.ReleaseAsync(GripperId.RightCouplingLGripper, 100, 100);
+                await _smcGripper.ReleaseAsync(GripperId.RightCouplingLGripper, 100, 200);
+                await _smcGripper.ReleaseAsync(GripperId.RightCouplingLGripper, 100, 300);
+                //await _smcGripper.GripAsync(GripperId.RightCouplingLGripper, 100, 100, 80, 80, 200);
+                Console.WriteLine();
             }
             catch (Exception ex)
             {
@@ -151,7 +162,8 @@ namespace AFOCS.App.ViewModels
                 //_cameraRightDown,
                 _leadShineMotionCard,
                 //_boardDevice,
-                _smcGripper,
+                //_smcGripper,
+                _pressureSensor
             ];
             return devices;
         }

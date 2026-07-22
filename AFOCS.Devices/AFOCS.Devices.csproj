@@ -15,6 +15,7 @@
     <ProjectReference Include="..\AFOCS.Shared\AFOCS.Shared.csproj" />
   </ItemGroup>
     <ItemGroup>
+        <PackageReference Include="Agito.AAMotion" />
         <PackageReference Include="NationalInstruments.Visa" />
     </ItemGroup>
     <ItemGroup>
