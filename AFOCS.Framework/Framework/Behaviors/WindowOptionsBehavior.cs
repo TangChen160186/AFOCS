@@ -37,6 +37,16 @@ namespace AFOCS.Framework.Framework.Behaviors
             set { SetValue(ShowMaximizeBoxProperty, value); }
         }
 
+        public static readonly DependencyProperty ShowCloseBoxProperty = DependencyProperty.Register(
+            "ShowCloseBox", typeof(bool), typeof(WindowOptionsBehavior),
+            new PropertyMetadata(true, OnWindowOptionChanged));
+
+        public bool ShowCloseBox
+        {
+            get { return (bool) GetValue(ShowCloseBoxProperty); }
+            set { SetValue(ShowCloseBoxProperty, value); }
+        }
+
         private static void OnWindowOptionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             ((WindowOptionsBehavior) d).UpdateWindowStyle();
@@ -60,6 +70,11 @@ namespace AFOCS.Framework.Framework.Behaviors
                 windowStyle |= NativeMethods.WS_MAXIMIZEBOX;
             else
                 windowStyle &= ~NativeMethods.WS_MAXIMIZEBOX;
+
+            if (ShowCloseBox)
+                windowStyle |= NativeMethods.WS_SYSMENU;
+            else
+                windowStyle &= ~NativeMethods.WS_SYSMENU;
 
             NativeMethods.SetWindowLong(handle, NativeMethods.GWL_STYLE, windowStyle);
 

@@ -107,18 +107,11 @@ namespace AFOCS.Framework.Modules.Settings.ViewModels
             await TryCloseAsync(true);
         }
 
-        public Task Cancel() => TryCloseAsync(false);
-
         public override async Task<bool> CanCloseAsync(CancellationToken cancellationToken)
         {
-            if (_saved) return true;
-
-            foreach (var editor in _settingsEditors)
+            if (!_saved)
             {
-                if (editor is SettingsEditorWrapper wrapper && wrapper.ViewModel is ICancelableSettingsEditor c1)
-                    c1.CancelChanges();
-                else if (editor is ICancelableSettingsEditor c2)
-                    c2.CancelChanges();
+                await SaveChanges();
             }
 
             return true;

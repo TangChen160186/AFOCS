@@ -11,6 +11,7 @@ namespace AFOCS.Framework.Framework.Win32
 
         public const int WS_MAXIMIZEBOX = 0x10000;
         public const int WS_MINIMIZEBOX = 0x20000;
+        public const int WS_SYSMENU = 0x80000;
 
         public const int WS_EX_DLGMODALFRAME = 0x00000001;
 

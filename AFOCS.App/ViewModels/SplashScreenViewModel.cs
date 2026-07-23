@@ -52,8 +52,6 @@ namespace AFOCS.App.ViewModels
         [Import] private HeightGauge _heightGauge = null!;
         [Import] private LeadShineMotionCard _leadShineMotionCard = null!;
 
-        [Import] private GlueDispenserLeft _glueDispenserLeft = null!;
-        [Import] private GlueDispenserRight _glueDispenserRight = null!;
         [Import] private CameraLight _cameraLight = null!;
         [Import] private CameraLeftUp _cameraLeftUp = null!;
         [Import] private CameraLeftDown _cameraLeftDown = null!;
@@ -70,7 +68,13 @@ namespace AFOCS.App.ViewModels
         [Import] private IMainWindow _mainWindow = null!;
 
         [Import] private IIOService _ioService = null!;
-        [Import] private IPressureSensor _pressureSensor = null!;
+
+        [Import] private LeftCouplingLPressureSensor _leftCouplingLPressure = null!;
+        [Import] private LeftCouplingRPressureSensor _leftCouplingRPressure = null!;
+        [Import] private LeftDispensePressureSensor _leftDispensePressure = null!;
+        [Import] private RightCouplingLPressureSensor _rightCouplingLPressure = null!;
+        [Import] private RightCouplingRPressureSensor _rightCouplingRPressure = null!;
+        [Import] private RightDispensePressureSensor _rightDispensePressure = null!;
         protected override Task OnActivatedAsync(CancellationToken cancellationToken)
         {
             InitializeDevices();
@@ -111,9 +115,9 @@ namespace AFOCS.App.ViewModels
 
                 //while (true)
                 //{
-                //   var s = await _pressureSensor.ReadAllAsync(PressureSensorId.LeftDispensePressure);
+                //   var s = await _leftDispensePressure.ReadAllAsync();
                    
-                //   Console.WriteLine(s.Data);
+                //   Console.WriteLine($"{s.Data.X}, {s.Data.Y}, {s.Data.Z}");
 
                 //   Thread.Sleep(100);
                 //}
@@ -147,23 +151,26 @@ namespace AFOCS.App.ViewModels
 
             List<IDevice> devices =
             [
-                //_programmablePowerSupply,
-                //_opticalSwitch,
-                //_heightGauge,
-                //_glueDispenserLeft,
-                //_glueDispenserRight,
-                //_opticalPowerMeterLeft,
-                //_opticalPowerMeterRight,
-                //_cameraLight,
+                _programmablePowerSupply,
+                _opticalSwitch,
+                _heightGauge,
+                _opticalPowerMeterLeft,
+                _opticalPowerMeterRight,
+                _cameraLight,
 
-                //_cameraLeftUp,
-                //_cameraLeftDown,
-                //_cameraRightUp,
-                //_cameraRightDown,
+                _cameraLeftUp,
+                _cameraLeftDown,
+                _cameraRightUp,
+                _cameraRightDown,
                 _leadShineMotionCard,
                 //_boardDevice,
                 //_smcGripper,
-                _pressureSensor
+                _leftCouplingLPressure,
+                _leftCouplingRPressure,
+                _leftDispensePressure,
+                _rightCouplingLPressure,
+                _rightCouplingRPressure,
+                _rightDispensePressure,
             ];
             return devices;
         }
@@ -174,8 +181,6 @@ namespace AFOCS.App.ViewModels
         {
             return device switch
             {
-                GlueDispenserLeft => "左工位点胶机",
-                GlueDispenserRight => "右工位点胶机",
                 OpticalPowerMeterLeft => "左工位光功率计",
                 OpticalPowerMeterRight => "右工位光功率计",
                 ProgrammablePowerSupply => "可编程电源",
@@ -187,6 +192,12 @@ namespace AFOCS.App.ViewModels
                 CameraLeftUp => "左上相机",
                 CameraRightUp => "右上相机",
                 LeadShineMotionCard => "雷赛控制卡",
+                LeftCouplingLPressureSensor => "左工位左耦合压力传感器",
+                LeftCouplingRPressureSensor => "左工位右耦合压力传感器",
+                LeftDispensePressureSensor => "左工位点胶压力传感器",
+                RightCouplingLPressureSensor => "右工位左耦合压力传感器",
+                RightCouplingRPressureSensor => "右工位右耦合压力传感器",
+                RightDispensePressureSensor => "右工位点胶压力传感器",
                 _ => device.GetType().Name
             };
         }

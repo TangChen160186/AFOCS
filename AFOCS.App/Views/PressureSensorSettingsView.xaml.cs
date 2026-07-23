@@ -2,9 +2,9 @@ using System.Windows.Controls;
 
 namespace AFOCS.App.Views
 {
-    public partial class GlueDispenserSettingsView : UserControl
+    public partial class PressureSensorSettingsView : UserControl
     {
-        public GlueDispenserSettingsView()
+        public PressureSensorSettingsView()
         {
             InitializeComponent();
         }
