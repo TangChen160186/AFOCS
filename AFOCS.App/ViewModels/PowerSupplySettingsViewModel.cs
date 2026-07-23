@@ -1,35 +1,30 @@
-using AFOCS.App.Services;
-using AFOCS.Devices.Implementation;
-using AFOCS.Framework.Framework.Services;
-using AFOCS.Framework.Modules.Settings;
-using AFOCS.Infrastructure;
-using Caliburn.Micro;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
+using System.Windows;
+using AFOCS.App.Services;
+using AFOCS.Devices;
+using AFOCS.Devices.Implementation;
+using AFOCS.Framework.Modules.Settings;
+using Caliburn.Micro;
 
 namespace AFOCS.App.ViewModels
 {
     [Export(typeof(ISettingsEditor))]
     [PartCreationPolicy(CreationPolicy.NonShared)]
-    public class PowerSupplySettingsViewModel : PropertyChangedBase, ISettingsEditor
+    public class PowerSupplySettingsViewModel : Screen, ISettingsEditor
     {
-        private readonly IConfigService _configService;
-        private readonly ProgrammablePowerSupply _powerSupply;
-        private ProgrammablePowerSupplyConfig _config = new();
+        private readonly IProgrammablePowerSupply _powerSupply;
+        private readonly IToastService _toastService;
+        private ProgrammablePowerSupplyConfig _editConfig = new();
 
-        private string _visaAddress = string.Empty;
-        private int _timeoutMs;
         private ObservableCollection<string> _availableResources = [];
         private bool _isScanning;
         private bool _isBusy;
         private string _statusMessage = string.Empty;
 
-        private IToastService _toastService;
-
         [ImportingConstructor]
-        public PowerSupplySettingsViewModel(IConfigService configService, ProgrammablePowerSupply powerSupply, IToastService toastService)
+        public PowerSupplySettingsViewModel(IProgrammablePowerSupply powerSupply, IToastService toastService)
         {
-            _configService = configService;
             _powerSupply = powerSupply;
             _toastService = toastService;
 
@@ -38,34 +33,58 @@ namespace AFOCS.App.ViewModels
                 new(1), new(2)
             };
 
-            _ = LoadConfigAsync();
+            var config = _powerSupply.GetConfig();
+            _editConfig.VisaAddress = config.VisaAddress;
+            _editConfig.TimeoutMs = config.TimeoutMs;
         }
 
         public string SettingsPageName => "可编程电源";
 
         public string SettingsPagePath => "设备配置";
 
+        // ========== 生命周期 ==========
+
+        protected override void OnViewAttached(object view, object context)
+        {
+            base.OnViewAttached(view, context);
+            _ = ScanAndRefreshAsync();
+
+            if (view is FrameworkElement fe)
+                fe.Unloaded += OnViewUnloaded;
+        }
+
+        private void OnViewUnloaded(object? sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe)
+                fe.Unloaded -= OnViewUnloaded;
+        }
+
+        private async Task ScanAndRefreshAsync()
+        {
+            await ScanAvailableResources();
+        }
+
         // ========== 配置属性 ==========
 
         public string VisaAddress
         {
-            get => _visaAddress;
+            get => _editConfig.VisaAddress;
             set
             {
-                if (_visaAddress == value) return;
-                _visaAddress = value;
-                NotifyOfPropertyChange(() => VisaAddress);
+                if (_editConfig.VisaAddress == value) return;
+                _editConfig.VisaAddress = value;
+                NotifyOfPropertyChange();
             }
         }
 
         public int TimeoutMs
         {
-            get => _timeoutMs;
+            get => _editConfig.TimeoutMs;
             set
             {
-                if (_timeoutMs == value) return;
-                _timeoutMs = value;
-                NotifyOfPropertyChange(() => TimeoutMs);
+                if (_editConfig.TimeoutMs == value) return;
+                _editConfig.TimeoutMs = value;
+                NotifyOfPropertyChange();
             }
         }
 
@@ -80,7 +99,7 @@ namespace AFOCS.App.ViewModels
             {
                 if (_isBusy == value) return;
                 _isBusy = value;
-                NotifyOfPropertyChange(() => IsBusy);
+                NotifyOfPropertyChange();
             }
         }
 
@@ -91,7 +110,7 @@ namespace AFOCS.App.ViewModels
             {
                 if (_statusMessage == value) return;
                 _statusMessage = value;
-                NotifyOfPropertyChange(() => StatusMessage);
+                NotifyOfPropertyChange();
             }
         }
 
@@ -109,11 +128,7 @@ namespace AFOCS.App.ViewModels
             StatusMessage = "正在重连...";
             try
             {
-                // 先保存当前配置，再重连
-                _config.VisaAddress = _visaAddress;
-                _config.TimeoutMs = _timeoutMs;
-                await _configService.SaveAsync(_config);
-
+                await _powerSupply.SaveConfigAsync(_editConfig);
                 var result = await _powerSupply.ReConnectAsync();
                 StatusMessage = result.IsSuccess ? "重连成功" : $"重连失败: {result.Message}";
             }
@@ -156,7 +171,7 @@ namespace AFOCS.App.ViewModels
             set
             {
                 _availableResources = value;
-                NotifyOfPropertyChange(() => AvailableResources);
+                NotifyOfPropertyChange();
             }
         }
 
@@ -167,7 +182,7 @@ namespace AFOCS.App.ViewModels
             {
                 if (_isScanning == value) return;
                 _isScanning = value;
-                NotifyOfPropertyChange(() => IsScanning);
+                NotifyOfPropertyChange();
             }
         }
 
@@ -191,7 +206,7 @@ namespace AFOCS.App.ViewModels
 
         public async Task ReadChannelAsync(ChannelInfo ch)
         {
-            if (!IsConnected) { _toastService.ShowWarning("设备未连接，请先连接设备。"); return; }
+            if (!_powerSupply.IsConnected) { _toastService.ShowWarning("设备未连接，请先连接设备。"); return; }
             ch.IsBusy = true;
             try
             {
@@ -214,7 +229,7 @@ namespace AFOCS.App.ViewModels
 
         public async Task ApplyChannelAsync(ChannelInfo ch)
         {
-            if (!IsConnected) { _toastService.ShowWarning("设备未连接，请先连接设备。"); return; }
+            if (!_powerSupply.IsConnected) { _toastService.ShowWarning("设备未连接，请先连接设备。"); return; }
             ch.IsBusy = true;
             try
             {
@@ -230,7 +245,7 @@ namespace AFOCS.App.ViewModels
 
         public async Task ToggleChannelAsync(ChannelInfo ch)
         {
-            if (!IsConnected) { _toastService.ShowWarning("设备未连接，请先连接设备。"); return; }
+            if (!_powerSupply.IsConnected) { _toastService.ShowWarning("设备未连接，请先连接设备。"); return; }
             ch.IsBusy = true;
             try
             {
@@ -250,6 +265,7 @@ namespace AFOCS.App.ViewModels
 
         public async Task ReadAllChannelsAsync()
         {
+            if (!_powerSupply.IsConnected) { _toastService.ShowWarning("设备未连接，请先连接设备。"); return; }
             foreach (var ch in Channels)
                 await ReadChannelAsync(ch);
         }
@@ -258,22 +274,7 @@ namespace AFOCS.App.ViewModels
 
         public void ApplyChanges()
         {
-            _config.VisaAddress = _visaAddress;
-            _config.TimeoutMs = _timeoutMs;
-            Task.Run(async () => await _configService.SaveAsync(_config));
-        }
-
-        private async Task LoadConfigAsync()
-        {
-            _config = await _configService.LoadAsync<ProgrammablePowerSupplyConfig>()
-                      ?? new ProgrammablePowerSupplyConfig();
-            _visaAddress = _config.VisaAddress;
-            _timeoutMs = _config.TimeoutMs;
-
-            NotifyOfPropertyChange(() => VisaAddress);
-            NotifyOfPropertyChange(() => TimeoutMs);
-            RefreshConnectionStatus();
-            _ = ReadAllChannelsAsync();
+            _ = ReconnectAsync();
         }
     }
 

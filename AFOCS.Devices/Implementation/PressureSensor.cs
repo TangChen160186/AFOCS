@@ -1,4 +1,3 @@
-using System.ComponentModel.Composition;
 using AFOCS.Infrastructure;
 using Serilog;
 
@@ -16,7 +15,7 @@ public abstract class PressureSensor : IPressureSensor
 
     private PressureSensorConfig _config = new();
     private CancellationTokenSource? _cts;
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
 
     // 缓存最新值
     private int _x, _y, _z;

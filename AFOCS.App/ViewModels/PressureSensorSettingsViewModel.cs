@@ -11,18 +11,9 @@ namespace AFOCS.App.ViewModels
     /// <summary>
     /// 压力传感器设置基类 —— 每个子类对应一个物理传感器
     /// </summary>
-    public abstract class PressureSensorSettingsViewModel : Screen, ISettingsEditor
+    public abstract class PressureSensorSettingsViewModel(string name, IPressureSensor sensor) : Screen, ISettingsEditor
     {
-        private readonly IPressureSensor _sensor;
-
-        protected PressureSensorSettingsViewModel(string name, IPressureSensor sensor)
-        {
-            Name = name;
-            _sensor = sensor;
-            _editConfig = sensor.GetConfig();
-        }
-
-        public string Name { get; }
+        public string Name { get; } = name;
 
         string ISettingsEditor.SettingsPageName => Name;
 
@@ -30,7 +21,7 @@ namespace AFOCS.App.ViewModels
 
         // ========== 配置编辑 ==========
 
-        private PressureSensorConfig _editConfig;
+        private readonly PressureSensorConfig _editConfig = sensor.GetConfig();
 
         public ushort SlaveAddress
         {
@@ -76,34 +67,66 @@ namespace AFOCS.App.ViewModels
 
         // ========== 实时值 ==========
 
-        private int _valueX;
-        public int ValueX { get => _valueX; set { _valueX = value; NotifyOfPropertyChange(); } }
+        public int ValueX
+        {
+            get;
+            set => Set(ref field, value);
+        }
 
-        private int _valueY;
-        public int ValueY { get => _valueY; set { _valueY = value; NotifyOfPropertyChange(); } }
+        public int ValueY
+        {
+            get;
+            set => Set(ref field,value);
+        }
 
-        private int _valueZ;
-        public int ValueZ { get => _valueZ; set { _valueZ = value; NotifyOfPropertyChange(); } }
+        public int ValueZ
+        {
+            get;
+            set => Set(ref field, value);
+        }
 
         // ========== 状态 ==========
 
-        private bool _isConnected;
-        public bool IsConnected { get => _isConnected; set { _isConnected = value; NotifyOfPropertyChange(); } }
 
-        private bool _isMonitoring;
-        public bool IsMonitoringDisplay { get => _isMonitoring; set { _isMonitoring = value; NotifyOfPropertyChange(); } }
+        public bool IsConnected
+        {
+            get;
+            set => Set(ref field, value);
+        }
+    
 
-        private string _statusMessage = "";
-        public string StatusMessage { get => _statusMessage; set { _statusMessage = value; NotifyOfPropertyChange(); } }
 
-        private bool _alarmActiveX;
-        public bool AlarmActiveX { get => _alarmActiveX; set { _alarmActiveX = value; NotifyOfPropertyChange(); } }
+        public bool IsMonitoringDisplay
+        {
+            get;
+            set => Set(ref field, value);
+        }
 
-        private bool _alarmActiveY;
-        public bool AlarmActiveY { get => _alarmActiveY; set { _alarmActiveY = value; NotifyOfPropertyChange(); } }
 
-        private bool _alarmActiveZ;
-        public bool AlarmActiveZ { get => _alarmActiveZ; set { _alarmActiveZ = value; NotifyOfPropertyChange(); } }
+        public string StatusMessage 
+        {
+            get;
+            set => Set(ref field, value);
+        } = "";
+
+
+        public bool AlarmActiveX
+        {
+            get;
+            set => Set(ref field, value);
+        }
+
+        public bool AlarmActiveY
+        {
+            get;
+            set => Set(ref field, value);
+        }
+
+        public bool AlarmActiveZ
+        {
+            get;
+            set => Set(ref field, value);
+        }
 
         // ========== 事件处理 ==========
 
@@ -126,10 +149,10 @@ namespace AFOCS.App.ViewModels
 
         private void RefreshStatus()
         {
-            IsConnected = _sensor.IsConnected;
-            IsMonitoringDisplay = _sensor.IsMonitoring;
-            StatusMessage = _sensor.IsConnected
-                ? (_sensor.IsMonitoring ? "已连接 · 监控中" : "已连接 · 未监控")
+            IsConnected = sensor.IsConnected;
+            IsMonitoringDisplay = sensor.IsMonitoring;
+            StatusMessage = sensor.IsConnected
+                ? (sensor.IsMonitoring ? "已连接 · 监控中" : "已连接 · 未监控")
                 : "未连接";
         }
 
@@ -155,35 +178,25 @@ namespace AFOCS.App.ViewModels
 
         private void Subscribe()
         {
-            _sensor.DataChanged += OnDataChanged;
-            _sensor.AlarmTriggered += OnAlarmTriggered;
-            ValueX = _sensor.GetX();
-            ValueY = _sensor.GetY();
-            ValueZ = _sensor.GetZ();
+            sensor.DataChanged += OnDataChanged;
+            sensor.AlarmTriggered += OnAlarmTriggered;
+            ValueX = sensor.GetX();
+            ValueY = sensor.GetY();
+            ValueZ = sensor.GetZ();
         }
 
         private void Unsubscribe()
         {
-            _sensor.DataChanged -= OnDataChanged;
-            _sensor.AlarmTriggered -= OnAlarmTriggered;
+            sensor.DataChanged -= OnDataChanged;
+            sensor.AlarmTriggered -= OnAlarmTriggered;
         }
 
         // ========== 命令 ==========
 
-        public async Task RefreshValuesAsync()
-        {
-            var result = await _sensor.ReadAllAsync();
-            if (result.IsSuccess)
-            {
-                ValueX = result.Data.X;
-                ValueY = result.Data.Y;
-                ValueZ = result.Data.Z;
-            }
-        }
 
         public async Task SaveAsync()
         {
-            await _sensor.SaveConfigAsync(_editConfig);
+            await sensor.SaveConfigAsync(_editConfig);
             StatusMessage = "配置已保存";
             RefreshStatus();
         }
@@ -191,32 +204,36 @@ namespace AFOCS.App.ViewModels
         public async Task ZeroXAsync()
         {
             StatusMessage = "X 通道清零中...";
-            await _sensor.ZeroXAsync();
+            await sensor.ZeroXAsync();
             StatusMessage = "X 通道清零完成";
         }
 
         public async Task ZeroYAsync()
         {
             StatusMessage = "Y 通道清零中...";
-            await _sensor.ZeroYAsync();
+            await sensor.ZeroYAsync();
             StatusMessage = "Y 通道清零完成";
         }
 
         public async Task ZeroZAsync()
         {
             StatusMessage = "Z 通道清零中...";
-            await _sensor.ZeroZAsync();
+            await sensor.ZeroZAsync();
             StatusMessage = "Z 通道清零完成";
         }
 
         public async Task ZeroAllAsync()
         {
             StatusMessage = "全部通道清零中...";
-            await _sensor.ZeroAllAsync();
+            await sensor.ZeroAllAsync();
             StatusMessage = "全部通道清零完成";
         }
 
         // ========== ISettingsEditor ==========
+        public override void NotifyOfPropertyChange(string propertyName = null)
+        {
+            base.NotifyOfPropertyChange(propertyName);
+        }
 
         public void ApplyChanges()
         {
@@ -230,55 +247,37 @@ namespace AFOCS.App.ViewModels
 
     [Export(typeof(ISettingsEditor))]
     [PartCreationPolicy(CreationPolicy.NonShared)]
-    public class PressureSensorLeftCouplingLSettingsViewModel : PressureSensorSettingsViewModel
-    {
-        [ImportingConstructor]
-        public PressureSensorLeftCouplingLSettingsViewModel(LeftCouplingLPressureSensor sensor)
-            : base("左耦合左压力传感器", sensor) { }
-    }
+    [method: ImportingConstructor]
+    public class PressureSensorLeftCouplingLSettingsViewModel(LeftCouplingLPressureSensor sensor)
+        : PressureSensorSettingsViewModel("左耦合左压力传感器", sensor);
 
     [Export(typeof(ISettingsEditor))]
     [PartCreationPolicy(CreationPolicy.NonShared)]
-    public class PressureSensorLeftCouplingRSettingsViewModel : PressureSensorSettingsViewModel
-    {
-        [ImportingConstructor]
-        public PressureSensorLeftCouplingRSettingsViewModel(LeftCouplingRPressureSensor sensor)
-            : base("左耦合右压力传感器", sensor) { }
-    }
+    [method: ImportingConstructor]
+    public class PressureSensorLeftCouplingRSettingsViewModel(LeftCouplingRPressureSensor sensor)
+        : PressureSensorSettingsViewModel("左耦合右压力传感器", sensor);
 
     [Export(typeof(ISettingsEditor))]
     [PartCreationPolicy(CreationPolicy.NonShared)]
-    public class PressureSensorLeftDispenseSettingsViewModel : PressureSensorSettingsViewModel
-    {
-        [ImportingConstructor]
-        public PressureSensorLeftDispenseSettingsViewModel(LeftDispensePressureSensor sensor)
-            : base("左点胶压力传感器", sensor) { }
-    }
+    [method: ImportingConstructor]
+    public class PressureSensorLeftDispenseSettingsViewModel(LeftDispensePressureSensor sensor)
+        : PressureSensorSettingsViewModel("左点胶压力传感器", sensor);
 
     [Export(typeof(ISettingsEditor))]
     [PartCreationPolicy(CreationPolicy.NonShared)]
-    public class PressureSensorRightCouplingLSettingsViewModel : PressureSensorSettingsViewModel
-    {
-        [ImportingConstructor]
-        public PressureSensorRightCouplingLSettingsViewModel(RightCouplingLPressureSensor sensor)
-            : base("右耦合左压力传感器", sensor) { }
-    }
+    [method: ImportingConstructor]
+    public class PressureSensorRightCouplingLSettingsViewModel(RightCouplingLPressureSensor sensor)
+        : PressureSensorSettingsViewModel("右耦合左压力传感器", sensor);
 
     [Export(typeof(ISettingsEditor))]
     [PartCreationPolicy(CreationPolicy.NonShared)]
-    public class PressureSensorRightCouplingRSettingsViewModel : PressureSensorSettingsViewModel
-    {
-        [ImportingConstructor]
-        public PressureSensorRightCouplingRSettingsViewModel(RightCouplingRPressureSensor sensor)
-            : base("右耦合右压力传感器", sensor) { }
-    }
+    [method: ImportingConstructor]
+    public class PressureSensorRightCouplingRSettingsViewModel(RightCouplingRPressureSensor sensor)
+        : PressureSensorSettingsViewModel("右耦合右压力传感器", sensor);
 
     [Export(typeof(ISettingsEditor))]
     [PartCreationPolicy(CreationPolicy.NonShared)]
-    public class PressureSensorRightDispenseSettingsViewModel : PressureSensorSettingsViewModel
-    {
-        [ImportingConstructor]
-        public PressureSensorRightDispenseSettingsViewModel(RightDispensePressureSensor sensor)
-            : base("右点胶压力传感器", sensor) { }
-    }
+    [method: ImportingConstructor]
+    public class PressureSensorRightDispenseSettingsViewModel(RightDispensePressureSensor sensor)
+        : PressureSensorSettingsViewModel("右点胶压力传感器", sensor);
 }

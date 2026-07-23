@@ -16,7 +16,19 @@ public class LeadShineMotionCardConfig
 [Export(typeof(IMotionControlCard))]
 public class LeadShineMotionCard(IConfigService configService, ILogger logger) : IMotionControlCard
 {
-    public bool IsConnected { get; private set; }
+    public event EventHandler<MotionCardConnectionChangedEventArgs>? ConnectionChanged;
+
+    private bool _isConnected;
+    public bool IsConnected
+    {
+        get => _isConnected;
+        private set
+        {
+            if (_isConnected == value) return;
+            _isConnected = value;
+            ConnectionChanged?.Invoke(this, new MotionCardConnectionChangedEventArgs(value));
+        }
+    }
 
     private ushort _cardNo = 0;
     private const ushort EniFileType = 200;
@@ -210,14 +222,20 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
         return Encoding.UTF8.GetBytes(content);
     }
 
-    public Task<Result> StopAsync(CancellationToken token = default)
+    public async Task<Result> StopAsync(CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        if (IsConnected)
+        {
+            await Task.Run(() => LTDMC.dmc_board_close());
+            IsConnected = false;
+        }
+        return Result.Success();
     }
 
-    public Task<Result> ReConnectAsync(CancellationToken token = default)
+    public async Task<Result> ReConnectAsync(CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        await StopAsync(token);
+        return await InitializeAsync(token);
     }
 
     /// <summary>

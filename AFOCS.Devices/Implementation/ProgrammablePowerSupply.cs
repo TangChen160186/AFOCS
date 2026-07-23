@@ -13,13 +13,23 @@ namespace AFOCS.Devices.Implementation
     }
 
     [Export]
+    [Export(typeof(IProgrammablePowerSupply))]
     [method: ImportingConstructor]
     public class ProgrammablePowerSupply(IConfigService configService, ILogger logger) : IProgrammablePowerSupply
     {
+        private ProgrammablePowerSupplyConfig _config = new();
         public bool IsConnected { get; private set; }
         private MessageBasedSession? _session;
         private ResourceManager? _resourceManager;
         private readonly SemaphoreSlim _lock = new(1, 1);
+
+        public ProgrammablePowerSupplyConfig GetConfig() => _config;
+
+        public async Task SaveConfigAsync(ProgrammablePowerSupplyConfig config)
+        {
+            _config = config;
+            await configService.SaveAsync(config);
+        }
 
         public async Task<Result> InitializeAsync(CancellationToken token = default)
         {
@@ -29,14 +39,15 @@ namespace AFOCS.Devices.Implementation
                 config = new ProgrammablePowerSupplyConfig();
                 await configService.SaveAsync(config);
             }
+            _config = config;
 
             try
             {
                 _resourceManager = new ResourceManager();
-                _session = (MessageBasedSession)_resourceManager.Open(config.VisaAddress);
-                _session.TimeoutMilliseconds = config.TimeoutMs;
+                _session = (MessageBasedSession)_resourceManager.Open(_config.VisaAddress);
+                _session.TimeoutMilliseconds = _config.TimeoutMs;
                 IsConnected = true;
-                logger.Information($"可编程电源({config.VisaAddress})初始化成功");
+                logger.Information($"可编程电源({_config.VisaAddress})初始化成功");
 
                 await SendCommandAsync("*CLS");
                 var errorResult = await GetErrorStatusAsync();
@@ -44,11 +55,11 @@ namespace AFOCS.Devices.Implementation
                 {
                     logger.Warning($"设备错误状态: {errorResult.Message}");
                 }
-                return Result.Success($"可编程电源({config.VisaAddress})初始化成功");
+                return Result.Success($"可编程电源({_config.VisaAddress})初始化成功");
             }
             catch (Exception ex)
             {
-                logger.Error(ex, $"可编程电源初始化失败: {config.VisaAddress}");
+                logger.Error(ex, $"可编程电源初始化失败: {_config.VisaAddress}");
                 CleanupConnection();
                 return Result.Fail(ResultCode.Fail, ex.Message, ex);
             }

@@ -54,6 +54,8 @@ namespace AFOCS.FlowNodeEditor.Nodes
         }
     }
 
+
+   
     [NodeDefinition("Builtin.Constant", "常量", "基础", HasExecutionInput = false, HasExecutionOutput = false)]
     [Export(typeof(INodeDefinition))]
     public class ConstantNodeDefinition : NodeDefinitionBase, IExecutableNode
@@ -179,6 +181,15 @@ namespace AFOCS.FlowNodeEditor.Nodes
         }
     }
 
+    public enum Test
+    {
+
+        A,
+        B,
+    }
+
+
+
     [NodeDefinition("Builtin.Add", "加法", "运算", HasExecutionInput = false, HasExecutionOutput = false)]
     [Export(typeof(INodeDefinition))]
     public class AddNodeDefinition : NodeDefinitionBase, IExecutableNode
@@ -194,6 +205,9 @@ namespace AFOCS.FlowNodeEditor.Nodes
         private double _result;
         [NodePort("Result", "结果", NodePortType.Double, false)]
         public double Result { get => _result; set => SetProperty(ref _result, value); }
+
+        [ReadOnly(true)]
+        public Test Test { get; set => SetProperty(ref field, value); }
 
         public Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
         {

@@ -44,14 +44,15 @@
                 </StackPanel>
             </Border>
 
+            <Button cal:Message.Attach="SaveAsync"
+                    Content="保存配置" Width="100" Padding="8,5"
+                    HorizontalAlignment="Left" Margin="0,0,0,8" />
+
             <!-- ========== 实时压力值 ========== -->
             <Border Background="{StaticResource SectionBg}" CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                         <TextBlock Text="实时压力值" FontWeight="Bold" />
-                        <Button cal:Message.Attach="RefreshValuesAsync"
-                                Content="刷新" Width="50" Padding="6,2" Margin="12,0,0,0"
-                                FontSize="11" />
                     </StackPanel>
 
                     <Grid>
@@ -135,10 +136,50 @@
                 <StackPanel>
                     <TextBlock Text="清零校准" FontWeight="Bold" Margin="0,0,0,6" />
                     <StackPanel Orientation="Horizontal">
-                        <Button cal:Message.Attach="ZeroXAsync" Content="X 清零" Width="65" Padding="6,3" Margin="0,0,6,0" />
-                        <Button cal:Message.Attach="ZeroYAsync" Content="Y 清零" Width="65" Padding="6,3" Margin="0,0,6,0" />
-                        <Button cal:Message.Attach="ZeroZAsync" Content="Z 清零" Width="65" Padding="6,3" Margin="0,0,6,0" />
-                        <Button cal:Message.Attach="ZeroAllAsync" Content="全部清零" Width="75" Padding="6,3" />
+                        <Button cal:Message.Attach="ZeroXAsync" Content="X 清零" Width="65" Padding="6,3" Margin="0,0,6,0">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsConnected}" Value="False">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button cal:Message.Attach="ZeroYAsync" Content="Y 清零" Width="65" Padding="6,3" Margin="0,0,6,0">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsConnected}" Value="False">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button cal:Message.Attach="ZeroZAsync" Content="Z 清零" Width="65" Padding="6,3" Margin="0,0,6,0">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsConnected}" Value="False">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button cal:Message.Attach="ZeroAllAsync" Content="全部清零" Width="75" Padding="6,3">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsConnected}" Value="False">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -215,11 +256,6 @@
                     </DockPanel>
                 </StackPanel>
             </Border>
-
-            <!-- ========== 保存 ========== -->
-            <Button cal:Message.Attach="SaveAsync"
-                    Content="保存配置" Width="100" Padding="8,5"
-                    HorizontalAlignment="Left" />
 
         </StackPanel>
     </ScrollViewer>

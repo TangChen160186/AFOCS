@@ -1,9 +1,13 @@
+using AFOCS.Devices.Implementation;
 using AFOCS.Infrastructure;
 
 namespace AFOCS.Devices
 {
     public interface IProgrammablePowerSupply : IDevice
     {
+        ProgrammablePowerSupplyConfig GetConfig();
+        Task SaveConfigAsync(ProgrammablePowerSupplyConfig config);
+
         Task<Result> SetChannelStatusAsync(int channel, bool status);
         Task<Result<bool>> GetChannelStatusAsync(int channel);
         Task<Result> SetVoltageAndCurrentAsync(int channel, double voltage,double current);

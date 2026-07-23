@@ -2,8 +2,16 @@ using AFOCS.Infrastructure;
 
 namespace AFOCS.Devices
 {
+    public class MotionCardConnectionChangedEventArgs : EventArgs
+    {
+        public bool IsConnected { get; }
+        public MotionCardConnectionChangedEventArgs(bool isConnected) => IsConnected = isConnected;
+    }
+
     public interface IMotionControlCard : IDevice
     {
+        event EventHandler<MotionCardConnectionChangedEventArgs>? ConnectionChanged;
+
         Task<Result> HotResetAsync();
 
         /// <summary>读取单个输入位</summary>

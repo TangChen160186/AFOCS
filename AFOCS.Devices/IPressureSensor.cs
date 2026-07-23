@@ -27,9 +27,9 @@ public class PressureSensorConfig
     /// </summary>
     public Dictionary<PressureChannel, int> AlarmThresholds { get; set; } = new()
     {
-        [PressureChannel.X] = 0,
-        [PressureChannel.Y] = 0,
-        [PressureChannel.Z] = 0,
+        [PressureChannel.X] = 400,
+        [PressureChannel.Y] = 400,
+        [PressureChannel.Z] = 400,
     };
 
     /// <summary>获取指定通道的 OD 子索引</summary>
@@ -38,7 +38,7 @@ public class PressureSensorConfig
 
     /// <summary>获取指定通道的报警阈值（0 表示禁用）</summary>
     public int GetAlarmThreshold(PressureChannel channel) =>
-        AlarmThresholds.TryGetValue(channel, out var threshold) ? threshold : 0;
+        AlarmThresholds.GetValueOrDefault(channel, 0);
 }
 
 /// <summary>
