@@ -2,84 +2,16 @@ using System.ComponentModel.Composition;
 using AFOCS.Infrastructure;
 using Serilog;
 
-namespace AFOCS.Devices
+namespace AFOCS.Devices.Implementation
 {
-    // ============================================================
-    // IO 状态变化事件
-    // ============================================================
-
-    /// <summary>
-    /// IO 状态变化事件参数（OldValue/NewValue 均为逻辑值，已考虑有效电平）
-    /// </summary>
-    public class IOStateChangedEventArgs : EventArgs
-    {
-        public AllInputs Signal { get; }
-        /// <summary>变化前逻辑值（已应用有效电平转换）</summary>
-        public bool OldValue { get; }
-        /// <summary>变化后逻辑值（已应用有效电平转换）</summary>
-        public bool NewValue { get; }
-        public DateTime Timestamp { get; }
-
-        public bool IsRisingEdge => !OldValue && NewValue;
-        public bool IsFallingEdge => OldValue && !NewValue;
-
-        public IOStateChangedEventArgs(AllInputs signal, bool oldValue, bool newValue)
-        {
-            Signal = signal;
-            OldValue = oldValue;
-            NewValue = newValue;
-            Timestamp = DateTime.Now;
-        }
-    }
-
-    // ============================================================
-    // IO 服务接口（映射 + 监控 + 配置，统一入口）
-    // ============================================================
-
-    public interface IIOService
-    {
-        // -- 输入监控 --
-        event EventHandler<IOStateChangedEventArgs>? InputChanged;
-        Task StartMonitor(int pollIntervalMs = 100);
-        void StopMonitor();
-        bool IsMonitoring { get; }
-        bool GetState(AllInputs signal);
-        /// <summary>获取输入信号原始硬件电平（未经有效电平转换）</summary>
-        bool GetRawState(AllInputs signal);
-
-        // -- 输出读写 --
-        Task WriteOutputAsync(AllOutputs signal, bool on);
-        Task<bool?> ReadOutputAsync(AllOutputs signal);
-        /// <summary>读取输出口硬件原始电平（未经有效电平转换）</summary>
-        Task<bool?> ReadOutputRawAsync(AllOutputs signal);
-
-        // -- 位号映射 --
-        int GetInputBitNo(AllInputs signal);
-        int GetOutputBitNo(AllOutputs signal);
-        void SetInputBitNo(AllInputs signal, int bitNo);
-        void SetOutputBitNo(AllOutputs signal, int bitNo);
-
-        // -- 有效电平 --
-        bool IsInputActiveHigh(AllInputs signal);
-        void SetInputActiveHigh(AllInputs signal, bool activeHigh);
-        bool IsOutputActiveHigh(AllOutputs signal);
-        void SetOutputActiveHigh(AllOutputs signal, bool activeHigh);
-
-        // -- 配置持久化 --
-        IOMappingConfig GetConfig();
-        Task LoadAsync();
-        Task SaveAsync();
-    }
-
-    // ============================================================
-    // IO 服务实现
-    // ============================================================
-
-    [Export(typeof(IIOService))]
+    [Export(typeof(IIODevice))]
     [method: ImportingConstructor]
-    public class IOService(IConfigService configService, IMotionControlCard motionCard, ILogger logger)
-        : IIOService, IDisposable
+    public class IODevice(IMotionControlCard motionCard, IConfigService configService, ILogger logger) : IIODevice
     {
+        // ---- 连接状态 ----
+
+        public bool IsConnected => motionCard.IsConnected;
+
         // ---- 配置 / 映射 ----
 
         private IOMappingConfig _config = IOMappingConfig.CreateDefault();
@@ -173,6 +105,11 @@ namespace AFOCS.Devices
 
         public async Task WriteOutputAsync(AllOutputs signal, bool on)
         {
+            if (!motionCard.IsConnected)
+            {
+                logger.Warning("IO 输出失败: 雷赛控制卡未连接");
+                return;
+            }
             var bitNo = GetOutputBitNo(signal);
             var rawValue = IsOutputActiveHigh(signal) ? on : !on;
             var result = await motionCard.WriteOutbitAsync((ushort)bitNo, rawValue);
@@ -182,7 +119,6 @@ namespace AFOCS.Devices
                 logger.Warning("IO 输出失败: {Signal} bit{No}, {Error}", signal, bitNo, result.Message);
         }
 
-        /// <summary>读取单个输出口硬件电平，返回逻辑值（已转换）</summary>
         public async Task<bool?> ReadOutputAsync(AllOutputs signal)
         {
             if (!motionCard.IsConnected) return null;
@@ -267,7 +203,6 @@ namespace AFOCS.Devices
 
         private async Task PollLoopAsync(int intervalMs, CancellationToken ct)
         {
-            // 首次读取初始状态
             try
             {
                 var initResult = await motionCard.ReadInbitsAsync(136);
@@ -378,6 +313,43 @@ namespace AFOCS.Devices
             }
         }
 
-        public void Dispose() => StopMonitor();
+        // ---- IDevice ----
+
+        public async Task<Result> InitializeAsync(CancellationToken token = default)
+        {
+            if (!motionCard.IsConnected)
+                return Result.Fail("IO 设备初始化失败: 雷赛控制卡未连接或总线异常");
+
+            try
+            {
+                await StartMonitor();
+                logger.Information("IO 设备初始化成功");
+                return Result.Success();
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "IO 设备初始化异常");
+                return Result.Fail($"IO 设备初始化异常: {ex.Message}");
+            }
+        }
+
+        public async Task<Result> StopAsync(CancellationToken token = default)
+        {
+            StopMonitor();
+            logger.Information("IO 设备已停止");
+            return await Task.FromResult(Result.Success());
+        }
+
+        public async Task<Result> ReConnectAsync(CancellationToken token = default)
+        {
+            await StopAsync(token);
+            return await InitializeAsync(token);
+        }
+
+        public void Dispose()
+        {
+            StopMonitor();
+            _cts?.Dispose();
+        }
     }
 }

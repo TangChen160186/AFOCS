@@ -36,6 +36,9 @@
                             <Button.Style>
                                 <Style TargetType="Button">
                                     <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsModify}" Value="False">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
                                         <DataTrigger Binding="{Binding IsBusy}" Value="True">
                                             <Setter Property="IsEnabled" Value="False" />
                                         </DataTrigger>

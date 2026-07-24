@@ -87,7 +87,7 @@ namespace AFOCS.App.ViewModels
 
     public abstract class JogStationViewModel : Tool, IJogStation
     {
-        protected readonly IAxisStateService AxisService;
+        protected readonly IMotionControlCard MotionCard;
         private readonly IShell _shell;
 
         public override PaneLocation PreferredLocation => PaneLocation.Bottom;
@@ -121,14 +121,14 @@ namespace AFOCS.App.ViewModels
         public ObservableCollection<JogAxisItem> LinearAxes { get; } = [];
         public ObservableCollection<JogAxisItem> Grippers { get; } = [];
 
-        protected JogStationViewModel(IAxisStateService axisService, IShell shell, string displayName)
+        protected JogStationViewModel(IMotionControlCard motionCard, IShell shell, string displayName)
         {
             DisplayName = displayName;
-            AxisService = axisService;
+            MotionCard = motionCard;
             _shell = shell;
 
             InitStationAxes();
-            AxisService.StateChanged += OnAxisStateChanged;
+            MotionCard.AxisStateChanged += OnAxisStateChanged;
         }
 
         protected abstract void InitStationAxes();
@@ -177,9 +177,25 @@ namespace AFOCS.App.ViewModels
             {
                 var dist = Math.Abs(JogDistance) * direction;
                 if (item.Kind == AxisKind.BusAxis)
-                    await AxisService.MovePmoveAsync((AxisId)item.AxisId, dist, JogSpeed);
+                {
+                    var axisId = (AxisId)item.AxisId;
+                    var cfg = MotionCard.GetAxisConfig(axisId).Motion;
+                    await MotionCard.MovePmoveAsync(
+                        axis: (ushort)axisId,
+                        distance: dist,
+                        equiv: cfg.Equiv,
+                        minVel: cfg.MinVel,
+                        maxVel: JogSpeed > 0 ? JogSpeed : cfg.MaxVel,
+                        tacc: cfg.Tacc,
+                        tdec: cfg.Tdec,
+                        stopVel: cfg.StopVel,
+                        sPara: cfg.SPara);
+                }
                 else if (item.Kind == AxisKind.LinearAxis)
-                    await AxisService.MoveLinearPmoveAsync((LinearAxisId)item.AxisId, dist);
+                {
+                    // 直线轴暂未实现
+                    LastError = "直线轴运动暂未实现";
+                }
             });
         }
 
@@ -188,7 +204,7 @@ namespace AFOCS.App.ViewModels
             await SafeRunAsync($"{item.Name} 停止", async () =>
             {
                 if (item.Kind == AxisKind.BusAxis)
-                    await AxisService.StopAxisAsync((AxisId)item.AxisId);
+                    await MotionCard.StopAxisAsync((ushort)item.AxisId);
             });
         }
 
@@ -197,7 +213,18 @@ namespace AFOCS.App.ViewModels
             await SafeRunAsync($"{item.Name} 回零", async () =>
             {
                 if (item.Kind == AxisKind.BusAxis)
-                    await AxisService.MoveHomeAsync((AxisId)item.AxisId);
+                {
+                    var axisId = (AxisId)item.AxisId;
+                    var cfg = MotionCard.GetAxisConfig(axisId).Home;
+                    await MotionCard.MoveHomeAsync(
+                        axis: (ushort)axisId,
+                        homeMode: cfg.HomeMode,
+                        lowVel: cfg.LowVel,
+                        highVel: cfg.HighVel,
+                        tacc: cfg.Tacc,
+                        tdec: cfg.Tdec,
+                        offsetPos: cfg.OffsetPos);
+                }
             });
         }
 
@@ -207,14 +234,14 @@ namespace AFOCS.App.ViewModels
         {
             await base.OnInitializedAsync(cancellationToken);
             _shell.RegisterTool(this);
-            if (!AxisService.IsMonitoring)
-                await AxisService.StartMonitor();
+            if (!MotionCard.IsAxisMonitoring)
+                await MotionCard.StartAxisMonitorAsync();
         }
 
         protected override Task OnDeactivateAsync(bool close, CancellationToken cancellationToken)
         {
             if (close)
-                AxisService.StopMonitor();
+                MotionCard.StopAxisMonitor();
             return base.OnDeactivateAsync(close, cancellationToken);
         }
 

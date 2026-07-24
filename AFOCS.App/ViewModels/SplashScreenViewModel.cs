@@ -67,7 +67,7 @@ namespace AFOCS.App.ViewModels
 
         [Import] private IMainWindow _mainWindow = null!;
 
-        [Import] private IIOService _ioService = null!;
+        [Import] private IIODevice _ioDevice = null!;
 
         [Import] private LeftCouplingLPressureSensor _leftCouplingLPressure = null!;
         [Import] private LeftCouplingRPressureSensor _leftCouplingRPressure = null!;
@@ -122,7 +122,6 @@ namespace AFOCS.App.ViewModels
                 //   Thread.Sleep(100);
                 //}
                 ///var nm = _boardDevice.DutReadWriteAsync(0, 1, 1, "RX", 0);
-                await _ioService.StartMonitor();
                 await FinalizeInitialization();
                 //await _smcGripper.EnablePushForceAsync(GripperId.RightCouplingLGripper);
                 await _smcGripper.AlarmResetAsync(GripperId.RightCouplingLGripper);
@@ -163,6 +162,7 @@ namespace AFOCS.App.ViewModels
                 _cameraRightUp,
                 _cameraRightDown,
                 _leadShineMotionCard,
+                _ioDevice,
                 //_boardDevice,
                 //_smcGripper,
                 _leftCouplingLPressure,
@@ -192,6 +192,7 @@ namespace AFOCS.App.ViewModels
                 CameraLeftUp => "左上相机",
                 CameraRightUp => "右上相机",
                 LeadShineMotionCard => "雷赛控制卡",
+                IODevice => "IO 设备",
                 LeftCouplingLPressureSensor => "左工位左耦合压力传感器",
                 LeftCouplingRPressureSensor => "左工位右耦合压力传感器",
                 LeftDispensePressureSensor => "左工位点胶压力传感器",

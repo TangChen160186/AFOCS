@@ -10,8 +10,8 @@ namespace AFOCS.App.ViewModels
     public class JogRightViewModel : JogStationViewModel, IJogRight
     {
         [ImportingConstructor]
-        public JogRightViewModel(IAxisStateService axisService, IShell shell)
-            : base(axisService, shell, "右工位手柄") { }
+        public JogRightViewModel(IMotionControlCard motionCard, IShell shell)
+            : base(motionCard, shell, "右工位手柄") { }
 
         protected override void InitStationAxes()
         {

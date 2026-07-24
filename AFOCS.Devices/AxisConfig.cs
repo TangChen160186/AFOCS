@@ -6,7 +6,7 @@ namespace AFOCS.Devices
     /// <summary>
     /// 轴运动参数（速度曲线）
     /// </summary>
-    public class AxisMotionParams
+    public class AxisMotionParams : ICloneable
     {
         /// <summary>脉冲当量（pulse/unit），如 1000 表示 1000 脉冲 = 1mm</summary>
         [Description("脉冲当量 (pulse/unit)")]
@@ -35,12 +35,20 @@ namespace AFOCS.Devices
         /// <summary>S段曲线时间（s），0 表示梯形曲线</summary>
         [Description("S段时间 (s)")]
         public double SPara { get; set; } = 0;
+
+        public AxisMotionParams Clone() => new()
+        {
+            Equiv = Equiv, MinVel = MinVel, MaxVel = MaxVel,
+            Tacc = Tacc, Tdec = Tdec, StopVel = StopVel, SPara = SPara,
+        };
+
+        object ICloneable.Clone() => Clone();
     }
 
     /// <summary>
     /// 轴回零参数
     /// </summary>
-    public class AxisHomeParams
+    public class AxisHomeParams : ICloneable
     {
         /// <summary>
         /// 回零模式：
@@ -70,12 +78,20 @@ namespace AFOCS.Devices
         /// <summary>回零偏移量（unit），回零完成后偏移的距离</summary>
         [Description("回零偏移量 (unit)")]
         public double OffsetPos { get; set; } = 0;
+
+        public AxisHomeParams Clone() => new()
+        {
+            HomeMode = HomeMode, LowVel = LowVel, HighVel = HighVel,
+            Tacc = Tacc, Tdec = Tdec, OffsetPos = OffsetPos,
+        };
+
+        object ICloneable.Clone() => Clone();
     }
 
     /// <summary>
     /// 单个轴的完整配置
     /// </summary>
-    public class AxisConfig
+    public class AxisConfig : ICloneable
     {
         /// <summary>轴标识</summary>
         public AxisId AxisId { get; set; }
@@ -105,6 +121,20 @@ namespace AFOCS.Devices
         /// <summary>每圈脉冲数</summary>
         [Description("每圈脉冲数")]
         public int PulsePerRev { get; set; } = 10000;
+
+        public AxisConfig Clone() => new()
+        {
+            AxisId = AxisId,
+            Motion = Motion.Clone(),
+            Home = Home.Clone(),
+            NegativeSoftLimit = NegativeSoftLimit,
+            PositiveSoftLimit = PositiveSoftLimit,
+            SoftLimitEnabled = SoftLimitEnabled,
+            MaxSpeed = MaxSpeed,
+            PulsePerRev = PulsePerRev,
+        };
+
+        object ICloneable.Clone() => Clone();
     }
 
     /// <summary>

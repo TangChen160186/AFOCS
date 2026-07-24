@@ -96,7 +96,7 @@ namespace AFOCS.App.ViewModels
     [PartCreationPolicy(CreationPolicy.Shared)]
     public class IOMappingSettingsViewModel : INotifyPropertyChanged, ISettingsEditor, ICancelableSettingsEditor, IDisposable
     {
-        private readonly IIOService _io;
+        private readonly IIODevice _io;
 
         public string SettingsPageName => "IO 配置";
         public string SettingsPagePath => "设备配置";
@@ -145,7 +145,7 @@ namespace AFOCS.App.ViewModels
         }
 
         [ImportingConstructor]
-        public IOMappingSettingsViewModel(IIOService io)
+        public IOMappingSettingsViewModel(IIODevice io)
         {
             _io = io;
 

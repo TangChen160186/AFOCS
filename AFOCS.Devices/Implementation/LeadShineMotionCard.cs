@@ -41,6 +41,9 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     private ushort _cardNo = 0;
     private LeadShineMotionCardConfig _config = new();
+    private readonly Dictionary<AxisId, AxisConfig> _axisConfigs = [];
+    private CancellationTokenSource? _monitorCts;
+    private bool _isAxisMonitoring;
     private const ushort EniFileType = 200;
     private const ushort ConfigFileType = 201;
     private const ushort EthercatPort = 2;
@@ -130,7 +133,10 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
                     return iniResult;
             }
 
-            // 8. 最终确认总线状态
+            // 8. 加载轴配置
+            await LoadAllAxisConfigsAsync();
+
+            // 9. 最终确认总线状态
             LTDMC.nmc_get_errcode(_cardNo, EthercatPort, ref nmcErr);
             if (nmcErr != 0)
                 return Result.Fail($"总线错误: 0x{nmcErr:X4}");
@@ -255,6 +261,221 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
         await configService.SaveAsync(_config);
     }
 
+    // ========== 轴配置管理 ==========
+
+    public AxisConfig GetAxisConfig(AxisId axisId)
+    {
+        if (_axisConfigs.TryGetValue(axisId, out var config))
+            return config;
+
+        var defaults = GetDefaultAxisConfig(axisId);
+        _axisConfigs[axisId] = defaults;
+        return defaults;
+    }
+
+    public void SetAxisConfig(AxisId axisId, AxisConfig config)
+    {
+        _axisConfigs[axisId] = config.Clone();
+    }
+
+    public async Task LoadAllAxisConfigsAsync()
+    {
+        try
+        {
+            var collection = await configService.LoadAsync<AxisConfigCollection>();
+            if (collection?.Axes != null)
+            {
+                foreach (var (key, config) in collection.Axes)
+                    _axisConfigs[(AxisId)key] = config;
+            }
+
+            foreach (AxisId axisId in Enum.GetValues<AxisId>())
+            {
+                if (!_axisConfigs.ContainsKey(axisId))
+                    _axisConfigs[axisId] = GetDefaultAxisConfig(axisId);
+            }
+
+            logger.Information($"轴配置加载完成，共 {_axisConfigs.Count} 个轴");
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "加载轴配置失败");
+            foreach (AxisId axisId in Enum.GetValues<AxisId>())
+                _axisConfigs[axisId] = GetDefaultAxisConfig(axisId);
+        }
+    }
+
+    public async Task SaveAllAxisConfigsAsync()
+    {
+        var collection = new AxisConfigCollection
+        {
+            Axes = _axisConfigs.ToDictionary(kv => (int)kv.Key, kv => kv.Value)
+        };
+        await configService.SaveAsync(collection);
+        logger.Information("轴配置已保存");
+    }
+
+    public AxisConfig GetDefaultAxisConfig(AxisId axisId)
+    {
+        var config = new AxisConfig { AxisId = axisId };
+
+        switch (axisId)
+        {
+            case AxisId.LeftCamUpX:
+            case AxisId.RightCamUpX:
+                config.Motion.Equiv = 1000;
+                config.Motion.MaxVel = 10;
+                config.Home.HomeMode = 33;
+                config.PulsePerRev = 20000;
+                break;
+            case AxisId.LeftCamUpY:
+            case AxisId.RightCamUpY:
+            case AxisId.LeftCamSideY:
+            case AxisId.RightCamSideY:
+                config.Motion.Equiv = 1000;
+                config.Motion.MaxVel = 100;
+                config.Home.HomeMode = 33;
+                config.PulsePerRev = 10000;
+                break;
+            case AxisId.LeftCamUpZ:
+            case AxisId.RightCamUpZ:
+                config.Motion.Equiv = 1000;
+                config.Motion.MaxVel = 50;
+                config.Home.HomeMode = 33;
+                config.PulsePerRev = 5000;
+                break;
+            case AxisId.LeftCouplingLThetaX:
+            case AxisId.LeftCouplingLThetaY:
+            case AxisId.LeftCouplingLThetaZ:
+            case AxisId.LeftCouplingRThetaX:
+            case AxisId.LeftCouplingRThetaY:
+            case AxisId.LeftCouplingRThetaZ:
+            case AxisId.RightCouplingLThetaX:
+            case AxisId.RightCouplingLThetaY:
+            case AxisId.RightCouplingLThetaZ:
+            case AxisId.RightCouplingRThetaX:
+            case AxisId.RightCouplingRThetaY:
+            case AxisId.RightCouplingRThetaZ:
+                config.Motion.Equiv = 10000.0 / 360.0;
+                config.Motion.MaxVel = 30;
+                config.Motion.MinVel = 1;
+                config.Home.HomeMode = 33;
+                config.Home.LowVel = 1;
+                config.Home.HighVel = 10;
+                config.PulsePerRev = 10000;
+                break;
+        }
+
+        return config;
+    }
+
+    // ========== 轴状态监控 ==========
+
+    public event EventHandler<AxisStateChangedEventArgs>? AxisStateChanged;
+    public bool IsAxisMonitoring => _isAxisMonitoring;
+
+    public Task StartAxisMonitorAsync(int pollIntervalMs = 200)
+    {
+        if (_isAxisMonitoring) return Task.CompletedTask;
+
+        _monitorCts = new CancellationTokenSource();
+        _isAxisMonitoring = true;
+        logger.Information("轴状态监控已启动，轮询间隔 {Interval}ms", pollIntervalMs);
+
+        _ = Task.Run(() => PollLoopAsync(pollIntervalMs, _monitorCts.Token), _monitorCts.Token);
+        return Task.CompletedTask;
+    }
+
+    public void StopAxisMonitor()
+    {
+        if (!_isAxisMonitoring) return;
+        _monitorCts?.Cancel();
+        _monitorCts?.Dispose();
+        _monitorCts = null;
+        _isAxisMonitoring = false;
+        logger.Information("轴状态监控已停止");
+    }
+
+    private async Task PollLoopAsync(int intervalMs, CancellationToken ct)
+    {
+        // 缓存上次值，用于去抖
+        var lastPositions = new Dictionary<AxisId, double>();
+        var lastSpeeds = new Dictionary<AxisId, double>();
+
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                await Task.Delay(intervalMs, ct);
+
+                if (!IsConnected) continue;
+
+                var changes = new List<AxisStateChangedEventArgs>();
+
+                foreach (AxisId id in Enum.GetValues<AxisId>())
+                {
+                    ct.ThrowIfCancellationRequested();
+
+                    var posResult = await GetPositionAsync((ushort)id);
+                    if (!posResult.IsSuccess) continue;
+
+                    var speedResult = await GetSpeedAsync((ushort)id);
+                    var speed = speedResult.IsSuccess ? speedResult.Data : 0;
+
+                    lastPositions.TryGetValue(id, out var oldPos);
+                    lastSpeeds.TryGetValue(id, out var oldSpeed);
+
+                    var changed = Math.Abs(oldPos - posResult.Data) > 0.0001 ||
+                                  Math.Abs(oldSpeed - speed) > 0.0001;
+
+                    if (changed)
+                    {
+                        lastPositions[id] = posResult.Data;
+                        lastSpeeds[id] = speed;
+
+                        var isMoving = Math.Abs(speed) > 0.01;
+                        var name = id switch
+                        {
+                            AxisId.LeftCamUpX => "左上相机X轴",
+                            AxisId.LeftCamUpY => "左上相机Y轴",
+                            AxisId.LeftCamUpZ => "左上相机Z轴",
+                            AxisId.LeftCamSideY => "左侧相机Y轴",
+                            AxisId.LeftCouplingLThetaX => "左耦合左θX轴",
+                            AxisId.LeftCouplingLThetaY => "左耦合左θY轴",
+                            AxisId.LeftCouplingLThetaZ => "左耦合左θZ轴",
+                            AxisId.LeftCouplingRThetaX => "左耦合右θX轴",
+                            AxisId.LeftCouplingRThetaY => "左耦合右θY轴",
+                            AxisId.LeftCouplingRThetaZ => "左耦合右θZ轴",
+                            AxisId.RightCamUpX => "右上相机X轴",
+                            AxisId.RightCamUpY => "右上相机Y轴",
+                            AxisId.RightCamUpZ => "右上相机Z轴",
+                            AxisId.RightCamSideY => "右侧相机Y轴",
+                            AxisId.RightCouplingLThetaX => "右耦合左θX轴",
+                            AxisId.RightCouplingLThetaY => "右耦合左θY轴",
+                            AxisId.RightCouplingLThetaZ => "右耦合左θZ轴",
+                            AxisId.RightCouplingRThetaX => "右耦合右θX轴",
+                            AxisId.RightCouplingRThetaY => "右耦合右θY轴",
+                            AxisId.RightCouplingRThetaZ => "右耦合右θZ轴",
+                            _ => id.ToString(),
+                        };
+
+                        changes.Add(new AxisStateChangedEventArgs(
+                            AxisKind.BusAxis, (int)id, name,
+                            posResult.Data, speed, true, isMoving));
+                    }
+                }
+
+                foreach (var change in changes)
+                {
+                    try { AxisStateChanged?.Invoke(this, change); }
+                    catch (Exception ex) { logger.Error(ex, "轴状态事件处理异常: {Axis}", change.Name); }
+                }
+            }
+            catch (OperationCanceledException) { break; }
+            catch (Exception ex) { logger.Error(ex, "轴轮询异常"); }
+        }
+    }
+
     private Result DownloadFile(ushort cardNo, string path,ushort fileType)
     {
         try
@@ -293,6 +514,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result> StopAsync(CancellationToken token = default)
     {
+        StopAxisMonitor();
         if (IsConnected)
         {
             await Task.Run(() => LTDMC.dmc_board_close());

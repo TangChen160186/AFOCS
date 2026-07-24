@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
+using System.Runtime.CompilerServices;
+using System.Windows;
 using AFOCS.Devices;
-using AFOCS.Devices.Implementation;
-using AFOCS.Framework.Framework.Services;
 using AFOCS.Framework.Modules.Settings;
 using AFOCS.Infrastructure;
 using Caliburn.Micro;
@@ -11,21 +11,31 @@ namespace AFOCS.App.ViewModels
 {
     [Export(typeof(ISettingsEditor))]
     [PartCreationPolicy(CreationPolicy.NonShared)]
-    public class AxisSettingsViewModel : PropertyChangedBase, ISettingsEditor
+    public class AxisSettingsViewModel : Screen, ISettingsEditor
     {
-        private readonly IAxisConfigService _axisConfigService;
-
-        [Import] private LeadShineMotionCard _motionCard = null!;
+        private readonly IMotionControlCard _motionCard;
 
         private AxisId _selectedAxis;
         private AxisConfig _currentConfig = new();
+        private bool _isModify;
+
+        private readonly string[] _modifyProperties =
+        [
+            nameof(Equiv), nameof(MinVel), nameof(MaxVel), nameof(Tacc), nameof(Tdec),
+            nameof(StopVel), nameof(SPara),
+            nameof(HomeMode), nameof(HomeLowVel), nameof(HomeHighVel),
+            nameof(HomeTacc), nameof(HomeTdec), nameof(HomeOffsetPos),
+            nameof(NegativeSoftLimit), nameof(PositiveSoftLimit), nameof(SoftLimitEnabled),
+            nameof(MaxSpeed), nameof(PulsePerRev),
+        ];
+
         private string _statusMessage = string.Empty;
         private bool _isBusy;
 
         [ImportingConstructor]
-        public AxisSettingsViewModel(IAxisConfigService axisConfigService)
+        public AxisSettingsViewModel(IMotionControlCard motionCard)
         {
-            _axisConfigService = axisConfigService;
+            _motionCard = motionCard;
 
             AxisList = new ObservableCollection<AxisInfo>(
                 Enum.GetValues<AxisId>().Select(a => new AxisInfo
@@ -41,6 +51,21 @@ namespace AFOCS.App.ViewModels
 
         public string SettingsPageName => "总线轴配置";
         public string SettingsPagePath => "设备配置";
+
+        // ========== 生命周期 ==========
+
+        protected override void OnViewAttached(object view, object context)
+        {
+            base.OnViewAttached(view, context);
+            if (view is FrameworkElement fe)
+                fe.Unloaded += OnViewUnloaded;
+        }
+
+        private void OnViewUnloaded(object? sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe)
+                fe.Unloaded -= OnViewUnloaded;
+        }
 
         // ========== 轴列表 ==========
 
@@ -82,6 +107,8 @@ namespace AFOCS.App.ViewModels
                 NotifyOfPropertyChange();
             }
         }
+
+        public bool IsModify => _isModify;
 
         // ========== 运动测试 ==========
 
@@ -231,7 +258,10 @@ namespace AFOCS.App.ViewModels
             StatusMessage = "保存中...";
             try
             {
-                await _axisConfigService.SaveAsync();
+                _motionCard.SetAxisConfig(_selectedAxis, _currentConfig);
+                await _motionCard.SaveAllAxisConfigsAsync();
+                _isModify = false;
+                NotifyOfPropertyChange(nameof(IsModify));
                 StatusMessage = "已保存";
             }
             catch (Exception ex)
@@ -246,8 +276,10 @@ namespace AFOCS.App.ViewModels
 
         public void ResetToDefault()
         {
-            var defaults = _axisConfigService.GetDefaultConfig(_selectedAxis);
-            _currentConfig = defaults;
+            var defaults = _motionCard.GetDefaultAxisConfig(_selectedAxis);
+            _currentConfig = defaults.Clone();
+            _isModify = true;
+            NotifyOfPropertyChange(nameof(IsModify));
             RefreshAllProperties();
             StatusMessage = "已重置为默认值";
         }
@@ -306,25 +338,40 @@ namespace AFOCS.App.ViewModels
             IsMoving = false;
         }
 
+        // ========== NotifyOfPropertyChange 重写 ==========
+
+        public override void NotifyOfPropertyChange([CallerMemberName] string? propertyName = null)
+        {
+            base.NotifyOfPropertyChange(propertyName);
+
+            if (_modifyProperties.Contains(propertyName))
+            {
+                _isModify = true;
+                NotifyOfPropertyChange(nameof(IsModify));
+            }
+        }
+
         // ========== ISettingsEditor ==========
 
         public void ApplyChanges()
         {
-            _ = SaveCurrentAxisAsync();
+            if (_isModify) _ = SaveCurrentAxisAsync();
         }
 
         // ========== 内部方法 ==========
 
         private async Task InitializeAsync()
         {
-            await _axisConfigService.LoadAsync();
             if (SelectedAxisInfo != null)
                 LoadAxisConfig(SelectedAxisInfo.AxisId);
         }
 
         private void LoadAxisConfig(AxisId axisId)
         {
-            _currentConfig = _axisConfigService.GetConfig(axisId);
+            var config = _motionCard.GetAxisConfig(axisId);
+            _currentConfig = config.Clone();
+            _isModify = false;
+            NotifyOfPropertyChange(nameof(IsModify));
             RefreshAllProperties();
         }
 
