@@ -4,7 +4,6 @@ using System.Windows;
 using AFOCS.Devices;
 using AFOCS.Devices.Implementation;
 using AFOCS.Framework.Framework.Services;
-using AFOCS.Infrastructure;
 using Caliburn.Micro;
 using Serilog;
 
@@ -124,16 +123,16 @@ namespace AFOCS.App.ViewModels
                 ///var nm = _boardDevice.DutReadWriteAsync(0, 1, 1, "RX", 0);
                 await FinalizeInitialization();
                 //await _smcGripper.EnablePushForceAsync(GripperId.RightCouplingLGripper);
-                await _smcGripper.AlarmResetAsync(GripperId.RightCouplingLGripper);
-                await _smcGripper.EnableAsync(GripperId.RightCouplingLGripper);
-                await Task.Delay(1000);
-                var s2 = await _smcGripper.IsEnabledAsync(GripperId.RightCouplingLGripper);
-                await _smcGripper.AlarmResetAsync(GripperId.RightCouplingLGripper);
-                var s1 = await _smcGripper.IsEnabledAsync(GripperId.RightCouplingLGripper);
-                //await _smcGripper.HomeAsync(GripperId.RightCouplingLGripper);
-                await _smcGripper.ReleaseAsync(GripperId.RightCouplingLGripper, 100, 100);
-                await _smcGripper.ReleaseAsync(GripperId.RightCouplingLGripper, 100, 200);
-                await _smcGripper.ReleaseAsync(GripperId.RightCouplingLGripper, 100, 300);
+                //await _smcGripper.AlarmResetAsync(GripperId.RightCouplingLGripper);
+                //await _smcGripper.EnableAsync(GripperId.RightCouplingLGripper);
+                //await Task.Delay(1000);
+                //var s2 = await _smcGripper.IsEnabledAsync(GripperId.RightCouplingLGripper);
+                //await _smcGripper.AlarmResetAsync(GripperId.RightCouplingLGripper);
+                //var s1 = await _smcGripper.IsEnabledAsync(GripperId.RightCouplingLGripper);
+                ////await _smcGripper.HomeAsync(GripperId.RightCouplingLGripper);
+                //await _smcGripper.ReleaseAsync(GripperId.RightCouplingLGripper, 100, 100);
+                //await _smcGripper.ReleaseAsync(GripperId.RightCouplingLGripper, 100, 200);
+                //await _smcGripper.ReleaseAsync(GripperId.RightCouplingLGripper, 100, 300);
                 //await _smcGripper.GripAsync(GripperId.RightCouplingLGripper, 100, 100, 80, 80, 200);
                 Console.WriteLine();
             }
@@ -164,7 +163,7 @@ namespace AFOCS.App.ViewModels
                 _leadShineMotionCard,
                 _ioDevice,
                 //_boardDevice,
-                //_smcGripper,
+                _smcGripper,
                 _leftCouplingLPressure,
                 _leftCouplingRPressure,
                 _leftDispensePressure,
