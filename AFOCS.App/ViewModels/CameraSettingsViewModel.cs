@@ -1,6 +1,10 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
+using System.IO;
 using System.Runtime.CompilerServices;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using AFOCS.App.Services;
 using AFOCS.Devices;
 using AFOCS.Devices.Implementation;
@@ -17,6 +21,7 @@ namespace AFOCS.App.ViewModels
         private readonly IToastService _toastService;
         private readonly HkCameraConfig _config = new();
         private bool _isModify;
+        private WriteableBitmap? _previewBitmap;
 
         private readonly string[] _modifyProperties = [nameof(SerialNumber)];
 
@@ -35,10 +40,60 @@ namespace AFOCS.App.ViewModels
         string ISettingsEditor.SettingsPageName => Name;
         string ISettingsEditor.SettingsPagePath => "设备配置\\相机";
 
+        // ========== 生命周期 ==========
+
         protected override void OnViewAttached(object view, object context)
         {
             base.OnViewAttached(view, context);
+            Subscribe();
             _ = ScanAvailableCameras();
+
+            if (view is FrameworkElement fe)
+                fe.Unloaded += OnViewUnloaded;
+        }
+
+        private void OnViewUnloaded(object? sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe)
+                fe.Unloaded -= OnViewUnloaded;
+            Unsubscribe();
+        }
+
+        private void Subscribe()
+        {
+            _camera.ImageReceived += OnImageReceived;
+        }
+
+        private void Unsubscribe()
+        {
+            _camera.ImageReceived -= OnImageReceived;
+        }
+
+        // ========== 图像预览 ==========
+
+        public BitmapSource? PreviewImage
+        {
+            get;
+            set => Set(ref field, value);
+        }
+
+        private void OnImageReceived(object? sender, ImagePreviewedEventArgs e)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                int w = e.Width, h = e.Height;
+                Width = (uint)e.Width;
+                Height = (uint)e.Height;
+                int bytesPerPixel = e.IsMono ? 1 : 3;
+                var format = e.IsMono ? PixelFormats.Gray8 : PixelFormats.Bgr24;
+
+                if (_previewBitmap == null || _previewBitmap.PixelWidth != w || _previewBitmap.PixelHeight != h)
+                    _previewBitmap = new WriteableBitmap(w, h, 96, 96, format, null);
+
+                int stride = w * bytesPerPixel;
+                _previewBitmap.WritePixels(new Int32Rect(0, 0, w, h), e.ImageData, stride * h, stride);
+                PreviewImage = _previewBitmap;
+            });
         }
 
         // ========== 配置 ==========
@@ -90,12 +145,6 @@ namespace AFOCS.App.ViewModels
             set => Set(ref field, value);
         }
 
-        public bool IsGrabbing
-        {
-            get;
-            set => Set(ref field, value);
-        }
-
         // ========== 扫描 ==========
 
         public ObservableCollection<(string, string)> AvailableCameras
@@ -134,6 +183,7 @@ namespace AFOCS.App.ViewModels
 
         public async Task ReconnectAsync()
         {
+            Unsubscribe();
             IsBusy = true;
             StatusMessage = "正在重连...";
             try
@@ -149,6 +199,7 @@ namespace AFOCS.App.ViewModels
                 {
                     Width = _camera.Width;
                     Height = _camera.Height;
+                    Subscribe();
                 }
             }
             catch (Exception ex) { StatusMessage = $"重连异常: {ex.Message}"; }
@@ -173,44 +224,31 @@ namespace AFOCS.App.ViewModels
             finally { IsBusy = false; }
         }
 
-        public async Task StartGrabbingAsync()
+        public async Task CaptureAsync()
         {
-            if (!IsConnected) { _toastService.ShowWarning("设备未连接，请先连接设备。"); return; }
-            IsBusy = true;
-            try
-            {
-                var result = await _camera.StartCameraAsync();
-                if (result.IsSuccess) IsGrabbing = true;
-                StatusMessage = result.IsSuccess ? "采集已启动" : $"启动失败: {result.Message}";
-            }
-            catch (Exception ex) { StatusMessage = $"启动异常: {ex.Message}"; }
-            finally { IsBusy = false; }
-        }
+            if (!IsConnected) return;
 
-        public async Task StopGrabbingAsync()
-        {
-            if (!IsConnected) { _toastService.ShowWarning("设备未连接，请先连接设备。"); return; }
-            IsBusy = true;
-            try
+            var dlg = new Microsoft.Win32.SaveFileDialog
             {
-                var result = await _camera.StopCameraAsync();
-                if (result.IsSuccess) IsGrabbing = false;
-                StatusMessage = result.IsSuccess ? "采集已停止" : $"停止失败: {result.Message}";
-            }
-            catch (Exception ex) { StatusMessage = $"停止异常: {ex.Message}"; }
-            finally { IsBusy = false; }
-        }
+                Title = "保存图像",
+                Filter = "BMP 图像|*.bmp",
+                DefaultExt = ".bmp",
+                FileName = $"capture_{DateTime.Now:yyyyMMdd_HHmmss}",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+            };
 
-        public async Task SoftwareTriggerAsync()
-        {
-            if (!IsConnected) { _toastService.ShowWarning("设备未连接，请先连接设备。"); return; }
+            if (dlg.ShowDialog() != true) return;
+
             IsBusy = true;
+            StatusMessage = "正在抓图...";
             try
             {
-                var result = await _camera.SoftwareTriggerOnce();
-                StatusMessage = result.IsSuccess ? "触发成功" : $"触发失败: {result.Message}";
+                var result = await _camera.CaptureImageAsync(dlg.FileName);
+                StatusMessage = result.IsSuccess
+                    ? $"已保存: {Path.GetFileName(result.Data)}"
+                    : $"抓图失败: {result.Message}";
             }
-            catch (Exception ex) { StatusMessage = $"触发异常: {ex.Message}"; }
+            catch (Exception ex) { StatusMessage = $"抓图异常: {ex.Message}"; }
             finally { IsBusy = false; }
         }
 

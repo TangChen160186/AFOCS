@@ -21,6 +21,7 @@ namespace AFOCS.Devices
         Task<Result> StopCameraAsync();
 
         Task<Result> SoftwareTriggerOnce();
+        Task<Result<string>> CaptureImageAsync(string filePath);
         event EventHandler<ImagePreviewedEventArgs> ImageReceived;
 
     }

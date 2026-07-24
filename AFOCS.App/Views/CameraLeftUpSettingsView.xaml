@@ -124,10 +124,10 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>
 
-            <!-- ========== 相机参数 ========== -->
+            <!-- ========== 实时预览 ========== -->
             <Border BorderBrush="#E5E7EB" BorderThickness="0,1,0,0" Margin="0,12,0,0" Padding="0,10,0,0">
                 <StackPanel>
-                    <TextBlock Text="相机参数" FontWeight="Bold" Margin="0,0,0,8" />
+                    <TextBlock Text="实时预览" FontWeight="Bold" Margin="0,0,0,8" />
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                         <TextBlock Text="分辨率:" VerticalAlignment="Center" FontSize="12"
@@ -140,73 +140,14 @@
                         </TextBlock>
                     </StackPanel>
 
-                    <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
-                        <TextBlock Text="采集状态:" VerticalAlignment="Center" FontSize="12"
-                                   Margin="0,0,8,0" />
-                        <TextBlock VerticalAlignment="Center" FontSize="14" FontWeight="Bold">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Text" Value="已停止" />
-                                    <Setter Property="Foreground" Value="{StaticResource DisconnectedBrush}" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsGrabbing}" Value="True">
-                                            <Setter Property="Text" Value="采集中" />
-                                            <Setter Property="Foreground" Value="{StaticResource ConnectedBrush}" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </StackPanel>
+                    <Image Source="{Binding PreviewImage}"
+                           Stretch="Uniform"
+                           MaxWidth="440" MaxHeight="330"
+                           Margin="0,8,0,0" />
 
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content="开始采集" Width="80" Height="28"
-                                FontSize="12" FontWeight="Bold"
-                                cal:Message.Attach="StartGrabbingAsync">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsGrabbing}" Value="True">
-                                            <Setter Property="IsEnabled" Value="False" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
-                                            <Setter Property="IsEnabled" Value="False" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                        <Button Content="停止采集" Width="80" Height="28"
-                                FontSize="12" Margin="8,0,0,0"
-                                cal:Message.Attach="StopGrabbingAsync">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsGrabbing}" Value="False">
-                                            <Setter Property="IsEnabled" Value="False" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
-                                            <Setter Property="IsEnabled" Value="False" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                    </StackPanel>
-
-                    <Button Content="软件触发" Width="80" Height="28"
+                    <Button Content="抓取当前图像" Width="100" Height="28"
                             FontSize="12" Margin="0,8,0,0"
-                            cal:Message.Attach="SoftwareTriggerAsync">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsBusy}" Value="True">
-                                        <Setter Property="IsEnabled" Value="False" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
+                            cal:Message.Attach="CaptureAsync" />
                 </StackPanel>
             </Border>
 

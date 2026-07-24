@@ -30,6 +30,12 @@ namespace AFOCS.Devices.Implementation
         private readonly MyCamera _camera = new();
         private cbOutputExdelegate _outputCallback;
 
+        // 缓存最新帧（从回调中拷贝）
+        private readonly object _lastFrameLock = new();
+        private byte[]? _lastFrameData;
+        private int _lastFrameW, _lastFrameH;
+        private bool _lastFrameIsMono;
+
         public bool IsConnected { get; private set; }
 
         public HkCameraConfig GetConfig() => _config.Clone();
@@ -70,6 +76,12 @@ namespace AFOCS.Devices.Implementation
                 InitImageSize();
                 InitCameraParm();
                 SetImageCallback();
+
+                // 初始化后自动开始连续采集
+                var ret = _camera.MV_CC_StartGrabbing_NET();
+                if (ret != 0)
+                    return Result.Fail(ResultCode.Fail, $"启动采集失败，错误码：{ret}");
+
                 return Result.Success();
 
             }
@@ -120,17 +132,34 @@ namespace AFOCS.Devices.Implementation
         {
             try
             {
-                uint width = pFrameInfo.nWidth;
-                uint height = pFrameInfo.nHeight;
+                uint w = pFrameInfo.nWidth;
+                uint h = pFrameInfo.nHeight;
+                uint frameLen = pFrameInfo.nFrameLen;
+                bool isMono = IsPixelMono(pFrameInfo.enPixelType);
 
-                ImageReceived?.Invoke(this, new ImagePreviewedEventArgs(pData, (int)width, (int)height));
+                // 拷贝最新帧数据
+                lock (_lastFrameLock)
+                {
+                    if (_lastFrameData == null || _lastFrameData.Length < frameLen)
+                        _lastFrameData = new byte[frameLen];
+                    Marshal.Copy(pData, _lastFrameData, 0, (int)frameLen);
+                    _lastFrameW = (int)w;
+                    _lastFrameH = (int)h;
+                    _lastFrameIsMono = isMono;
+                }
 
+                ImageReceived?.Invoke(this, new ImagePreviewedEventArgs(pData, (int)w, (int)h, isMono));
             }
             catch (Exception ex)
             {
                 logger.Error($"{ex}");
             }
         }
+
+        /// <summary>
+        /// 判断像素格式是否为单色（Mono 族）。
+        /// </summary>
+        private static bool IsPixelMono(MvGvspPixelType type) => ((uint)type & 0xFF000000) == 0x01000000;
         private bool OpenDevice(MV_CC_DEVICE_INFO deviceInfo)
         {
             try
@@ -284,6 +313,151 @@ namespace AFOCS.Devices.Implementation
             if (ret != 0)
                 return Result.Fail(ResultCode.Fail, "软件触发失败");
             return Result.Success();
+        }
+
+        public async Task<Result<string>> CaptureImageAsync(string filePath)
+        {
+            byte[]? frameData;
+            int w, h;
+            bool isMono;
+
+            lock (_lastFrameLock)
+            {
+                if (_lastFrameData == null)
+                    return Result<string>.Fail("暂无图像帧");
+
+                frameData = new byte[_lastFrameData.Length];
+                Array.Copy(_lastFrameData, frameData, _lastFrameData.Length);
+                w = _lastFrameW;
+                h = _lastFrameH;
+                isMono = _lastFrameIsMono;
+            }
+
+            if (w == 0 || h == 0)
+                return Result<string>.Fail("图像尺寸未初始化");
+
+            if (isMono)
+            {
+                using var pinned = new PinnedArray(frameData);
+                SaveAs8BitBmp(pinned.Ptr, (uint)w, (uint)h, filePath);
+            }
+            else
+            {
+                // 彩色相机回退到 SDK BGR 转换
+                uint bgrSize = (uint)w * (uint)h * 3;
+                IntPtr pBuf = Marshal.AllocHGlobal((int)bgrSize);
+                try
+                {
+                    MV_FRAME_OUT_INFO_EX info = new();
+                    int ret = _camera.MV_CC_GetImageForBGR_NET(pBuf, bgrSize, ref info, 5000);
+                    if (ret != 0)
+                        return Result<string>.Fail($"BGR 转换失败，错误码: {ret}");
+                    SaveAs24BitBmp(pBuf, (uint)w, (uint)h, filePath);
+                }
+                finally { Marshal.FreeHGlobal(pBuf); }
+            }
+
+            return Result<string>.Success(filePath);
+        }
+
+        /// <summary>
+        /// 短暂 pin 住 byte[]，拿到 IntPtr 用于 BMP 写入。
+        /// </summary>
+        private sealed class PinnedArray : IDisposable
+        {
+            private readonly GCHandle _handle;
+            public IntPtr Ptr => _handle.AddrOfPinnedObject();
+            public PinnedArray(byte[] data) { _handle = GCHandle.Alloc(data, GCHandleType.Pinned); }
+            public void Dispose() { _handle.Free(); }
+        }
+
+        /// <summary>
+        /// 保存 8-bit 灰度 BMP（带调色板）。传入的灰度数据每像素 1 字节。
+        /// </summary>
+        private static void SaveAs8BitBmp(IntPtr grayData, uint width, uint height, string filePath)
+        {
+            uint rowSize = ((width + 3) / 4) * 4;
+            uint pixelDataSize = rowSize * height;
+            uint paletteSize = 256 * 4;
+            uint fileSize = 54 + paletteSize + pixelDataSize;
+
+            using var fs = new FileStream(filePath, FileMode.Create);
+            using var bw = new BinaryWriter(fs);
+
+            // BITMAPFILEHEADER
+            bw.Write((ushort)0x4D42);
+            bw.Write(fileSize);
+            bw.Write((ushort)0);
+            bw.Write((ushort)0);
+            bw.Write(54u + paletteSize);
+
+            // BITMAPINFOHEADER
+            bw.Write(40u);
+            bw.Write((int)width);
+            bw.Write((int)height);
+            bw.Write((ushort)1);
+            bw.Write((ushort)8);
+            bw.Write(0u);
+            bw.Write(pixelDataSize);
+            bw.Write(0);
+            bw.Write(0);
+            bw.Write(256u);
+            bw.Write(256u);
+
+            // Grayscale palette
+            for (int i = 0; i < 256; i++)
+                bw.Write((uint)(i | (i << 8) | (i << 16)));
+
+            // Pixel data (bottom-up, raw mono bytes)
+            byte[] row = new byte[rowSize];
+            for (int y = (int)height - 1; y >= 0; y--)
+            {
+                IntPtr src = grayData + (int)(y * width);
+                Marshal.Copy(src, row, 0, (int)width);
+                bw.Write(row);
+            }
+        }
+
+        /// <summary>
+        /// 保存 24-bit BGR BMP。
+        /// </summary>
+        private static void SaveAs24BitBmp(IntPtr bgrData, uint width, uint height, string filePath)
+        {
+            uint rowSize = ((width * 3 + 3) / 4) * 4;
+            uint pixelDataSize = rowSize * height;
+            uint fileSize = 54 + pixelDataSize;
+
+            using var fs = new FileStream(filePath, FileMode.Create);
+            using var bw = new BinaryWriter(fs);
+
+            // BITMAPFILEHEADER
+            bw.Write((ushort)0x4D42);
+            bw.Write(fileSize);
+            bw.Write((ushort)0);
+            bw.Write((ushort)0);
+            bw.Write(54u);
+
+            // BITMAPINFOHEADER
+            bw.Write(40u);
+            bw.Write((int)width);
+            bw.Write((int)height);
+            bw.Write((ushort)1);
+            bw.Write((ushort)24);
+            bw.Write(0u);
+            bw.Write(pixelDataSize);
+            bw.Write(0);
+            bw.Write(0);
+            bw.Write(0u);
+            bw.Write(0u);
+
+            // Pixel data (BGR, bottom-up)
+            byte[] row = new byte[rowSize];
+            for (int y = (int)height - 1; y >= 0; y--)
+            {
+                IntPtr src = bgrData + (int)(y * width * 3);
+                Marshal.Copy(src, row, 0, (int)(width * 3));
+                bw.Write(row);
+            }
         }
         public async Task<Result> StopCameraAsync()
         {
