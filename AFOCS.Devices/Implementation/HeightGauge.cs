@@ -1,22 +1,41 @@
-﻿using System.ComponentModel.Composition;
+using System.ComponentModel.Composition;
 using AFOCS.Communication;
 using AFOCS.Infrastructure;
 using Serilog;
 
 namespace AFOCS.Devices.Implementation
 {
-    public class HeightGaugeConfig
+    public class HeightGaugeConfig : ICloneable
     {
         public string Ip { get; set; } = "127.0.0.1";
         public int Port { get; set; } = 1000;
-    }
+        public int TimeoutMs { get; set; } = 3000;
 
+        public HeightGaugeConfig Clone() => new()
+        {
+            Ip = Ip,
+            Port = Port,
+            TimeoutMs = TimeoutMs,
+        };
+
+        object ICloneable.Clone() => Clone();
+    }
     [Export]
+    [Export(typeof(IHeightGauge))]
     [method: ImportingConstructor]
     public class HeightGauge(ITcpClient tcpClient, IConfigService configService, ILogger logger)
         : IHeightGauge
     {
+        private HeightGaugeConfig _config = new();
         public bool IsConnected => tcpClient.IsConnected;
+
+        public HeightGaugeConfig GetConfig() => _config.Clone();
+
+        public async Task SaveConfigAsync(HeightGaugeConfig config)
+        {
+            _config = config.Clone();
+            await configService.SaveAsync(_config);
+        }
 
         public async Task<Result> InitializeAsync(CancellationToken token = default)
         {
@@ -26,6 +45,7 @@ namespace AFOCS.Devices.Implementation
                 config = new HeightGaugeConfig();
                 await configService.SaveAsync(config);
             }
+            _config = config;
 
             TcpClientConfig tcpClientConfig = new TcpClientConfig
             {

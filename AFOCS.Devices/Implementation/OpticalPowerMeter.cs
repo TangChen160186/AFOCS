@@ -1,20 +1,39 @@
-﻿using AFOCS.Communication;
+using AFOCS.Communication;
 using AFOCS.Infrastructure;
 using Serilog;
 
 namespace AFOCS.Devices.Implementation
 {
-    public class OpticalPowerMeterConfig
+    public class OpticalPowerMeterConfig : ICloneable
     {
         public string Ip { get; set; } = "192.168.0.200";
         public int Port { get; set; } = 3498;
+        public int TimeoutMs { get; set; } = 3000;
+
+        public OpticalPowerMeterConfig Clone() => new()
+        {
+            Ip = Ip,
+            Port = Port,
+            TimeoutMs = TimeoutMs,
+        };
+
+        object ICloneable.Clone() => Clone();
     }
 
     public class OpticalPowerMeter<T>(ITcpClient tcpClient, IConfigService configService, ILogger logger)
         : IOpticalPowerMeter
         where T : OpticalPowerMeterConfig, new()
     {
+        private OpticalPowerMeterConfig _config = new T();
         public bool IsConnected => tcpClient.IsConnected;
+
+        public OpticalPowerMeterConfig GetConfig() => _config.Clone();
+
+        public async Task SaveConfigAsync(OpticalPowerMeterConfig config)
+        {
+            _config = config.Clone();
+            await configService.SaveAsync(_config);
+        }
 
         public async Task<Result> InitializeAsync(CancellationToken token = default)
         {
@@ -24,6 +43,7 @@ namespace AFOCS.Devices.Implementation
                 config = new T();
                 await configService.SaveAsync(config);
             }
+            _config = config;  // 同步内部配置引用
 
             TcpClientConfig tcpClientConfig = new TcpClientConfig
             {

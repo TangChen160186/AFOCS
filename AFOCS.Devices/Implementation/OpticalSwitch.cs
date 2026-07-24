@@ -6,18 +6,36 @@ using Serilog;
 
 namespace AFOCS.Devices.Implementation
 {
-    public class OpticalSwitchConfig
+    public class OpticalSwitchConfig : ICloneable
     {
         public string Ip { get; set; } = "192.168.1.188";
-
         public int Port { get; set; } = 1000;
+        public int TimeoutMs { get; set; } = 3000;
+
+        public OpticalSwitchConfig Clone() => new()
+        {
+            Ip = Ip,
+            Port = Port,
+            TimeoutMs = TimeoutMs,
+        };
+
+        object ICloneable.Clone() => Clone();
     }
-    [Export]
+    [Export(typeof(IOpticalSwitch))]
     [method: ImportingConstructor]
     public class OpticalSwitch(ITcpClient tcpClient, IConfigService configService, ILogger logger)
         : IOpticalSwitch
     {
+        private OpticalSwitchConfig _config = new();
         public bool IsConnected => tcpClient.IsConnected;
+
+        public OpticalSwitchConfig GetConfig() => _config.Clone();
+
+        public async Task SaveConfigAsync(OpticalSwitchConfig config)
+        {
+            _config = config.Clone();
+            await configService.SaveAsync(_config);
+        }
 
         public async Task<Result> InitializeAsync(CancellationToken token = default)
         {
@@ -27,6 +45,7 @@ namespace AFOCS.Devices.Implementation
                 config = new OpticalSwitchConfig();
                 await configService.SaveAsync(config);
             }
+            _config = config;
 
             TcpClientConfig tcpClientConfig = new TcpClientConfig
             {

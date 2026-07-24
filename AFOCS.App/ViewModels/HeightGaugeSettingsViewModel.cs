@@ -1,40 +1,43 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
+using System.Runtime.CompilerServices;
 using AFOCS.App.Services;
+using AFOCS.Devices;
 using AFOCS.Devices.Implementation;
 using AFOCS.Framework.Modules.Settings;
-using AFOCS.Infrastructure;
 using Caliburn.Micro;
 
 namespace AFOCS.App.ViewModels
 {
     [Export(typeof(ISettingsEditor))]
     [PartCreationPolicy(CreationPolicy.NonShared)]
-    public class HeightGaugeSettingsViewModel : PropertyChangedBase, ISettingsEditor
+    public class HeightGaugeSettingsViewModel : Screen, ISettingsEditor
     {
-        private readonly IConfigService _configService;
-        private readonly HeightGauge _heightGauge;
+        private readonly IHeightGauge _heightGauge;
         private readonly IToastService _toastService;
-        private HeightGaugeConfig _config = new();
+        private readonly HeightGaugeConfig _config = new();
+        private bool _isModify;
 
-        private string _ip = string.Empty;
-        private int _port;
-        private bool _isBusy;
-        private string _statusMessage = string.Empty;
+        private readonly string[] _modifyProperties =
+        [
+            nameof(Ip), nameof(Port), nameof(TimeoutMs),
+        ];
 
         [ImportingConstructor]
-        public HeightGaugeSettingsViewModel(IConfigService configService, HeightGauge heightGauge, IToastService toastService)
+        public HeightGaugeSettingsViewModel(IHeightGauge heightGauge, IToastService toastService)
         {
-            _configService = configService;
             _heightGauge = heightGauge;
             _toastService = toastService;
 
             Channels = new ObservableCollection<HeightChannelInfo>
             {
-                new(1), new(2)
+                new(1), new(2), new(3), new(4),
             };
 
-            _ = LoadConfigAsync();
+            var config = _heightGauge.GetConfig();
+            _config.Ip = config.Ip;
+            _config.Port = config.Port;
+            _config.TimeoutMs = config.TimeoutMs;
         }
 
         public string SettingsPageName => "测高仪";
@@ -45,23 +48,34 @@ namespace AFOCS.App.ViewModels
 
         public string Ip
         {
-            get => _ip;
+            get => _config.Ip;
             set
             {
-                if (_ip == value) return;
-                _ip = value;
-                NotifyOfPropertyChange(() => Ip);
+                if (_config.Ip == value) return;
+                _config.Ip = value;
+                NotifyOfPropertyChange();
             }
         }
 
         public int Port
         {
-            get => _port;
+            get => _config.Port;
             set
             {
-                if (_port == value) return;
-                _port = value;
-                NotifyOfPropertyChange(() => Port);
+                if (_config.Port == value) return;
+                _config.Port = value;
+                NotifyOfPropertyChange();
+            }
+        }
+
+        public int TimeoutMs
+        {
+            get => _config.TimeoutMs;
+            set
+            {
+                if (_config.TimeoutMs == value) return;
+                _config.TimeoutMs = value;
+                NotifyOfPropertyChange();
             }
         }
 
@@ -71,25 +85,15 @@ namespace AFOCS.App.ViewModels
 
         public bool IsBusy
         {
-            get => _isBusy;
-            set
-            {
-                if (_isBusy == value) return;
-                _isBusy = value;
-                NotifyOfPropertyChange(() => IsBusy);
-            }
+            get;
+            set => Set(ref field, value);
         }
 
         public string StatusMessage
         {
-            get => _statusMessage;
-            set
-            {
-                if (_statusMessage == value) return;
-                _statusMessage = value;
-                NotifyOfPropertyChange(() => StatusMessage);
-            }
-        }
+            get;
+            set => Set(ref field, value);
+        } = string.Empty;
 
         public void RefreshConnectionStatus()
         {
@@ -105,11 +109,11 @@ namespace AFOCS.App.ViewModels
             StatusMessage = "正在重连...";
             try
             {
-                // 先保存当前配置，再重连
-                _config.Ip = _ip;
-                _config.Port = _port;
-                await _configService.SaveAsync(_config);
-
+                if (_isModify)
+                {
+                    await _heightGauge.SaveConfigAsync(_config);
+                    _isModify = false;
+                }
                 var result = await _heightGauge.ReConnectAsync();
                 StatusMessage = result.IsSuccess ? "重连成功" : $"重连失败: {result.Message}";
             }
@@ -124,23 +128,23 @@ namespace AFOCS.App.ViewModels
             }
         }
 
-        public async Task DisconnectAsync()
+        public async Task SaveAsync()
         {
             IsBusy = true;
-            StatusMessage = "正在断开...";
+            StatusMessage = "正在保存...";
             try
             {
-                var result = await _heightGauge.StopAsync();
-                StatusMessage = result.IsSuccess ? "已断开" : $"断开失败: {result.Message}";
+                await _heightGauge.SaveConfigAsync(_config);
+                _isModify = false;
+                StatusMessage = "配置已保存";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"断开异常: {ex.Message}";
+                StatusMessage = $"保存异常: {ex.Message}";
             }
             finally
             {
                 IsBusy = false;
-                NotifyOfPropertyChange(() => IsConnected);
             }
         }
 
@@ -178,23 +182,20 @@ namespace AFOCS.App.ViewModels
 
         // ========== ISettingsEditor ==========
 
-        public void ApplyChanges()
+        public override void NotifyOfPropertyChange([CallerMemberName] string? propertyName = null)
         {
-            _config.Ip = _ip;
-            _config.Port = _port;
-            Task.Run(async () => await _configService.SaveAsync(_config));
+            base.NotifyOfPropertyChange(propertyName);
+
+            if (_modifyProperties.Contains(propertyName))
+            {
+                _isModify = true;
+            }
         }
 
-        private async Task LoadConfigAsync()
+        public void ApplyChanges()
         {
-            _config = await _configService.LoadAsync<HeightGaugeConfig>()
-                      ?? new HeightGaugeConfig();
-            _ip = _config.Ip;
-            _port = _config.Port;
-
-            NotifyOfPropertyChange(() => Ip);
-            NotifyOfPropertyChange(() => Port);
-            RefreshConnectionStatus();
+            if(!_isModify) return;
+            _ = SaveAsync();
         }
     }
 
@@ -202,9 +203,6 @@ namespace AFOCS.App.ViewModels
 
     public class HeightChannelInfo : PropertyChangedBase
     {
-        private double _height;
-        private bool _isBusy;
-
         public HeightChannelInfo(int number)
         {
             Number = number;
@@ -214,24 +212,14 @@ namespace AFOCS.App.ViewModels
 
         public double Height
         {
-            get => _height;
-            set
-            {
-                if (Math.Abs(_height - value) < 0.0001) return;
-                _height = value;
-                NotifyOfPropertyChange();
-            }
+            get;
+            set => Set(ref field, value);
         }
 
         public bool IsBusy
         {
-            get => _isBusy;
-            set
-            {
-                if (_isBusy == value) return;
-                _isBusy = value;
-                NotifyOfPropertyChange();
-            }
+            get;
+            set => Set(ref field, value);
         }
     }
 }

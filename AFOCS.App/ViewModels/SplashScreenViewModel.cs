@@ -48,7 +48,7 @@ namespace AFOCS.App.ViewModels
         [Import] private ILogger _logger = null!;
 
         [Import] private ProgrammablePowerSupply _programmablePowerSupply = null!;
-        [Import] private OpticalSwitch _opticalSwitch = null!;
+        [Import] private IOpticalSwitch _opticalSwitch = null!;
         [Import] private HeightGauge _heightGauge = null!;
         [Import] private LeadShineMotionCard _leadShineMotionCard = null!;
 

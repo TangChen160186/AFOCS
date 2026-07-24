@@ -6,6 +6,7 @@ using Serilog;
 namespace AFOCS.Communication
 {
     [Export(typeof(ITcpClient))]
+    [PartCreationPolicy(CreationPolicy.NonShared)] // 通常与 NonShared 配合使用
     [method: ImportingConstructor]
     public class TcpClient(ILogger logger) : ITcpClient, IDisposable
     {

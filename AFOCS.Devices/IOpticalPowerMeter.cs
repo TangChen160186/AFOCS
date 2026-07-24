@@ -1,9 +1,12 @@
-﻿using AFOCS.Infrastructure;
+using AFOCS.Devices.Implementation;
+using AFOCS.Infrastructure;
 
 namespace AFOCS.Devices
 {
     public interface IOpticalPowerMeter: IDevice
     {
+        OpticalPowerMeterConfig GetConfig();
+        Task SaveConfigAsync(OpticalPowerMeterConfig config);
 
         #region 光源相关
 

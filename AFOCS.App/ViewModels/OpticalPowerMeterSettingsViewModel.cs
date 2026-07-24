@@ -1,105 +1,95 @@
 using System.ComponentModel.Composition;
+using System.Runtime.CompilerServices;
 using AFOCS.App.Services;
 using AFOCS.Devices;
 using AFOCS.Devices.Implementation;
 using AFOCS.Framework.Modules.Settings;
-using AFOCS.Infrastructure;
 using Caliburn.Micro;
 
 namespace AFOCS.App.ViewModels
 {
-    [Export(typeof(ISettingsEditor))]
-    [PartCreationPolicy(CreationPolicy.NonShared)]
-    public class OpticalPowerMeterSettingsViewModel : PropertyChangedBase, ISettingsEditor
+    /// <summary>
+    /// 光功率计设置基类 —— 每个子类对应一个工位
+    /// </summary>
+    public abstract class OpticalPowerMeterSettingsViewModel : Screen, ISettingsEditor
     {
-        private readonly IConfigService _configService;
-
-        [ImportingConstructor]
-        public OpticalPowerMeterSettingsViewModel(
-            IConfigService configService,
-            OpticalPowerMeterLeft meterLeft,
-            OpticalPowerMeterRight meterRight,
-            IToastService toastService)
-        {
-            _configService = configService;
-
-            Left = new OpmSideInfo("左工位", meterLeft, typeof(OpticalPowerMeterConfigLeft), configService, toastService);
-            Right = new OpmSideInfo("右工位", meterRight, typeof(OpticalPowerMeterConfigRight), configService, toastService);
-
-            _ = LoadConfigAsync();
-        }
-
-        public string SettingsPageName => "光功率计";
-
-        public string SettingsPagePath => "设备配置";
-
-        public OpmSideInfo Left { get; }
-        public OpmSideInfo Right { get; }
-
-        public void ApplyChanges()
-        {
-            Left.SaveConfig();
-            Right.SaveConfig();
-        }
-
-        private async Task LoadConfigAsync()
-        {
-            await Task.WhenAll(Left.LoadConfigAsync(), Right.LoadConfigAsync());
-        }
-    }
-
-    // ========== 工位信息 ==========
-
-    public class OpmSideInfo : PropertyChangedBase
-    {
-        private readonly IOpticalPowerMeter _meter;
-        private readonly Type _configType;
-        private readonly IConfigService _cfgService;
+        protected readonly IOpticalPowerMeter Meter;
         private readonly IToastService _toastService;
         private OpticalPowerMeterConfig _config = new();
+        private bool _isModify = false;
 
-        private string _ip = string.Empty;
-        private int _port;
-        private bool _isBusy;
-        private string _statusMessage = string.Empty;
-        private int _slot = 1;
-        private int _channel = 1;
+        private readonly string[] _modifyProperties =
+        [
+            nameof(Ip), nameof(Port), nameof(TimeoutMs),
+        ];
 
-        // OS
-        private double _osPowerRead;
-        private double _osPowerSet;
-        private string _osStatus = "";
+        string ISettingsEditor.SettingsPageName => Name;
+        string ISettingsEditor.SettingsPagePath => "设备配置\\光功率计";
 
-        // OPM
-        private double _opmPowerRead;
-        private double _opmOffsetRead;
-        private double _opmOffsetSet;
+        protected abstract string Name { get; }
 
-        public OpmSideInfo(string name, IOpticalPowerMeter meter, Type configType, IConfigService cfgService, IToastService toastService)
+        protected OpticalPowerMeterSettingsViewModel(
+            IOpticalPowerMeter meter,
+            IToastService toastService)
         {
-            Name = name;
-            _meter = meter;
-            _configType = configType;
-            _cfgService = cfgService;
+            Meter = meter;
             _toastService = toastService;
+
+            var config = Meter.GetConfig();
+            _config.Ip = config.Ip;
+            _config.Port = config.Port;
+            _config.TimeoutMs = config.TimeoutMs;
         }
 
-        public string Name { get; }
+        // ========== 配置属性 ==========
 
-        // ========== 连接 ==========
+        public string Ip
+        {
+            get => _config.Ip;
+            set
+            {
+                if (_config.Ip == value) return;
+                _config.Ip = value;
+                NotifyOfPropertyChange();
+            }
+        }
 
-        public bool IsConnected => _meter.IsConnected;
+        public int Port
+        {
+            get => _config.Port;
+            set
+            {
+                if (_config.Port == value) return;
+                _config.Port = value;
+                NotifyOfPropertyChange();
+            }
+        }
+
+        public int TimeoutMs
+        {
+            get => _config.TimeoutMs;
+            set
+            {
+                if (_config.TimeoutMs == value) return;
+                _config.TimeoutMs = value;
+                NotifyOfPropertyChange();
+            }
+        }
+
+        // ========== 连接状态 ==========
+
+        public bool IsConnected => Meter.IsConnected;
 
         public string StatusMessage
         {
-            get => _statusMessage;
-            set { if (_statusMessage == value) return; _statusMessage = value; NotifyOfPropertyChange(); }
-        }
+            get;
+            set => Set(ref field, value);
+        } = string.Empty;
 
         public bool IsBusy
         {
-            get => _isBusy;
-            set { if (_isBusy == value) return; _isBusy = value; NotifyOfPropertyChange(); }
+            get;
+            set => Set(ref field, value);
         }
 
         public void RefreshConnectionStatus()
@@ -108,75 +98,91 @@ namespace AFOCS.App.ViewModels
             StatusMessage = IsConnected ? "已连接" : "未连接";
         }
 
-        // ========== 配置 ==========
-
-        public string Ip
-        {
-            get => _ip;
-            set { if (_ip == value) return; _ip = value; NotifyOfPropertyChange(); }
-        }
-
-        public int Port
-        {
-            get => _port;
-            set { if (_port == value) return; _port = value; NotifyOfPropertyChange(); }
-        }
-
         // ========== Slot/Channel ==========
+
 
         public int Slot
         {
-            get => _slot;
-            set { if (_slot == value) return; _slot = value; NotifyOfPropertyChange(); }
-        }
+            get => field;
+            set => Set(ref field, value);
+        } = 1;
+
 
         public int Channel
         {
-            get => _channel;
-            set { if (_channel == value) return; _channel = value; NotifyOfPropertyChange(); }
-        }
+            get => field;
+            set => Set(ref field, value);
+        } = 1;
 
         // ========== OS 光源 ==========
 
         public double OsPowerRead
         {
-            get => _osPowerRead;
-            set { if (Math.Abs(_osPowerRead - value) < 0.0001) return; _osPowerRead = value; NotifyOfPropertyChange(); }
+            get => field;
+            set => Set(ref field, value);
         }
 
         public double OsPowerSet
         {
-            get => _osPowerSet;
-            set { if (Math.Abs(_osPowerSet - value) < 0.0001) return; _osPowerSet = value; NotifyOfPropertyChange(); }
+            get => field;
+            set => Set(ref field, value);
         }
 
         public string OsStatus
         {
-            get => _osStatus;
-            set { if (_osStatus == value) return; _osStatus = value; NotifyOfPropertyChange(); }
+            get => field;
+            set => Set(ref field, value);
         }
 
         // ========== OPM 功率计 ==========
 
         public double OpmPowerRead
         {
-            get => _opmPowerRead;
-            set { if (Math.Abs(_opmPowerRead - value) < 0.0001) return; _opmPowerRead = value; NotifyOfPropertyChange(); }
+            get => field;
+            set => Set(ref field, value);
         }
+
 
         public double OpmOffsetRead
         {
-            get => _opmOffsetRead;
-            set { if (Math.Abs(_opmOffsetRead - value) < 0.0001) return; _opmOffsetRead = value; NotifyOfPropertyChange(); }
+            get => field;
+            set => Set(ref field, value);
         }
+
 
         public double OpmOffsetSet
         {
-            get => _opmOffsetSet;
-            set { if (Math.Abs(_opmOffsetSet - value) < 0.0001) return; _opmOffsetSet = value; NotifyOfPropertyChange(); }
+            get => field;
+            set => Set(ref field, value);
+        }
+
+        // ========== NotifyOfPropertyChange 重写 ==========
+
+        public override void NotifyOfPropertyChange([CallerMemberName] string? propertyName = null)
+        {
+            base.NotifyOfPropertyChange(propertyName);
+
+            if (_modifyProperties.Contains(propertyName))
+            {
+                _isModify = true;
+            }
         }
 
         // ========== 操作 ==========
+
+        public async Task SaveAsync()
+        {
+            IsBusy = true;
+            StatusMessage = "正在保存...";
+            try
+            {
+                await Meter.SaveConfigAsync(_config);
+                _isModify = false;
+                StatusMessage = "配置已保存";
+            }
+            catch (Exception ex) { StatusMessage = $"保存异常: {ex.Message}"; }
+            finally { IsBusy = false; }
+        }
 
         public async Task ReconnectAsync()
         {
@@ -184,28 +190,15 @@ namespace AFOCS.App.ViewModels
             StatusMessage = "正在重连...";
             try
             {
-                SaveConfig();
-                var result = await _meter.ReConnectAsync();
+                if (_isModify)
+                {
+                    await Meter.SaveConfigAsync(_config);
+                    _isModify = false;
+                }
+                var result = await Meter.ReConnectAsync();
                 StatusMessage = result.IsSuccess ? "重连成功" : $"重连失败: {result.Message}";
             }
             catch (Exception ex) { StatusMessage = $"重连异常: {ex.Message}"; }
-            finally
-            {
-                IsBusy = false;
-                NotifyOfPropertyChange(() => IsConnected);
-            }
-        }
-
-        public async Task DisconnectAsync()
-        {
-            IsBusy = true;
-            StatusMessage = "正在断开...";
-            try
-            {
-                var result = await _meter.StopAsync();
-                StatusMessage = result.IsSuccess ? "已断开" : $"断开失败: {result.Message}";
-            }
-            catch (Exception ex) { StatusMessage = $"断开异常: {ex.Message}"; }
             finally
             {
                 IsBusy = false;
@@ -221,10 +214,10 @@ namespace AFOCS.App.ViewModels
             IsBusy = true;
             try
             {
-                var pResult = await _meter.GetOsPowerAsync(_slot, _channel);
+                var pResult = await Meter.GetOsPowerAsync(Slot, Channel);
                 if (pResult.IsSuccess) OsPowerRead = pResult.Data;
 
-                var sResult = await _meter.GetOsStatusAsync(_slot, _channel);
+                var sResult = await Meter.GetOsStatusAsync(Slot, Channel);
                 if (sResult.IsSuccess) OsStatus = sResult.Data ? "ON" : "OFF";
             }
             finally { IsBusy = false; }
@@ -236,7 +229,7 @@ namespace AFOCS.App.ViewModels
             IsBusy = true;
             try
             {
-                await _meter.SetOsPowerAsync(_slot, _channel, _osPowerSet);
+                await Meter.SetOsPowerAsync(Slot, Channel, OsPowerSet);
                 await ReadOsAsync();
             }
             finally { IsBusy = false; }
@@ -250,7 +243,7 @@ namespace AFOCS.App.ViewModels
             IsBusy = true;
             try
             {
-                var pResult = await _meter.GetOpmPowerAsync(_slot, _channel);
+                var pResult = await Meter.GetOpmPowerAsync(Slot, Channel);
                 if (pResult.IsSuccess) OpmPowerRead = pResult.Data;
             }
             finally { IsBusy = false; }
@@ -262,7 +255,7 @@ namespace AFOCS.App.ViewModels
             IsBusy = true;
             try
             {
-                var oResult = await _meter.GetOpmOffsetAsync(_slot, _channel);
+                var oResult = await Meter.GetOpmOffsetAsync(Slot, Channel);
                 if (oResult.IsSuccess) OpmOffsetRead = oResult.Data;
             }
             finally { IsBusy = false; }
@@ -274,31 +267,45 @@ namespace AFOCS.App.ViewModels
             IsBusy = true;
             try
             {
-                await _meter.SetOpmOffsetAsync(_slot, _channel, _opmOffsetSet);
+                await Meter.SetOpmOffsetAsync(Slot, Channel, OpmOffsetSet);
                 await ReadOpmOffsetAsync();
             }
             finally { IsBusy = false; }
         }
 
-        // ========== 持久化 ==========
+        // ========== ISettingsEditor ==========
 
-        public async Task LoadConfigAsync()
+        public void ApplyChanges()
         {
-            var loaded = await _cfgService.LoadAsync(_configType);
-            _config = (loaded as OpticalPowerMeterConfig) ?? new OpticalPowerMeterConfig();
-            _ip = _config.Ip;
-            _port = _config.Port;
-
-            NotifyOfPropertyChange(() => Ip);
-            NotifyOfPropertyChange(() => Port);
-            RefreshConnectionStatus();
+            if(!_isModify) 
+                return;
+            _ = SaveAsync();
         }
+    }
 
-        public void SaveConfig()
-        {
-            _config.Ip = _ip;
-            _config.Port = _port;
-            Task.Run(async () => await _cfgService.SaveAsync(_configType, _config));
-        }
+    // ====================================================================
+    // 两个工位子类
+    // ====================================================================
+
+    [Export(typeof(ISettingsEditor))]
+    [PartCreationPolicy(CreationPolicy.NonShared)]
+    [method: ImportingConstructor]
+    public class OpticalPowerMeterLeftSettingsViewModel(
+        OpticalPowerMeterLeft meter,
+        IToastService toastService)
+        : OpticalPowerMeterSettingsViewModel(meter, toastService)
+    {
+        protected override string Name => "左工位";
+    }
+
+    [Export(typeof(ISettingsEditor))]
+    [PartCreationPolicy(CreationPolicy.NonShared)]
+    [method: ImportingConstructor]
+    public class OpticalPowerMeterRightSettingsViewModel(
+        OpticalPowerMeterRight meter,
+        IToastService toastService)
+        : OpticalPowerMeterSettingsViewModel(meter, toastService)
+    {
+        protected override string Name => "右工位";
     }
 }

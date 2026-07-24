@@ -287,8 +287,8 @@ namespace AFOCS.App.ViewModels
       
         public void ApplyChanges()
         {
-            _ = SaveAsync();
-            _ = ReconnectAsync();
+            if(_isModify)
+                _ = SaveAsync();
         }
     }
 
