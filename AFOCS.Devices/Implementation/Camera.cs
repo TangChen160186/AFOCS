@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using AFOCS.Infrastructure;
 using MvCamCtrl.NET;
 using Serilog;
@@ -6,14 +6,22 @@ using static MvCamCtrl.NET.MyCamera;
 
 namespace AFOCS.Devices.Implementation
 {
-    public class HkCameraConfig
+    public class HkCameraConfig : ICloneable
     {
         public string ChSerialNumber { get; set; } = "ChSerialNumber";
+
+        public HkCameraConfig Clone() => new()
+        {
+            ChSerialNumber = ChSerialNumber,
+        };
+
+        object ICloneable.Clone() => Clone();
     }
 
     public class Camera<T>(IConfigService configService, ILogger logger) : ICamera
         where T : HkCameraConfig, new()
     {
+        private T _config = new();
         public uint Height { get; private set; }
         public uint Width { get; private set; }
         public uint WidthStep { get; private set; }
@@ -22,8 +30,16 @@ namespace AFOCS.Devices.Implementation
         private readonly MyCamera _camera = new();
         private cbOutputExdelegate _outputCallback;
 
-        public bool IsConnected => _camera.MV_CC_IsDeviceConnected_NET();
+        public bool IsConnected { get; private set; }
 
+        public HkCameraConfig GetConfig() => _config.Clone();
+
+        public async Task SaveConfigAsync(HkCameraConfig config)
+        {
+            var newConfig = new T { ChSerialNumber = config.ChSerialNumber };
+            _config = newConfig;
+            await configService.SaveAsync(newConfig);
+        }
 
 
         public event EventHandler<ImagePreviewedEventArgs>? ImageReceived;
@@ -38,15 +54,19 @@ namespace AFOCS.Devices.Implementation
                     config = new T();
                     await configService.SaveAsync(config);
                 }
+                _config = config;
 
                 var deviceInfo = FindCameraByChSerialNumber(config.ChSerialNumber);
                 if (deviceInfo == null)
+                {
                     return Result.Fail(ResultCode.Fail, $"Find Device Error: Target camera 【{config.ChSerialNumber}】 not found");
+                }
+                
 
                 var success = OpenDevice(deviceInfo.Value);
                 if(!success) 
                     return Result.Fail(ResultCode.Fail, $"Open Device fail");
-
+                IsConnected = true;
                 InitImageSize();
                 InitCameraParm();
                 SetImageCallback();

@@ -1,65 +1,56 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
+using System.Runtime.CompilerServices;
 using AFOCS.App.Services;
 using AFOCS.Devices;
 using AFOCS.Devices.Implementation;
 using AFOCS.Framework.Modules.Settings;
-using AFOCS.Infrastructure;
 using Caliburn.Micro;
 
 namespace AFOCS.App.ViewModels
 {
     // ========== 相机设置基类 ==========
 
-    public abstract class CameraSettingsViewModel : PropertyChangedBase, ISettingsEditor
+    public abstract class CameraSettingsViewModel : Screen, ISettingsEditor
     {
-        private readonly IConfigService _configService;
         private readonly ICamera _camera;
-        private readonly Type _configType;
         private readonly IToastService _toastService;
-        private HkCameraConfig _config = new();
+        private readonly HkCameraConfig _config = new();
+        private bool _isModify;
 
-        private string _serialNumber = string.Empty;
-        private ObservableCollection<(string, string)> _availableCameras = [];
-        private bool _isScanning;
-        private string _statusMessage = string.Empty;
-        private bool _isBusy;
-        private uint _width;
-        private uint _height;
-        private bool _isGrabbing;
+        private readonly string[] _modifyProperties = [nameof(SerialNumber)];
 
-        protected CameraSettingsViewModel(
-            string name,
-            IConfigService configService,
-            ICamera camera,
-            Type configType,
-            IToastService toastService)
+        protected CameraSettingsViewModel(string name, ICamera camera, IToastService toastService)
         {
             Name = name;
-            _configService = configService;
             _camera = camera;
-            _configType = configType;
             _toastService = toastService;
 
-            _ = LoadConfigAsync();
+            var config = _camera.GetConfig();
+            _config.ChSerialNumber = config.ChSerialNumber;
         }
 
         public string Name { get; }
 
         string ISettingsEditor.SettingsPageName => Name;
-
         string ISettingsEditor.SettingsPagePath => "设备配置\\相机";
+
+        protected override void OnViewAttached(object view, object context)
+        {
+            base.OnViewAttached(view, context);
+            _ = ScanAvailableCameras();
+        }
 
         // ========== 配置 ==========
 
         public string SerialNumber
         {
-            get => _serialNumber;
+            get => _config.ChSerialNumber;
             set
             {
-                if (_serialNumber == value) return;
-                _serialNumber = value;
-                NotifyOfPropertyChange(() => SerialNumber);
+                if (_config.ChSerialNumber == value) return;
+                _config.ChSerialNumber = value;
+                NotifyOfPropertyChange();
             }
         }
 
@@ -69,14 +60,14 @@ namespace AFOCS.App.ViewModels
 
         public string StatusMessage
         {
-            get => _statusMessage;
-            set { if (_statusMessage == value) return; _statusMessage = value; NotifyOfPropertyChange(); }
-        }
+            get;
+            set => Set(ref field, value);
+        } = string.Empty;
 
         public bool IsBusy
         {
-            get => _isBusy;
-            set { if (_isBusy == value) return; _isBusy = value; NotifyOfPropertyChange(); }
+            get;
+            set => Set(ref field, value);
         }
 
         public void RefreshConnectionStatus()
@@ -89,34 +80,34 @@ namespace AFOCS.App.ViewModels
 
         public uint Width
         {
-            get => _width;
-            set { if (_width == value) return; _width = value; NotifyOfPropertyChange(); }
+            get;
+            set => Set(ref field, value);
         }
 
         public uint Height
         {
-            get => _height;
-            set { if (_height == value) return; _height = value; NotifyOfPropertyChange(); }
+            get;
+            set => Set(ref field, value);
         }
 
         public bool IsGrabbing
         {
-            get => _isGrabbing;
-            set { if (_isGrabbing == value) return; _isGrabbing = value; NotifyOfPropertyChange(); }
+            get;
+            set => Set(ref field, value);
         }
 
         // ========== 扫描 ==========
 
-        public ObservableCollection<(string,string)> AvailableCameras
+        public ObservableCollection<(string, string)> AvailableCameras
         {
-            get => _availableCameras;
-            set { _availableCameras = value; NotifyOfPropertyChange(); }
-        }
+            get;
+            set => Set(ref field, value);
+        } = [];
 
         public bool IsScanning
         {
-            get => _isScanning;
-            set { if (_isScanning == value) return; _isScanning = value; NotifyOfPropertyChange(); }
+            get;
+            set => Set(ref field, value);
         }
 
         public async Task ScanAvailableCameras()
@@ -124,13 +115,11 @@ namespace AFOCS.App.ViewModels
             IsScanning = true;
             try
             {
-                var cameras = await Task.Run(() => Camera<HkCameraConfig>.GetAllCameraSerialNumbers(Serilog.Log.Logger));
-                AvailableCameras.Clear();
+                var cameras = await Task.Run(() =>
+                    Camera<HkCameraConfig>.GetAllCameraSerialNumbers(Serilog.Log.Logger));
+                AvailableCameras = new ObservableCollection<(string, string)>();
                 foreach (var item in cameras)
-                {
-                    AvailableCameras.Add((item.Item1,item.Item2));
-                }
-  
+                    AvailableCameras.Add(item);
             }
             finally { IsScanning = false; }
         }
@@ -149,7 +138,11 @@ namespace AFOCS.App.ViewModels
             StatusMessage = "正在重连...";
             try
             {
-                SaveConfig();
+                if (_isModify)
+                {
+                    await _camera.SaveConfigAsync(_config);
+                    _isModify = false;
+                }
                 var result = await _camera.ReConnectAsync();
                 StatusMessage = result.IsSuccess ? "重连成功" : $"重连失败: {result.Message}";
                 if (result.IsSuccess)
@@ -166,21 +159,18 @@ namespace AFOCS.App.ViewModels
             }
         }
 
-        public async Task DisconnectAsync()
+        public async Task SaveAsync()
         {
             IsBusy = true;
-            StatusMessage = "正在断开...";
+            StatusMessage = "正在保存...";
             try
             {
-                var result = await _camera.StopAsync();
-                StatusMessage = result.IsSuccess ? "已断开" : $"断开失败: {result.Message}";
+                await _camera.SaveConfigAsync(_config);
+                _isModify = false;
+                StatusMessage = "配置已保存";
             }
-            catch (Exception ex) { StatusMessage = $"断开异常: {ex.Message}"; }
-            finally
-            {
-                IsBusy = false;
-                NotifyOfPropertyChange(() => IsConnected);
-            }
+            catch (Exception ex) { StatusMessage = $"保存异常: {ex.Message}"; }
+            finally { IsBusy = false; }
         }
 
         public async Task StartGrabbingAsync()
@@ -224,30 +214,20 @@ namespace AFOCS.App.ViewModels
             finally { IsBusy = false; }
         }
 
-        // ========== 持久化 ==========
+        // ========== ISettingsEditor ==========
 
-        void ISettingsEditor.ApplyChanges()
+        public override void NotifyOfPropertyChange([CallerMemberName] string? propertyName = null)
         {
-            SaveConfig();
+            base.NotifyOfPropertyChange(propertyName);
+
+            if (_modifyProperties.Contains(propertyName))
+                _isModify = true;
         }
 
-        private async Task LoadConfigAsync()
+        public void ApplyChanges()
         {
-            var loaded = await _configService.LoadAsync(_configType);
-            _config = (loaded as HkCameraConfig) ?? new HkCameraConfig();
-            _serialNumber = _config.ChSerialNumber;
-
-            NotifyOfPropertyChange(() => SerialNumber);
-            RefreshConnectionStatus();
-
-            Width = _camera.Width;
-            Height = _camera.Height;
-        }
-
-        private void SaveConfig()
-        {
-            _config.ChSerialNumber = _serialNumber;
-            Task.Run(async () => await _configService.SaveAsync(_configType, _config));
+            if (!_isModify) return;
+            _ = SaveAsync();
         }
     }
 
@@ -258,8 +238,8 @@ namespace AFOCS.App.ViewModels
     public class CameraLeftUpSettingsViewModel : CameraSettingsViewModel
     {
         [ImportingConstructor]
-        public CameraLeftUpSettingsViewModel(IConfigService configService, CameraLeftUp camera, IToastService toastService)
-            : base("左上", configService, camera, typeof(CameraConfigLeftUp), toastService) { }
+        public CameraLeftUpSettingsViewModel(CameraLeftUp camera, IToastService toastService)
+            : base("左上", camera, toastService) { }
     }
 
     [Export(typeof(ISettingsEditor))]
@@ -267,8 +247,8 @@ namespace AFOCS.App.ViewModels
     public class CameraLeftDownSettingsViewModel : CameraSettingsViewModel
     {
         [ImportingConstructor]
-        public CameraLeftDownSettingsViewModel(IConfigService configService, CameraLeftDown camera, IToastService toastService)
-            : base("左下", configService, camera, typeof(CameraConfigLeftDown), toastService) { }
+        public CameraLeftDownSettingsViewModel(CameraLeftDown camera, IToastService toastService)
+            : base("左下", camera, toastService) { }
     }
 
     [Export(typeof(ISettingsEditor))]
@@ -276,8 +256,8 @@ namespace AFOCS.App.ViewModels
     public class CameraRightUpSettingsViewModel : CameraSettingsViewModel
     {
         [ImportingConstructor]
-        public CameraRightUpSettingsViewModel(IConfigService configService, CameraRightUp camera, IToastService toastService)
-            : base("右上", configService, camera, typeof(CameraConfigRightUp), toastService) { }
+        public CameraRightUpSettingsViewModel(CameraRightUp camera, IToastService toastService)
+            : base("右上", camera, toastService) { }
     }
 
     [Export(typeof(ISettingsEditor))]
@@ -285,7 +265,7 @@ namespace AFOCS.App.ViewModels
     public class CameraRightDownSettingsViewModel : CameraSettingsViewModel
     {
         [ImportingConstructor]
-        public CameraRightDownSettingsViewModel(IConfigService configService, CameraRightDown camera, IToastService toastService)
-            : base("右下", configService, camera, typeof(CameraConfigRightDown), toastService) { }
+        public CameraRightDownSettingsViewModel(CameraRightDown camera, IToastService toastService)
+            : base("右下", camera, toastService) { }
     }
 }

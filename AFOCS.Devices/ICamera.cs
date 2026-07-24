@@ -1,4 +1,4 @@
-﻿using AFOCS.Devices.Implementation;
+using AFOCS.Devices.Implementation;
 using AFOCS.Infrastructure;
 
 namespace AFOCS.Devices
@@ -12,6 +12,9 @@ namespace AFOCS.Devices
         public uint WidthStep { get; }
 
         public uint HeightStep { get; }
+
+        HkCameraConfig GetConfig();
+        Task SaveConfigAsync(HkCameraConfig config);
 
         Task<Result> StartCameraAsync();
 

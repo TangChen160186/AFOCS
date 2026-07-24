@@ -43,21 +43,18 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="2" Orientation="Horizontal">
-                        <Button cal:Message.Attach="DisconnectAsync"
+                        <Button cal:Message.Attach="SaveAsync"
                                 Width="60" Padding="6,3" Margin="0,0,6,0">
                             <Button.Style>
                                 <Style TargetType="Button">
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsConnected}" Value="False">
-                                            <Setter Property="IsEnabled" Value="False" />
-                                        </DataTrigger>
                                         <DataTrigger Binding="{Binding IsBusy}" Value="True">
                                             <Setter Property="IsEnabled" Value="False" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </Button.Style>
-                            断开
+                            保存
                         </Button>
                         <Button cal:Message.Attach="ReconnectAsync"
                                 Width="60" Padding="6,3">
