@@ -6,10 +6,18 @@ using Serilog;
 
 namespace AFOCS.Devices.Implementation
 {
-    public class ProgrammablePowerSupplyConfig
+    public class ProgrammablePowerSupplyConfig : ICloneable
     {
         public string VisaAddress { get; set; } = "TCPIP0::127.0.0.1::inst0::INSTR";
         public int TimeoutMs { get; set; } = 3000;
+
+        public ProgrammablePowerSupplyConfig Clone() => new()
+        {
+            VisaAddress = VisaAddress,
+            TimeoutMs = TimeoutMs,
+        };
+
+        object ICloneable.Clone() => Clone();
     }
 
     [Export]
@@ -17,18 +25,18 @@ namespace AFOCS.Devices.Implementation
     [method: ImportingConstructor]
     public class ProgrammablePowerSupply(IConfigService configService, ILogger logger) : IProgrammablePowerSupply
     {
-        private ProgrammablePowerSupplyConfig _config = new();
+        private ProgrammablePowerSupplyConfig _config = null!;
         public bool IsConnected { get; private set; }
         private MessageBasedSession? _session;
         private ResourceManager? _resourceManager;
         private readonly SemaphoreSlim _lock = new(1, 1);
 
-        public ProgrammablePowerSupplyConfig GetConfig() => _config;
+        public ProgrammablePowerSupplyConfig GetConfig() => _config.Clone();
 
         public async Task SaveConfigAsync(ProgrammablePowerSupplyConfig config)
         {
-            _config = config;
-            await configService.SaveAsync(config);
+            _config = config.Clone();
+            await configService.SaveAsync(_config);
         }
 
         public async Task<Result> InitializeAsync(CancellationToken token = default)
@@ -60,7 +68,7 @@ namespace AFOCS.Devices.Implementation
             catch (Exception ex)
             {
                 logger.Error(ex, $"可编程电源初始化失败: {_config.VisaAddress}");
-                CleanupConnection();
+                HandleConnectionError();
                 return Result.Fail(ResultCode.Fail, ex.Message, ex);
             }
         }
@@ -112,7 +120,7 @@ namespace AFOCS.Devices.Implementation
             catch(Exception e)
             {
                 logger?.Error(e,e.Message);
-                return Array.Empty<string>();
+                return [];
             }
         }
 

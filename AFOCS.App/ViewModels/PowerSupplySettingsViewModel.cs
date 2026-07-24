@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using AFOCS.App.Services;
 using AFOCS.Devices;
@@ -15,27 +16,24 @@ namespace AFOCS.App.ViewModels
     {
         private readonly IProgrammablePowerSupply _powerSupply;
         private readonly IToastService _toastService;
-        private ProgrammablePowerSupplyConfig _editConfig = new();
+        private readonly ProgrammablePowerSupplyConfig _config = new();
+        private bool _isModify;
 
-        private ObservableCollection<string> _availableResources = [];
-        private bool _isScanning;
-        private bool _isBusy;
-        private string _statusMessage = string.Empty;
-
+        private readonly string[] _modifyProperties =
+        [
+            nameof(VisaAddress), nameof(TimeoutMs),
+        ];
         [ImportingConstructor]
         public PowerSupplySettingsViewModel(IProgrammablePowerSupply powerSupply, IToastService toastService)
         {
             _powerSupply = powerSupply;
             _toastService = toastService;
 
-            Channels = new ObservableCollection<ChannelInfo>
-            {
-                new(1), new(2)
-            };
+            Channels = [new(1), new(2)];
 
             var config = _powerSupply.GetConfig();
-            _editConfig.VisaAddress = config.VisaAddress;
-            _editConfig.TimeoutMs = config.TimeoutMs;
+            _config.VisaAddress = config.VisaAddress;
+            _config.TimeoutMs = config.TimeoutMs;
         }
 
         public string SettingsPageName => "可编程电源";
@@ -68,22 +66,22 @@ namespace AFOCS.App.ViewModels
 
         public string VisaAddress
         {
-            get => _editConfig.VisaAddress;
+            get => _config.VisaAddress;
             set
             {
-                if (_editConfig.VisaAddress == value) return;
-                _editConfig.VisaAddress = value;
+                if (_config.VisaAddress == value) return;
+                _config.VisaAddress = value;
                 NotifyOfPropertyChange();
             }
         }
 
         public int TimeoutMs
         {
-            get => _editConfig.TimeoutMs;
+            get => _config.TimeoutMs;
             set
             {
-                if (_editConfig.TimeoutMs == value) return;
-                _editConfig.TimeoutMs = value;
+                if (_config.TimeoutMs == value) return;
+                _config.TimeoutMs = value;
                 NotifyOfPropertyChange();
             }
         }
@@ -94,25 +92,25 @@ namespace AFOCS.App.ViewModels
 
         public bool IsBusy
         {
-            get => _isBusy;
+            get;
             set
             {
-                if (_isBusy == value) return;
-                _isBusy = value;
+                if (field == value) return;
+                field = value;
                 NotifyOfPropertyChange();
             }
         }
 
         public string StatusMessage
         {
-            get => _statusMessage;
+            get;
             set
             {
-                if (_statusMessage == value) return;
-                _statusMessage = value;
+                if (field == value) return;
+                field = value;
                 NotifyOfPropertyChange();
             }
-        }
+        } = string.Empty;
 
         public void RefreshConnectionStatus()
         {
@@ -128,7 +126,11 @@ namespace AFOCS.App.ViewModels
             StatusMessage = "正在重连...";
             try
             {
-                await _powerSupply.SaveConfigAsync(_editConfig);
+                if (_isModify)
+                {
+                    await _powerSupply.SaveConfigAsync(_config);
+                    _isModify = false;
+                }
                 var result = await _powerSupply.ReConnectAsync();
                 StatusMessage = result.IsSuccess ? "重连成功" : $"重连失败: {result.Message}";
             }
@@ -143,23 +145,23 @@ namespace AFOCS.App.ViewModels
             }
         }
 
-        public async Task DisconnectAsync()
+        public async Task SaveAsync()
         {
             IsBusy = true;
-            StatusMessage = "正在断开...";
+            StatusMessage = "正在保存...";
             try
             {
-                var result = await _powerSupply.StopAsync();
-                StatusMessage = result.IsSuccess ? "已断开" : $"断开失败: {result.Message}";
+                await _powerSupply.SaveConfigAsync(_config);
+                _isModify = false;
+                StatusMessage = "配置已保存";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"断开异常: {ex.Message}";
+                StatusMessage = $"保存异常: {ex.Message}";
             }
             finally
             {
                 IsBusy = false;
-                NotifyOfPropertyChange(() => IsConnected);
             }
         }
 
@@ -167,21 +169,21 @@ namespace AFOCS.App.ViewModels
 
         public ObservableCollection<string> AvailableResources
         {
-            get => _availableResources;
+            get;
             set
             {
-                _availableResources = value;
+                field = value;
                 NotifyOfPropertyChange();
             }
-        }
+        } = [];
 
         public bool IsScanning
         {
-            get => _isScanning;
+            get;
             set
             {
-                if (_isScanning == value) return;
-                _isScanning = value;
+                if (field == value) return;
+                field = value;
                 NotifyOfPropertyChange();
             }
         }
@@ -272,94 +274,64 @@ namespace AFOCS.App.ViewModels
 
         // ========== ISettingsEditor ==========
 
+        public override void NotifyOfPropertyChange([CallerMemberName]string? propertyName = null)
+        {
+            base.NotifyOfPropertyChange(propertyName);
+
+            if (_modifyProperties.Contains(propertyName))
+            {
+                _isModify = true;
+            }
+        }
+
+      
         public void ApplyChanges()
         {
+            _ = SaveAsync();
             _ = ReconnectAsync();
         }
     }
 
     // ========== 通道信息 ==========
 
-    public class ChannelInfo : PropertyChangedBase
+    public class ChannelInfo(int number) : PropertyChangedBase
     {
-        private double _targetVoltage;
-        private double _targetCurrent = 1.0;
-        private double _actualVoltage;
-        private double _actualCurrent;
-        private bool _isEnabled;
-        private bool _isBusy;
-
-        public ChannelInfo(int number)
-        {
-            Number = number;
-        }
-
-        public int Number { get; }
+        public int Number { get; } = number;
 
         public double TargetVoltage
         {
-            get => _targetVoltage;
-            set
-            {
-                if (Math.Abs(_targetVoltage - value) < 0.001) return;
-                _targetVoltage = value;
-                NotifyOfPropertyChange();
-            }
+            get;
+            set => Set(ref field,value);
         }
 
         public double TargetCurrent
         {
-            get => _targetCurrent;
-            set
-            {
-                if (Math.Abs(_targetCurrent - value) < 0.001) return;
-                _targetCurrent = value;
-                NotifyOfPropertyChange();
-            }
-        }
+            get;
+            set => Set(ref field, value);
+        } = 1.0;
 
         public double ActualVoltage
         {
-            get => _actualVoltage;
-            set
-            {
-                if (Math.Abs(_actualVoltage - value) < 0.001) return;
-                _actualVoltage = value;
-                NotifyOfPropertyChange();
-            }
+            get;
+            set => Set(ref field, value);
         }
 
         public double ActualCurrent
         {
-            get => _actualCurrent;
-            set
-            {
-                if (Math.Abs(_actualCurrent - value) < 0.001) return;
-                _actualCurrent = value;
-                NotifyOfPropertyChange();
-            }
+            get;
+            set => Set(ref field, value);
         }
 
         public bool IsEnabled
         {
-            get => _isEnabled;
-            set
-            {
-                if (_isEnabled == value) return;
-                _isEnabled = value;
-                NotifyOfPropertyChange();
-            }
+            get;
+            set => Set(ref field, value);
         }
 
         public bool IsBusy
         {
-            get => _isBusy;
-            set
-            {
-                if (_isBusy == value) return;
-                _isBusy = value;
-                NotifyOfPropertyChange();
-            }
+            get;
+            set => Set(ref field, value);
         }
     }
 }
