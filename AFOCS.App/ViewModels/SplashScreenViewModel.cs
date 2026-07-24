@@ -52,7 +52,7 @@ namespace AFOCS.App.ViewModels
         [Import] private HeightGauge _heightGauge = null!;
         [Import] private LeadShineMotionCard _leadShineMotionCard = null!;
 
-        [Import] private CameraLight _cameraLight = null!;
+        [Import] private ICameraLight _cameraLight = null!;
         [Import] private CameraLeftUp _cameraLeftUp = null!;
         [Import] private CameraLeftDown _cameraLeftDown = null!;
         [Import] private CameraRightUp _cameraRightUp = null!;

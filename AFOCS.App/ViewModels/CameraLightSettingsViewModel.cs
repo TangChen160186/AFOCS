@@ -1,36 +1,32 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.IO.Ports;
+using System.Runtime.CompilerServices;
 using AFOCS.App.Services;
 using AFOCS.Devices;
 using AFOCS.Devices.Implementation;
 using AFOCS.Framework.Modules.Settings;
-using AFOCS.Infrastructure;
 using Caliburn.Micro;
 
 namespace AFOCS.App.ViewModels
 {
     [Export(typeof(ISettingsEditor))]
     [PartCreationPolicy(CreationPolicy.NonShared)]
-    public class CameraLightSettingsViewModel : PropertyChangedBase, ISettingsEditor
+    public class CameraLightSettingsViewModel : Screen, ISettingsEditor
     {
-        private readonly IConfigService _configService;
-        private readonly CameraLight _cameraLight;
+        private readonly ICameraLight _cameraLight;
         private readonly IToastService _toastService;
-        private CameraLightConfig _config = new();
+        private readonly CameraLightConfig _config = new();
+        private bool _isModify;
 
-        private string _portName = string.Empty;
-        private int _baudRate = 19200;
-        private bool _isBusy;
-        private string _statusMessage = string.Empty;
+        private readonly string[] _modifyProperties =
+        [
+            nameof(PortName), nameof(BaudRate), nameof(TimeoutMs),
+        ];
 
         [ImportingConstructor]
-        public CameraLightSettingsViewModel(
-            IConfigService configService,
-            CameraLight cameraLight,
-            IToastService toastService)
+        public CameraLightSettingsViewModel(ICameraLight cameraLight, IToastService toastService)
         {
-            _configService = configService;
             _cameraLight = cameraLight;
             _toastService = toastService;
 
@@ -42,34 +38,53 @@ namespace AFOCS.App.ViewModels
                 new(CameraLightChannel.D, "通道 D"),
             };
 
-            _ = LoadConfigAsync();
+            var config = _cameraLight.GetConfig();
+            _config.PortName = config.PortName;
+            _config.BaudRate = config.BaudRate;
+            _config.TimeoutMs = config.TimeoutMs;
+        }
+
+        protected override void OnViewAttached(object view, object context)
+        {
+            base.OnViewAttached(view, context);
+            _ = ScanPortsAsync();
         }
 
         public string SettingsPageName => "相机光源";
-
         public string SettingsPagePath => "设备配置";
 
         // ========== 配置属性 ==========
 
         public string PortName
         {
-            get => _portName;
+            get => _config.PortName;
             set
             {
-                if (_portName == value) return;
-                _portName = value;
-                NotifyOfPropertyChange(() => PortName);
+                if (_config.PortName == value) return;
+                _config.PortName = value;
+                NotifyOfPropertyChange();
             }
         }
 
         public int BaudRate
         {
-            get => _baudRate;
+            get => _config.BaudRate;
             set
             {
-                if (_baudRate == value) return;
-                _baudRate = value;
-                NotifyOfPropertyChange(() => BaudRate);
+                if (_config.BaudRate == value) return;
+                _config.BaudRate = value;
+                NotifyOfPropertyChange();
+            }
+        }
+
+        public int TimeoutMs
+        {
+            get => _config.TimeoutMs;
+            set
+            {
+                if (_config.TimeoutMs == value) return;
+                _config.TimeoutMs = value;
+                NotifyOfPropertyChange();
             }
         }
 
@@ -79,25 +94,15 @@ namespace AFOCS.App.ViewModels
 
         public bool IsBusy
         {
-            get => _isBusy;
-            set
-            {
-                if (_isBusy == value) return;
-                _isBusy = value;
-                NotifyOfPropertyChange(() => IsBusy);
-            }
+            get;
+            set => Set(ref field, value);
         }
 
         public string StatusMessage
         {
-            get => _statusMessage;
-            set
-            {
-                if (_statusMessage == value) return;
-                _statusMessage = value;
-                NotifyOfPropertyChange(() => StatusMessage);
-            }
-        }
+            get;
+            set => Set(ref field, value);
+        } = string.Empty;
 
         public void RefreshConnectionStatus()
         {
@@ -107,29 +112,16 @@ namespace AFOCS.App.ViewModels
 
         // ========== 端口扫描 ==========
 
-        private ObservableCollection<string> _availablePorts = [];
-
         public ObservableCollection<string> AvailablePorts
         {
-            get => _availablePorts;
-            set
-            {
-                _availablePorts = value;
-                NotifyOfPropertyChange(() => AvailablePorts);
-            }
-        }
-
-        private bool _isScanning;
+            get;
+            set => Set(ref field, value);
+        } = [];
 
         public bool IsScanning
         {
-            get => _isScanning;
-            set
-            {
-                if (_isScanning == value) return;
-                _isScanning = value;
-                NotifyOfPropertyChange(() => IsScanning);
-            }
+            get;
+            set => Set(ref field, value);
         }
 
         public async Task ScanPortsAsync()
@@ -137,7 +129,7 @@ namespace AFOCS.App.ViewModels
             IsScanning = true;
             try
             {
-                var ports = await Task.Run(() => SerialPort.GetPortNames());
+                var ports = await Task.Run(SerialPort.GetPortNames);
                 AvailablePorts = new ObservableCollection<string>(ports);
             }
             finally
@@ -154,7 +146,11 @@ namespace AFOCS.App.ViewModels
             StatusMessage = "正在重连...";
             try
             {
-                SaveConfig();
+                if (_isModify)
+                {
+                    await _cameraLight.SaveConfigAsync(_config);
+                    _isModify = false;
+                }
                 var result = await _cameraLight.ReConnectAsync();
                 StatusMessage = result.IsSuccess ? "重连成功" : $"重连失败: {result.Message}";
             }
@@ -169,23 +165,25 @@ namespace AFOCS.App.ViewModels
             }
         }
 
-        public async Task DisconnectAsync()
+        public async Task SaveAsync()
         {
+
+
             IsBusy = true;
-            StatusMessage = "正在断开...";
+            StatusMessage = "正在保存...";
             try
             {
-                var result = await _cameraLight.StopAsync();
-                StatusMessage = result.IsSuccess ? "已断开" : $"断开失败: {result.Message}";
+                await _cameraLight.SaveConfigAsync(_config);
+                _isModify = false;
+                StatusMessage = "配置已保存";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"断开异常: {ex.Message}";
+                StatusMessage = $"保存异常: {ex.Message}";
             }
             finally
             {
                 IsBusy = false;
-                NotifyOfPropertyChange(() => IsConnected);
             }
         }
 
@@ -211,28 +209,20 @@ namespace AFOCS.App.ViewModels
 
         // ========== ISettingsEditor ==========
 
+        public override void NotifyOfPropertyChange([CallerMemberName] string? propertyName = null)
+        {
+            base.NotifyOfPropertyChange(propertyName);
+
+            if (_modifyProperties.Contains(propertyName))
+            {
+                _isModify = true;
+            }
+        }
+
         public void ApplyChanges()
         {
-            SaveConfig();
-        }
-
-        private async Task LoadConfigAsync()
-        {
-            _config = await _configService.LoadAsync<CameraLightConfig>()
-                      ?? new CameraLightConfig();
-            _portName = _config.PortName;
-            _baudRate = _config.BaudRate;
-
-            NotifyOfPropertyChange(() => PortName);
-            NotifyOfPropertyChange(() => BaudRate);
-            RefreshConnectionStatus();
-        }
-
-        private void SaveConfig()
-        {
-            _config.PortName = _portName;
-            _config.BaudRate = _baudRate;
-            Task.Run(async () => await _configService.SaveAsync(_config));
+            if (!_isModify) return;
+            _ = SaveAsync();
         }
     }
 
@@ -240,10 +230,6 @@ namespace AFOCS.App.ViewModels
 
     public class LightChannelInfo : PropertyChangedBase
     {
-        private uint _brightness = 128;
-        private uint _appliedBrightness;
-        private bool _isBusy;
-
         public LightChannelInfo(CameraLightChannel channel, string name)
         {
             Channel = channel;
@@ -255,35 +241,24 @@ namespace AFOCS.App.ViewModels
 
         public uint Brightness
         {
-            get => _brightness;
+            get;
             set
             {
-                if (_brightness == value) return;
-                _brightness = Math.Clamp(value, 0u, 255u);
+                field = Math.Clamp(value, 0u, 255u);
                 NotifyOfPropertyChange();
             }
-        }
+        } = 128;
 
         public uint AppliedBrightness
         {
-            get => _appliedBrightness;
-            set
-            {
-                if (_appliedBrightness == value) return;
-                _appliedBrightness = value;
-                NotifyOfPropertyChange();
-            }
+            get;
+            set => Set(ref field, value);
         }
 
         public bool IsBusy
         {
-            get => _isBusy;
-            set
-            {
-                if (_isBusy == value) return;
-                _isBusy = value;
-                NotifyOfPropertyChange();
-            }
+            get;
+            set => Set(ref field, value);
         }
     }
 }

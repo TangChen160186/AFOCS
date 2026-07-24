@@ -6,17 +6,36 @@ using Serilog;
 
 namespace AFOCS.Devices.Implementation
 {
-    public class CameraLightConfig
+    public class CameraLightConfig : ICloneable
     {
         public string PortName { get; set; } = "COM100";
         public int BaudRate { get; set; } = 19200;
+        public int TimeoutMs { get; set; } = 3000;
+
+        public CameraLightConfig Clone() => new()
+        {
+            PortName = PortName,
+            BaudRate = BaudRate,
+            TimeoutMs = TimeoutMs,
+        };
+
+        object ICloneable.Clone() => Clone();
     }
-    [Export]
+    [Export(typeof(ICameraLight))]
     [method: ImportingConstructor]
     public class CameraLight(ISerialPortClient serialPortClient, IConfigService configService, ILogger logger)
         : ICameraLight
     {
+        private CameraLightConfig _config = new();
         public bool IsConnected => serialPortClient.IsOpen;
+
+        public CameraLightConfig GetConfig() => _config.Clone();
+
+        public async Task SaveConfigAsync(CameraLightConfig config)
+        {
+            _config = config.Clone();
+            await configService.SaveAsync(_config);
+        }
 
         public async Task<Result> InitializeAsync(CancellationToken token = default)
         {
@@ -26,6 +45,7 @@ namespace AFOCS.Devices.Implementation
                 config = new CameraLightConfig();
                 await configService.SaveAsync(config);
             }
+            _config = config;
 
             SerialPortConfig serialPortConfig = new SerialPortConfig
             {
