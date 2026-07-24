@@ -7,13 +7,12 @@ namespace AFOCS.Devices.Implementation;
 /// 压力传感器基类 —— 每个实例代表一个物理传感器
 /// TConfig 用于隔离每个传感器的配置文件
 /// </summary>
-public abstract class PressureSensor : IPressureSensor
+public abstract class PressureSensor(IMotionControlCard motionCard, IConfigService configService, ILogger logger)
+    : IPressureSensor
 {
-    private readonly IMotionControlCard _motionCard;
-    private readonly IConfigService _configService;
-    protected readonly ILogger Logger;
+    protected readonly ILogger Logger = logger;
 
-    private PressureSensorConfig _config = new();
+    private PressureSensorConfig _config = null!;
     private CancellationTokenSource? _cts;
     private readonly Lock _lock = new();
 
@@ -40,17 +39,10 @@ public abstract class PressureSensor : IPressureSensor
     /// <summary>配置文件类型（用于 ConfigService 存取隔离）</summary>
     protected abstract Type ConfigType { get; }
 
-    public bool IsConnected => _motionCard.IsConnected;
+    public bool IsConnected => motionCard.IsConnected;
     public bool IsMonitoring { get; private set; }
     public event EventHandler<PressureDataChangedEventArgs>? DataChanged;
     public event EventHandler<PressureAlarmEventArgs>? AlarmTriggered;
-
-    protected PressureSensor(IMotionControlCard motionCard, IConfigService configService, ILogger logger)
-    {
-        _motionCard = motionCard;
-        _configService = configService;
-        Logger = logger;
-    }
 
     // ====================================================================
     // IDevice
@@ -58,16 +50,16 @@ public abstract class PressureSensor : IPressureSensor
 
     public async Task<Result> InitializeAsync(CancellationToken token = default)
     {
-        var loaded = await _configService.LoadAsync(ConfigType);
+        var loaded = await configService.LoadAsync(ConfigType);
         if (loaded is PressureSensorConfig config)
             _config = config;
         else
         {
             _config = new PressureSensorConfig { SlaveAddress = DefaultSlaveAddress };
-            await _configService.SaveAsync(ConfigType, _config);
+            await configService.SaveAsync(ConfigType, _config);
         }
 
-        if (!_motionCard.IsConnected)
+        if (!motionCard.IsConnected)
             return Result.Fail("运动控制卡未连接，压力传感器无法初始化");
 
         Logger.Information("[{Type}] 初始化完成，从站地址={Addr}, 通道映射 X→{X} Y→{Y} Z→{Z}",
@@ -124,11 +116,10 @@ public abstract class PressureSensor : IPressureSensor
                 var result = await ReadAllInternalAsync();
                 if (!result.IsSuccess) continue;
 
-                int oldX, oldY, oldZ;
                 bool dataChanged;
                 lock (_lock)
                 {
-                    oldX = _x; oldY = _y; oldZ = _z;
+                    var oldX = _x; var oldY = _y; var oldZ = _z;
                     _x = result.Data.X;
                     _y = result.Data.Y;
                     _z = result.Data.Z;
@@ -203,7 +194,7 @@ public abstract class PressureSensor : IPressureSensor
         var yTask = ReadChannelAsync(PressureChannel.Y);
         var zTask = ReadChannelAsync(PressureChannel.Z);
 
-        await Task.WhenAll(xTask, yTask, zTask);
+        await Task.WhenAll(xTask, yTask, zTask); // 并发读取
 
         if (!xTask.Result.IsSuccess)
             return Result<(int, int, int)>.Fail(xTask.Result.Message);
@@ -217,14 +208,14 @@ public abstract class PressureSensor : IPressureSensor
 
     private async Task<Result<int>> ReadChannelAsync(PressureChannel channel)
     {
-        if (!_motionCard.IsConnected)
+        if (!motionCard.IsConnected)
             return Result<int>.Fail("运动控制卡未连接");
 
         if (_config.SlaveAddress == 0)
             return Result<int>.Fail("从站地址未配置");
 
         var subIndex = _config.GetSubIndex(channel);
-        var result = await _motionCard.ReadTxPDOAsync(_config.SlaveAddress, OdReadPressure, subIndex, OdBitLen32);
+        var result = await motionCard.ReadTxPDOAsync(_config.SlaveAddress, OdReadPressure, subIndex, OdBitLen32);
 
         if (!result.IsSuccess)
             return Result<int>.Fail($"PDO 读取失败: {result.Message}");
@@ -250,7 +241,7 @@ public abstract class PressureSensor : IPressureSensor
 
     private async Task<Result> ZeroChannelAsync(PressureChannel channel)
     {
-        if (!_motionCard.IsConnected)
+        if (!motionCard.IsConnected)
             return Result.Fail("运动控制卡未连接");
 
         if (_config.SlaveAddress == 0)
@@ -266,7 +257,7 @@ public abstract class PressureSensor : IPressureSensor
 
         Logger.Information("[{Type}] 通道 {Channel} 开始清零...", ConfigType.Name, channel);
 
-        var result = await _motionCard.WriteRxPDOAsync(
+        var result = await motionCard.WriteRxPDOAsync(
             _config.SlaveAddress, OdZeroControl, OdSubIndex, OdBitLen32, zeroValue);
 
         if (!result.IsSuccess)
@@ -280,12 +271,16 @@ public abstract class PressureSensor : IPressureSensor
     // 配置读写
     // ====================================================================
 
-    public PressureSensorConfig GetConfig() => _config;
+    public PressureSensorConfig GetConfig() => _config.Clone();
 
     public async Task SaveConfigAsync(PressureSensorConfig config)
     {
-        _config = config;
-        await _configService.SaveAsync(ConfigType, _config);
+        var cloned = config.Clone();
+        lock (_lock)
+        {
+            _config = cloned;
+        }
+        await configService.SaveAsync(ConfigType, _config);
         Logger.Information("[{Type}] 配置已保存", ConfigType.Name);
     }
 

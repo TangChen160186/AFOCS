@@ -1,4 +1,5 @@
 using System.ComponentModel.Composition;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using AFOCS.Devices;
 using AFOCS.Devices.Implementation;
@@ -23,6 +24,13 @@ namespace AFOCS.App.ViewModels
 
         private readonly PressureSensorConfig _editConfig = sensor.GetConfig();
 
+        private bool _isModify = false;
+
+        private readonly string[] _modifyProperties =
+        [
+            nameof(SlaveAddress), nameof(MapX), nameof(MapY), nameof(MapZ), nameof(AlarmX), nameof(AlarmY),
+            nameof(AlarmZ)
+        ];
         public ushort SlaveAddress
         {
             get => _editConfig.SlaveAddress;
@@ -230,14 +238,18 @@ namespace AFOCS.App.ViewModels
         }
 
         // ========== ISettingsEditor ==========
-        public override void NotifyOfPropertyChange(string propertyName = null)
+
+        public override void NotifyOfPropertyChange([CallerMemberName]string? propertyName = null)
         {
+            if (_modifyProperties.Contains(propertyName))
+                _isModify = true;
             base.NotifyOfPropertyChange(propertyName);
         }
 
         public void ApplyChanges()
         {
-            _ = SaveAsync();
+            if(_isModify)
+                _ = SaveAsync();
         }
     }
 

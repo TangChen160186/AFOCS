@@ -5,7 +5,7 @@ namespace AFOCS.Devices;
 /// <summary>
 /// 压力传感器配置（每个传感器实例独立一份）
 /// </summary>
-public class PressureSensorConfig
+public class PressureSensorConfig : ICloneable
 {
     /// <summary>从站地址</summary>
     public ushort SlaveAddress { get; set; }
@@ -39,6 +39,16 @@ public class PressureSensorConfig
     /// <summary>获取指定通道的报警阈值（0 表示禁用）</summary>
     public int GetAlarmThreshold(PressureChannel channel) =>
         AlarmThresholds.GetValueOrDefault(channel, 0);
+
+    /// <summary>深拷贝</summary>
+    public PressureSensorConfig Clone() => new()
+    {
+        SlaveAddress = SlaveAddress,
+        ChannelSubIndexMapping = new Dictionary<PressureChannel, ushort>(ChannelSubIndexMapping),
+        AlarmThresholds = new Dictionary<PressureChannel, int>(AlarmThresholds),
+    };
+
+    object ICloneable.Clone() => Clone();
 }
 
 /// <summary>
