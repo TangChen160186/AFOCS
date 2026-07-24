@@ -36,8 +36,6 @@
         <ApplicationDefinition Remove="App.xaml" />
         <PackageReference Include="Caliburn.Micro" />
         <PackageReference Include="MahApps.Metro" />
-        <PackageReference Include="NationalInstruments.Visa" />
-        <PackageReference Include="Nodify" />
         <PackageReference Include="Serilog" />
         <PackageReference Include="Serilog.Sinks.Console" />
 
