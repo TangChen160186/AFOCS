@@ -1,3 +1,4 @@
+using AFOCS.Devices.Implementation;
 using AFOCS.Infrastructure;
 
 namespace AFOCS.Devices
@@ -13,6 +14,13 @@ namespace AFOCS.Devices
         event EventHandler<MotionCardConnectionChangedEventArgs>? ConnectionChanged;
 
         Task<Result> HotResetAsync();
+        Task<Result> ColdResetAsync();
+
+        /// <summary>获取总线错误码和状态描述</summary>
+        Task<Result<(ushort ErrorCode, string Description)>> GetBusStatusAsync();
+
+        LeadShineMotionCardConfig GetConfig();
+        Task SaveConfigAsync(LeadShineMotionCardConfig config);
 
         /// <summary>读取单个输入位</summary>
         Task<Result<bool>> ReadInbitAsync(ushort bitNo);

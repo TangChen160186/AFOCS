@@ -50,7 +50,7 @@ namespace AFOCS.App.ViewModels
         [Import] private ProgrammablePowerSupply _programmablePowerSupply = null!;
         [Import] private IOpticalSwitch _opticalSwitch = null!;
         [Import] private HeightGauge _heightGauge = null!;
-        [Import] private LeadShineMotionCard _leadShineMotionCard = null!;
+        [Import] private IMotionControlCard _leadShineMotionCard = null!;
 
         [Import] private ICameraLight _cameraLight = null!;
         [Import] private CameraLeftUp _cameraLeftUp = null!;

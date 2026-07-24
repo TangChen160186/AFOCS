@@ -5,10 +5,20 @@ using Serilog;
 
 namespace AFOCS.Devices.Implementation;
 
-public class LeadShineMotionCardConfig
+public class LeadShineMotionCardConfig : ICloneable
 {
     public string EniPath { get; set; } = "";
     public string IniPath { get; set; } = "";
+    public int TimeoutMs { get; set; } = 30000;
+
+    public LeadShineMotionCardConfig Clone() => new()
+    {
+        EniPath = EniPath,
+        IniPath = IniPath,
+        TimeoutMs = TimeoutMs,
+    };
+
+    object ICloneable.Clone() => Clone();
 }
 
 [Export]
@@ -18,19 +28,19 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 {
     public event EventHandler<MotionCardConnectionChangedEventArgs>? ConnectionChanged;
 
-    private bool _isConnected;
     public bool IsConnected
     {
-        get => _isConnected;
+        get;
         private set
         {
-            if (_isConnected == value) return;
-            _isConnected = value;
+            if (field == value) return;
+            field = value;
             ConnectionChanged?.Invoke(this, new MotionCardConnectionChangedEventArgs(value));
         }
     }
 
     private ushort _cardNo = 0;
+    private LeadShineMotionCardConfig _config = new();
     private const ushort EniFileType = 200;
     private const ushort ConfigFileType = 201;
     private const ushort EthercatPort = 2;
@@ -40,12 +50,8 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
         try
         {
             // 1. 加载配置
-            var config = await configService.LoadAsync<LeadShineMotionCardConfig>();
-            if (config == null)
-            {
-                config = new LeadShineMotionCardConfig();
-                await configService.SaveAsync(config);
-            }
+            _config = await configService.LoadAsync<LeadShineMotionCardConfig>() 
+                      ?? new LeadShineMotionCardConfig();
 
             // 2. 板卡初始化
             short cardNum = LTDMC.dmc_board_init();
@@ -83,7 +89,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
                 // 6.2 下载ENI文件
                 logger.Information("下载ENI总线配置文件");
-                var eniResult = DownloadFile(_cardNo, config.EniPath,EniFileType);
+                var eniResult = DownloadFile(_cardNo, _config.EniPath,EniFileType);
                 if (!eniResult.IsSuccess)
                     return eniResult;
 
@@ -116,10 +122,10 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
             }
 
             // 7. 下载轴参数配置文件（INI）
-            if (!string.IsNullOrWhiteSpace(config.IniPath) && File.Exists(config.IniPath))
+            if (!string.IsNullOrWhiteSpace(_config.IniPath) && File.Exists(_config.IniPath))
             {
                 logger.Information("下载轴参数配置文件");
-                var iniResult = DownloadFile(_cardNo, config.IniPath,ConfigFileType);
+                var iniResult = DownloadFile(_cardNo, _config.IniPath,ConfigFileType);
                 if (!iniResult.IsSuccess)
                     return iniResult;
             }
@@ -184,6 +190,69 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
         _cardNo = cardList[0];
 
         return Result.Success();
+    }
+
+    /// <summary>
+    /// 获取总线错误码和对应的中文描述
+    /// </summary>
+    public Task<Result<(ushort ErrorCode, string Description)>> GetBusStatusAsync()
+    {
+        ushort nmcErr = 0;
+        var ret = LTDMC.nmc_get_errcode(_cardNo, EthercatPort, ref nmcErr);
+        if (ret != 0)
+            return Task.FromResult(Result<(ushort, string)>.Fail($"读取总线状态失败, error code: {ret}"));
+        return Task.FromResult(Result<(ushort, string)>.Success((nmcErr, GetBusErrorDescription(nmcErr))));
+    }
+
+    private static string GetBusErrorDescription(ushort errCode)
+    {
+        return errCode switch
+        {
+            0x0000 => "总线正常，EtherCAT 运行中",
+            0x0001 => "无 EtherCAT 从站",
+            0x0002 => "从站数量不匹配",
+            0x0003 => "从站信息不匹配",
+            0x0004 => "从站初始化失败",
+            0x0005 => "从站未进入 OP 状态",
+            0x0006 => "SM 看门狗超时",
+            0x0007 => "DC 时钟同步失败",
+            0x0008 => "EEPROM 加载失败",
+            0x0009 => "SDO 下载失败",
+            0x000A => "SDO 上传失败",
+            0x000B => "PDO 映射失败",
+            0x000C => "ENI 文件缺失（需下载 ENI）",
+            0x000D => "从站 AL 状态错误",
+            0x000E => "看门狗错误",
+            0x000F => "从站 DC 配置失败",
+            0x0010 => "EEPROM 重新加载失败",
+            0x0011 => "从站 SM 配置失败",
+            0x0012 => "从站 PDO 看门狗错误",
+            0x0013 => "从站通信错误",
+            0x0014 => "从站返回错误",
+            0x0015 => "从站 AL 状态超时",
+            0x0016 => "主站状态异常",
+            0x0017 => "从站响应超时",
+            0x0018 => "链路丢失",
+            0x0019 => "无效的帧",
+            0x001A => "CRC 校验错误",
+            0x001B => "物理层错误",
+            0x001C => "从站端口未打开",
+            0x001D => "无效的从站配置",
+            0x001E => "INI 配置不匹配（需重新下载）",
+            0x001F => "帧丢失",
+            0x0020 => "从站数量不足",
+            0x0021 => "从站丢失",
+            0x0022 => "主站初始化未完成",
+            _ => $"未知错误 (0x{errCode:X4})"
+        };
+    }
+
+    public LeadShineMotionCardConfig GetConfig() => _config.Clone();
+
+    public async Task SaveConfigAsync(LeadShineMotionCardConfig config)
+    {
+        _config = config.Clone();
+        await configService.SaveAsync(_config);
     }
 
     private Result DownloadFile(ushort cardNo, string path,ushort fileType)
