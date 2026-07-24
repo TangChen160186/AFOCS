@@ -205,6 +205,7 @@ namespace AFOCS.App.ViewModels
         public async Task SaveAsync()
         {
             await sensor.SaveConfigAsync(_editConfig);
+            _isModify = false;
             StatusMessage = "配置已保存";
             RefreshStatus();
         }
