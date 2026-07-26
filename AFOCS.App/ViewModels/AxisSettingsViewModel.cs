@@ -50,7 +50,7 @@ namespace AFOCS.App.ViewModels
         }
 
         public string SettingsPageName => "总线轴配置";
-        public string SettingsPagePath => "设备配置";
+        public string SettingsPagePath => "设备配置\\雷赛板卡";
 
         // ========== 生命周期 ==========
 

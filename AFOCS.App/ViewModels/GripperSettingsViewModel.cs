@@ -19,7 +19,7 @@ namespace AFOCS.App.ViewModels
 
         string ISettingsEditor.SettingsPageName => Name;
 
-        string ISettingsEditor.SettingsPagePath => "设备配置\\夹爪";
+        string ISettingsEditor.SettingsPagePath => "设备配置\\雷赛板卡\\夹爪";
 
         // ========== 配置编辑 ==========
 

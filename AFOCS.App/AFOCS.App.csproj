@@ -69,4 +69,7 @@
         <HintPath>..\Vendor\Camera\win64\MvCameraControl.Net.dll</HintPath>
       </Reference>
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="ViewModels\Settings\" />
+    </ItemGroup>
 </Project>

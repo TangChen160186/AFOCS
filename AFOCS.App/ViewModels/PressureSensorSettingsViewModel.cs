@@ -18,7 +18,7 @@ namespace AFOCS.App.ViewModels
 
         string ISettingsEditor.SettingsPageName => Name;
 
-        string ISettingsEditor.SettingsPagePath => "设备配置\\压力传感器";
+        string ISettingsEditor.SettingsPagePath => "设备配置\\雷赛板卡\\压力传感器";
 
         // ========== 配置编辑 ==========
 

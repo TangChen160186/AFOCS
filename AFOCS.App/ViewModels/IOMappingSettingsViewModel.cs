@@ -99,7 +99,7 @@ namespace AFOCS.App.ViewModels
         private readonly IIODevice _io;
 
         public string SettingsPageName => "IO 配置";
-        public string SettingsPagePath => "设备配置";
+        public string SettingsPagePath => "设备配置\\雷赛板卡";
 
         public ObservableCollection<IOEditItem> InputItems { get; } = [];
         public ObservableCollection<IOEditItem> OutputItems { get; } = [];
