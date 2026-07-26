@@ -1,0 +1,258 @@
+<UserControl x:Class="AFOCS.App.Views.Settings.MotionCardSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:cal="http://www.caliburnproject.org"
+             xmlns:viewModels="clr-namespace:AFOCS.App.ViewModels"
+             xmlns:settings="clr-namespace:AFOCS.App.ViewModels.Settings"
+             mc:Ignorable="d"
+             d:DesignHeight="420" d:DesignWidth="480"
+             d:DataContext="{d:DesignInstance settings:MotionCardSettingsViewModel}"
+             IsTabStop="False">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="ConnectedBrush" Color="#10B981" />
+        <SolidColorBrush x:Key="DisconnectedBrush" Color="#EF4444" />
+        <SolidColorBrush x:Key="WarningBrush" Color="#F59E0B" />
+        <SolidColorBrush x:Key="ErrorBrush" Color="#EF4444" />
+        <SolidColorBrush x:Key="BusOkBrush" Color="#10B981" />
+    </UserControl.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="0,5">
+            <!-- ========== 总线状态 ========== -->
+            <Border BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="0,0,0,8" Margin="0,0,0,8">
+                <StackPanel>
+                    <!-- 第一行：连接状态 + 操作按钮 -->
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse Width="10" Height="10" Margin="0,0,6,0">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="{StaticResource DisconnectedBrush}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                                <Setter Property="Fill" Value="{StaticResource ConnectedBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                            <TextBlock Text="总线状态:" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center"
+                                       FontWeight="Bold" Margin="4,0,0,0" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                            <Button cal:Message.Attach="SaveAsync"
+                                    Width="50" Height="22" FontSize="10"
+                                    Padding="4,2" Margin="0,0,4,0">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                保存
+                            </Button>
+                            <Button cal:Message.Attach="ReconnectAsync"
+                                    Width="50" Height="22" FontSize="10" Padding="4,2">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                重连
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- 第二行：总线错误码 -->
+                    <Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="3"
+                            Padding="10,8" Background="#F9FAFB">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="错误码:" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBlock Text="{Binding BusErrorCode}" VerticalAlignment="Center"
+                                           FontWeight="Bold" FontSize="13" FontFamily="Consolas"
+                                           MinWidth="80">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#6B7280" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding BusErrorCode}" Value="0x0000">
+                                                    <Setter Property="Foreground" Value="{StaticResource BusOkBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding BusErrorCode}" Value="ERR">
+                                                    <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <TextBlock Grid.Column="1" Text="{Binding BusStatusText}"
+                                       VerticalAlignment="Center" TextWrapping="Wrap"
+                                       Margin="12,0,0,0" FontSize="12" Foreground="#374151" />
+
+                            <Button Grid.Column="2" cal:Message.Attach="RefreshBusStatusAsync"
+                                    Width="70" Height="22" FontSize="10"
+                                    Padding="4,2" VerticalAlignment="Center"
+                                    Margin="12,0,0,0">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                刷新状态
+                            </Button>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- ========== 配置文件路径 ========== -->
+            <TextBlock Text="EtherCAT 配置" FontWeight="Bold" Margin="0,0,0,6" />
+            <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                <Label Width="90" Content="ENI 文件:" VerticalAlignment="Center" />
+                <TextBox Width="280" Text="{Binding EniPath, UpdateSourceTrigger=PropertyChanged}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Label Width="90" Content="INI 文件:" VerticalAlignment="Center" />
+                <TextBox Width="280" Text="{Binding IniPath, UpdateSourceTrigger=PropertyChanged}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Label Width="90" Content="超时时间(ms):" VerticalAlignment="Center" />
+                <TextBox Width="80" Text="{Binding TimeoutMs, UpdateSourceTrigger=PropertyChanged}" />
+            </StackPanel>
+
+            <!-- ========== 总线操作 ========== -->
+            <Border BorderBrush="#E5E7EB" BorderThickness="0,1,0,0" Margin="0,12,0,0" Padding="0,10,0,0">
+                <StackPanel>
+                    <TextBlock Text="总线操作" FontWeight="Bold" Margin="0,0,0,8" />
+
+                    <Border BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="4"
+                            Padding="12,10" Margin="0,0,0,8">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
+                                <TextBlock Text="热复位" FontWeight="SemiBold" FontSize="13"
+                                           VerticalAlignment="Center" Width="60" />
+                                <TextBlock Text="仅复位 EtherCAT 协议栈，不断开板卡驱动"
+                                           VerticalAlignment="Center" Foreground="#9CA3AF"
+                                           FontSize="11" Margin="8,0,0,0" />
+                            </StackPanel>
+
+                            <Button Grid.Row="1" cal:Message.Attach="HotResetAsync"
+                                    Content="热复位" Width="80" Height="26"
+                                    FontSize="11" HorizontalAlignment="Left">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Style.Triggers>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding IsConnected}" Value="False" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </MultiDataTrigger>
+                                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <Border BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="4"
+                            Padding="12,10" Margin="0,0,0,8"
+                            Background="#FFF7ED">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
+                                <TextBlock Text="冷复位" FontWeight="SemiBold" FontSize="13"
+                                           VerticalAlignment="Center" Width="60"
+                                           Foreground="{StaticResource WarningBrush}" />
+                                <TextBlock Text="硬件复位板卡，需等待 15 秒，ENI/INI 需重新下载"
+                                           VerticalAlignment="Center" Foreground="#92400E"
+                                           FontSize="11" Margin="8,0,0,0" />
+                            </StackPanel>
+
+                            <Button Grid.Row="1" cal:Message.Attach="ColdResetAsync"
+                                    Content="冷复位" Width="80" Height="26"
+                                    FontSize="11" HorizontalAlignment="Left">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Style.Triggers>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding IsConnected}" Value="False" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </MultiDataTrigger>
+                                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- 底部进度条 -->
+            <ProgressBar Height="6" IsIndeterminate="True" Margin="0,8,0,0">
+                <ProgressBar.Style>
+                    <Style TargetType="ProgressBar">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ProgressBar.Style>
+            </ProgressBar>
+
+            <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Foreground="{DynamicResource EnvironmentWindowText}"
+                       Opacity="0.7" FontSize="12">
+                修改 ENI/INI 路径后请先保存再重连使配置生效。
+                &#10;热复位仅复位协议栈（不重新下载文件）；冷复位为硬件复位（需重新初始化全部从站）。
+            </TextBlock>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

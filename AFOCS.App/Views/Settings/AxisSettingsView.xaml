@@ -1,0 +1,279 @@
+<UserControl x:Class="AFOCS.App.Views.Settings.AxisSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:cal="http://www.caliburnproject.org"
+             xmlns:viewModels="clr-namespace:AFOCS.App.ViewModels"
+             xmlns:settings="clr-namespace:AFOCS.App.ViewModels.Settings"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="480"
+             d:DataContext="{d:DesignInstance settings:AxisSettingsViewModel}"
+             IsTabStop="False">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="SectionBg" Color="#FFF3F4F6" />
+        <SolidColorBrush x:Key="LabelFg" Color="#FF6B7280" />
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="0,5">
+
+            <!-- ========== 轴选择 ========== -->
+            <Border BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="0,0,0,8" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="选择轴" FontWeight="Bold" Margin="0,0,0,6" />
+                    <ComboBox ItemsSource="{Binding AxisList}"
+                              SelectedItem="{Binding SelectedAxisInfo, Mode=TwoWay}"
+                              DisplayMemberPath="HeaderText">
+                        <ComboBox.ItemContainerStyle>
+                            <Style TargetType="ComboBoxItem">
+                                <Setter Property="Height" Value="26" />
+                            </Style>
+                        </ComboBox.ItemContainerStyle>
+                    </ComboBox>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button cal:Message.Attach="SaveCurrentAxisAsync"
+                                Content="保存" Width="60" Padding="6,3" Margin="0,0,8,0">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsModify}" Value="False">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button cal:Message.Attach="ResetToDefault"
+                                Content="恢复默认" Width="70" Padding="6,3">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   VerticalAlignment="Center" Margin="10,0,0,0"
+                                   FontWeight="Bold" FontSize="11" />
+                        <ProgressBar Width="60" Height="6" IsIndeterminate="True" Margin="8,0,0,0">
+                            <ProgressBar.Style>
+                                <Style TargetType="ProgressBar">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ProgressBar.Style>
+                        </ProgressBar>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ========== 运动参数 ========== -->
+            <Border Background="{StaticResource SectionBg}" CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="运动参数" FontWeight="Bold" Margin="0,0,0,8" />
+                    <UniformGrid Columns="2" Rows="4">
+                        <!-- 脉冲当量 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="脉冲当量 (pulse/unit)" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <TextBox Text="{Binding Equiv, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F4}}" />
+                        </StackPanel>
+                        <!-- 起始速度 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="起始速度 (unit/s)" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <TextBox Text="{Binding MinVel, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F2}}" />
+                        </StackPanel>
+                        <!-- 最大速度 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="最大速度 (unit/s)" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <TextBox Text="{Binding MaxVel, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F2}}" />
+                        </StackPanel>
+                        <!-- 停止速度 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="停止速度 (unit/s)" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <TextBox Text="{Binding StopVel, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F2}}" />
+                        </StackPanel>
+                        <!-- 加速时间 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="加速时间 (s)" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <TextBox Text="{Binding Tacc, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F4}}" />
+                        </StackPanel>
+                        <!-- 减速时间 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="减速时间 (s)" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <TextBox Text="{Binding Tdec, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F4}}" />
+                        </StackPanel>
+                        <!-- S段时间 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="S段时间 (s)" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <TextBox Text="{Binding SPara, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F4}}" />
+                        </StackPanel>
+                        <!-- 最高速度 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="最高速度上限 (unit/s)" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <TextBox Text="{Binding MaxSpeed, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F2}}" />
+                        </StackPanel>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- ========== 回零参数 ========== -->
+            <Border Background="{StaticResource SectionBg}" CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="回零参数" FontWeight="Bold" Margin="0,0,0,8" />
+
+                    <!-- 回零模式 -->
+                    <StackPanel Margin="0,2,0,4">
+                        <TextBlock Text="回零模式" FontSize="10"
+                                   Foreground="{StaticResource LabelFg}" />
+                        <ComboBox ItemsSource="{Binding HomeModeOptions}"
+                                  SelectedValue="{Binding HomeMode, Mode=TwoWay}"
+                                  SelectedValuePath="Mode"
+                                  DisplayMemberPath="Label" />
+                    </StackPanel>
+
+                    <UniformGrid Columns="2" Rows="3">
+                        <!-- 回零低速 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="低速 (unit/s)" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <TextBox Text="{Binding HomeLowVel, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F2}}" />
+                        </StackPanel>
+                        <!-- 回零高速 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="高速 (unit/s)" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <TextBox Text="{Binding HomeHighVel, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F2}}" />
+                        </StackPanel>
+                        <!-- 回零加速 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="加速时间 (s)" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <TextBox Text="{Binding HomeTacc, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F4}}" />
+                        </StackPanel>
+                        <!-- 回零减速 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="减速时间 (s)" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <TextBox Text="{Binding HomeTdec, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F4}}" />
+                        </StackPanel>
+                        <!-- 回零偏移 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="回零偏移 (unit)" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <TextBox Text="{Binding HomeOffsetPos, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F4}}" />
+                        </StackPanel>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- ========== 软限位 ========== -->
+            <Border Background="{StaticResource SectionBg}" CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="软限位" FontWeight="Bold" Margin="0,0,0,8" />
+                    <UniformGrid Columns="2" Rows="2">
+                        <!-- 负软限位 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="负方向 (unit)" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <TextBox Text="{Binding NegativeSoftLimit, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F2}}" />
+                        </StackPanel>
+                        <!-- 正软限位 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="正方向 (unit)" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <TextBox Text="{Binding PositiveSoftLimit, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F2}}" />
+                        </StackPanel>
+                    </UniformGrid>
+                    <CheckBox Content="启用软限位"
+                              IsChecked="{Binding SoftLimitEnabled}"
+                              Margin="0,6,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- ========== 基础参数 ========== -->
+            <Border Background="{StaticResource SectionBg}" CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="基础参数" FontWeight="Bold" Margin="0,0,0,8" />
+                    <StackPanel Margin="0,2">
+                        <TextBlock Text="脉冲当量" FontSize="10"
+                                   Foreground="{StaticResource LabelFg}" />
+                        <TextBox Text="{Binding PulsePerRev, UpdateSourceTrigger=PropertyChanged}"
+                                 Width="120" HorizontalAlignment="Left" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ========== 运动测试 ========== -->
+            <Border Background="{StaticResource SectionBg}" CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="运动测试" FontWeight="Bold" Margin="0,0,0,8" />
+                    <UniformGrid Columns="4" Rows="1">
+                        <!-- 距离 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="距离 (unit)" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <TextBox Text="{Binding MoveDistance, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F2}}" />
+                        </StackPanel>
+                        <!-- 方向 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="方向" FontSize="10"
+                                       Foreground="{StaticResource LabelFg}" />
+                            <CheckBox IsChecked="{Binding MovePositive}" 
+                                      Content="{Binding MoveDirectionText}"
+                                      VerticalAlignment="Center" Margin="0,4,0,0" />
+                        </StackPanel>
+                        <!-- 移动按钮 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text=" " FontSize="10" />
+                            <Button cal:Message.Attach="MoveTestAsync" Content="移动测试"
+                                    Width="80" Padding="6,3">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMoving}" Value="True">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </StackPanel>
+                        <!-- 停止按钮 -->
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text=" " FontSize="10" />
+                            <Button cal:Message.Attach="StopAsync" Content="停止"
+                                    Width="60" Padding="6,3"
+                                    Background="#FFE53E3E" Foreground="White" />
+                        </StackPanel>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Margin="0,6,0,8" TextWrapping="Wrap"
+                       Foreground="{DynamicResource EnvironmentWindowText}"
+                       Opacity="0.7" FontSize="11">
+                修改参数后点击"保存"按钮保存当前轴配置。点击"恢复默认"将重置为出厂默认值。
+            </TextBlock>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

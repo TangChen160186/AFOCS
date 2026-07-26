@@ -5,6 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:cal="http://www.caliburnproject.org"
     xmlns:vm="clr-namespace:AFOCS.App.ViewModels"
+    xmlns:settings="clr-namespace:AFOCS.App.ViewModels.Settings"
     mc:Ignorable="d"
     d:DataContext="{d:DesignInstance vm:JogRightViewModel}"
     d:DesignHeight="560" d:DesignWidth="580">
@@ -12,7 +13,7 @@
     <UserControl.Resources>
         <SolidColorBrush x:Key="MovingBrush" Color="#2E7D32" />
         <SolidColorBrush x:Key="IdleBrush" Color="#999999" />
-        <vm:BoolToBrushConverter x:Key="BoolToMovingBrush" OnBrush="{StaticResource MovingBrush}" OffBrush="{StaticResource IdleBrush}" />
+        <settings:BoolToBrushConverter x:Key="BoolToMovingBrush" OnBrush="{StaticResource MovingBrush}" OffBrush="{StaticResource IdleBrush}" />
 
         <Style x:Key="SectionHeader" TargetType="TextBlock">
             <Setter Property="FontSize" Value="12" />
