@@ -10,18 +10,16 @@ namespace AFOCS.App.ViewModels
     public class JogRightViewModel : JogStationViewModel, IJogRight
     {
         [ImportingConstructor]
-        public JogRightViewModel(IMotionControlCard motionCard, IShell shell)
-            : base(motionCard, shell, "右工位手柄") { }
+        public JogRightViewModel(IBusAxisDevice busAxisDevice, IShell shell)
+            : base(busAxisDevice, shell, "右工位手柄") { }
 
         protected override void InitStationAxes()
         {
-            // 相机轴
             AddBusAxis(AxisId.RightCamUpX, CameraAxes);
             AddBusAxis(AxisId.RightCamUpY, CameraAxes);
             AddBusAxis(AxisId.RightCamUpZ, CameraAxes);
             AddBusAxis(AxisId.RightCamSideY, CameraAxes);
 
-            // 耦合θ轴
             AddBusAxis(AxisId.RightCouplingLThetaX, ThetaAxes);
             AddBusAxis(AxisId.RightCouplingLThetaY, ThetaAxes);
             AddBusAxis(AxisId.RightCouplingLThetaZ, ThetaAxes);
@@ -29,7 +27,6 @@ namespace AFOCS.App.ViewModels
             AddBusAxis(AxisId.RightCouplingRThetaY, ThetaAxes);
             AddBusAxis(AxisId.RightCouplingRThetaZ, ThetaAxes);
 
-            // 直线轴（暂未实现）
             AddLinearAxis(LinearAxisId.RightCouplingLX);
             AddLinearAxis(LinearAxisId.RightCouplingLY);
             AddLinearAxis(LinearAxisId.RightCouplingLZ);
@@ -37,7 +34,6 @@ namespace AFOCS.App.ViewModels
             AddLinearAxis(LinearAxisId.RightCouplingRY);
             AddLinearAxis(LinearAxisId.RightCouplingRZ);
 
-            // 夹爪（暂未实现）
             AddGripper(GripperId.RightCouplingLGripper);
             AddGripper(GripperId.RightCouplingRGripper);
         }

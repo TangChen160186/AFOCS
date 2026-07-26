@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using AFOCS.Devices;
+using AFOCS.Devices.Implementation;
 using AFOCS.Framework.Framework;
 using AFOCS.Framework.Framework.Services;
 using AFOCS.Infrastructure;
@@ -87,7 +88,7 @@ namespace AFOCS.App.ViewModels
 
     public abstract class JogStationViewModel : Tool, IJogStation
     {
-        protected readonly IMotionControlCard MotionCard;
+        protected readonly IBusAxisDevice BusAxisDevice;
         private readonly IShell _shell;
 
         public override PaneLocation PreferredLocation => PaneLocation.Bottom;
@@ -121,14 +122,14 @@ namespace AFOCS.App.ViewModels
         public ObservableCollection<JogAxisItem> LinearAxes { get; } = [];
         public ObservableCollection<JogAxisItem> Grippers { get; } = [];
 
-        protected JogStationViewModel(IMotionControlCard motionCard, IShell shell, string displayName)
+        protected JogStationViewModel(IBusAxisDevice busAxisDevice, IShell shell, string displayName)
         {
             DisplayName = displayName;
-            MotionCard = motionCard;
+            BusAxisDevice = busAxisDevice;
             _shell = shell;
 
             InitStationAxes();
-            MotionCard.AxisStateChanged += OnAxisStateChanged;
+            BusAxisDevice.AxisStateChanged += OnAxisStateChanged;
         }
 
         protected abstract void InitStationAxes();
@@ -179,21 +180,13 @@ namespace AFOCS.App.ViewModels
                 if (item.Kind == AxisKind.BusAxis)
                 {
                     var axisId = (AxisId)item.AxisId;
-                    var cfg = MotionCard.GetAxisConfig(axisId).Motion;
-                    await MotionCard.MovePmoveAsync(
-                        axis: (ushort)axisId,
+                    await BusAxisDevice.MovePmoveAsync(
+                        axisId: axisId,
                         distance: dist,
-                        equiv: cfg.Equiv,
-                        minVel: cfg.MinVel,
-                        maxVel: JogSpeed > 0 ? JogSpeed : cfg.MaxVel,
-                        tacc: cfg.Tacc,
-                        tdec: cfg.Tdec,
-                        stopVel: cfg.StopVel,
-                        sPara: cfg.SPara);
+                        overrideMaxVel: JogSpeed > 0 ? JogSpeed : null);
                 }
                 else if (item.Kind == AxisKind.LinearAxis)
                 {
-                    // 直线轴暂未实现
                     LastError = "直线轴运动暂未实现";
                 }
             });
@@ -204,7 +197,7 @@ namespace AFOCS.App.ViewModels
             await SafeRunAsync($"{item.Name} 停止", async () =>
             {
                 if (item.Kind == AxisKind.BusAxis)
-                    await MotionCard.StopAxisAsync((ushort)item.AxisId);
+                    await BusAxisDevice.StopAxisAsync((AxisId)item.AxisId);
             });
         }
 
@@ -215,15 +208,7 @@ namespace AFOCS.App.ViewModels
                 if (item.Kind == AxisKind.BusAxis)
                 {
                     var axisId = (AxisId)item.AxisId;
-                    var cfg = MotionCard.GetAxisConfig(axisId).Home;
-                    await MotionCard.MoveHomeAsync(
-                        axis: (ushort)axisId,
-                        homeMode: cfg.HomeMode,
-                        lowVel: cfg.LowVel,
-                        highVel: cfg.HighVel,
-                        tacc: cfg.Tacc,
-                        tdec: cfg.Tdec,
-                        offsetPos: cfg.OffsetPos);
+                    await BusAxisDevice.MoveHomeAsync(axisId: axisId);
                 }
             });
         }
@@ -234,14 +219,14 @@ namespace AFOCS.App.ViewModels
         {
             await base.OnInitializedAsync(cancellationToken);
             _shell.RegisterTool(this);
-            if (!MotionCard.IsAxisMonitoring)
-                await MotionCard.StartAxisMonitorAsync();
+            if (!BusAxisDevice.IsAxisMonitoring)
+                await BusAxisDevice.StartAxisMonitorAsync();
         }
 
         protected override Task OnDeactivateAsync(bool close, CancellationToken cancellationToken)
         {
             if (close)
-                MotionCard.StopAxisMonitor();
+                BusAxisDevice.StopAxisMonitor();
             return base.OnDeactivateAsync(close, cancellationToken);
         }
 
@@ -249,7 +234,7 @@ namespace AFOCS.App.ViewModels
 
         protected void AddBusAxis(AxisId id, ObservableCollection<JogAxisItem> group, string? shortName = null)
         {
-            group.Add(new JogAxisItem(this, AxisKind.BusAxis, (int)id, shortName ?? GetAxisShortName(id)));
+            group.Add(new JogAxisItem(this, AxisKind.BusAxis, (int)id, shortName ?? BusAxisDevice.GetAxisShortName(id)));
         }
 
         protected void AddLinearAxis(LinearAxisId id, string? shortName = null)
@@ -263,31 +248,6 @@ namespace AFOCS.App.ViewModels
         }
 
         // ---- 短名称（界面用） ----
-
-        protected static string GetAxisShortName(AxisId id) => id switch
-        {
-            AxisId.LeftCamUpX => "上视X",
-            AxisId.LeftCamUpY => "上视Y",
-            AxisId.LeftCamUpZ => "上视Z",
-            AxisId.LeftCamSideY => "侧视Y",
-            AxisId.LeftCouplingLThetaX => "LθX",
-            AxisId.LeftCouplingLThetaY => "LθY",
-            AxisId.LeftCouplingLThetaZ => "LθZ",
-            AxisId.LeftCouplingRThetaX => "RθX",
-            AxisId.LeftCouplingRThetaY => "RθY",
-            AxisId.LeftCouplingRThetaZ => "RθZ",
-            AxisId.RightCamUpX => "上视X",
-            AxisId.RightCamUpY => "上视Y",
-            AxisId.RightCamUpZ => "上视Z",
-            AxisId.RightCamSideY => "侧视Y",
-            AxisId.RightCouplingLThetaX => "LθX",
-            AxisId.RightCouplingLThetaY => "LθY",
-            AxisId.RightCouplingLThetaZ => "LθZ",
-            AxisId.RightCouplingRThetaX => "RθX",
-            AxisId.RightCouplingRThetaY => "RθY",
-            AxisId.RightCouplingRThetaZ => "RθZ",
-            _ => id.ToString(),
-        };
 
         protected static string GetLinearShortName(LinearAxisId id) => id switch
         {

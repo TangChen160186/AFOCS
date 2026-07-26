@@ -50,6 +50,7 @@ namespace AFOCS.App.ViewModels
         [Import] private IOpticalSwitch _opticalSwitch = null!;
         [Import] private HeightGauge _heightGauge = null!;
         [Import] private IMotionControlCard _leadShineMotionCard = null!;
+        [Import] private IBusAxisDevice _busAxisDevice = null!;
 
         [Import] private ICameraLight _cameraLight = null!;
         [Import] private CameraLeftUp _cameraLeftUp = null!;
@@ -112,29 +113,7 @@ namespace AFOCS.App.ViewModels
                     }
                 }
 
-                //while (true)
-                //{
-                //   var s = await _leftDispensePressure.ReadAllAsync();
-                   
-                //   Console.WriteLine($"{s.Data.X}, {s.Data.Y}, {s.Data.Z}");
-
-                //   Thread.Sleep(100);
-                //}
-                ///var nm = _boardDevice.DutReadWriteAsync(0, 1, 1, "RX", 0);
                 await FinalizeInitialization();
-                //await _smcGripper.EnablePushForceAsync(GripperId.RightCouplingLGripper);
-                //await _smcGripper.AlarmResetAsync(GripperId.RightCouplingLGripper);
-                //await _smcGripper.EnableAsync(GripperId.RightCouplingLGripper);
-                //await Task.Delay(1000);
-                //var s2 = await _smcGripper.IsEnabledAsync(GripperId.RightCouplingLGripper);
-                //await _smcGripper.AlarmResetAsync(GripperId.RightCouplingLGripper);
-                //var s1 = await _smcGripper.IsEnabledAsync(GripperId.RightCouplingLGripper);
-                ////await _smcGripper.HomeAsync(GripperId.RightCouplingLGripper);
-                //await _smcGripper.ReleaseAsync(GripperId.RightCouplingLGripper, 100, 100);
-                //await _smcGripper.ReleaseAsync(GripperId.RightCouplingLGripper, 100, 200);
-                //await _smcGripper.ReleaseAsync(GripperId.RightCouplingLGripper, 100, 300);
-                //await _smcGripper.GripAsync(GripperId.RightCouplingLGripper, 100, 100, 80, 80, 200);
-                Console.WriteLine();
             }
             catch (Exception ex)
             {
@@ -161,8 +140,8 @@ namespace AFOCS.App.ViewModels
                 _cameraRightUp,
                 _cameraRightDown,
                 _leadShineMotionCard,
+                _busAxisDevice,
                 _ioDevice,
-                //_boardDevice,
                 _smcGripper,
                 _leftCouplingLPressure,
                 _leftCouplingRPressure,
@@ -191,6 +170,7 @@ namespace AFOCS.App.ViewModels
                 CameraLeftUp => "左上相机",
                 CameraRightUp => "右上相机",
                 LeadShineMotionCard => "雷赛控制卡",
+                BusAxisDevice => "总线轴设备",
                 IODevice => "IO 设备",
                 LeftCouplingLPressureSensor => "左工位左耦合压力传感器",
                 LeftCouplingRPressureSensor => "左工位右耦合压力传感器",

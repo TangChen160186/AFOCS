@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using AFOCS.Infrastructure;
 
 namespace AFOCS.Devices
 {

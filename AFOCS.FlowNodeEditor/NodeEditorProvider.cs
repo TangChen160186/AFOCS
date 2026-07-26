@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.Composition;
+using System.ComponentModel.Composition;
 using AFOCS.Framework.Framework;
 using AFOCS.Framework.Framework.Services;
 

@@ -1,4 +1,4 @@
-﻿namespace AFOCS.Framework.Framework.Services
+namespace AFOCS.Framework.Framework.Services
 {
 	public enum PaneLocation
 	{

@@ -3,8 +3,8 @@ using System.ComponentModel.Composition;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using AFOCS.Devices;
+using AFOCS.Devices.Implementation;
 using AFOCS.Framework.Modules.Settings;
-using AFOCS.Infrastructure;
 using Caliburn.Micro;
 
 namespace AFOCS.App.ViewModels
@@ -13,7 +13,7 @@ namespace AFOCS.App.ViewModels
     [PartCreationPolicy(CreationPolicy.NonShared)]
     public class AxisSettingsViewModel : Screen, ISettingsEditor
     {
-        private readonly IMotionControlCard _motionCard;
+        private readonly IBusAxisDevice _busAxisDevice;
 
         private AxisId _selectedAxis;
         private AxisConfig _currentConfig = new();
@@ -33,15 +33,15 @@ namespace AFOCS.App.ViewModels
         private bool _isBusy;
 
         [ImportingConstructor]
-        public AxisSettingsViewModel(IMotionControlCard motionCard)
+        public AxisSettingsViewModel(IBusAxisDevice busAxisDevice)
         {
-            _motionCard = motionCard;
+            _busAxisDevice = busAxisDevice;
 
             AxisList = new ObservableCollection<AxisInfo>(
                 Enum.GetValues<AxisId>().Select(a => new AxisInfo
                 {
                     AxisId = a,
-                    DisplayName = GetAxisDisplayName(a),
+                    DisplayName = BusAxisDevice.GetAxisDisplayName(a),
                     AxisNumber = (int)a
                 }));
 
@@ -258,8 +258,8 @@ namespace AFOCS.App.ViewModels
             StatusMessage = "保存中...";
             try
             {
-                _motionCard.SetAxisConfig(_selectedAxis, _currentConfig);
-                await _motionCard.SaveAllAxisConfigsAsync();
+                _busAxisDevice.SetAxisConfig(_selectedAxis, _currentConfig);
+                await _busAxisDevice.SaveAllAxisConfigsAsync();
                 _isModify = false;
                 NotifyOfPropertyChange(nameof(IsModify));
                 StatusMessage = "已保存";
@@ -276,7 +276,7 @@ namespace AFOCS.App.ViewModels
 
         public void ResetToDefault()
         {
-            var defaults = _motionCard.GetDefaultAxisConfig(_selectedAxis);
+            var defaults = _busAxisDevice.GetDefaultAxisConfig(_selectedAxis);
             _currentConfig = defaults.Clone();
             _isModify = true;
             NotifyOfPropertyChange(nameof(IsModify));
@@ -286,9 +286,9 @@ namespace AFOCS.App.ViewModels
 
         public async Task MoveTestAsync()
         {
-            if (_motionCard == null || !_motionCard.IsConnected)
+            if (_busAxisDevice == null || !_busAxisDevice.IsConnected)
             {
-                StatusMessage = "运动控制卡未连接";
+                StatusMessage = "总线轴设备未连接";
                 return;
             }
 
@@ -296,18 +296,10 @@ namespace AFOCS.App.ViewModels
             StatusMessage = "运动中...";
             try
             {
-                var cfg = _currentConfig.Motion;
                 var distance = _movePositive ? _moveDistance : -_moveDistance;
-                var result = await _motionCard.MovePmoveAsync(
-                    axis: (ushort)_selectedAxis,
-                    distance: distance,
-                    equiv: 8000000,
-                    minVel: cfg.MinVel,
-                    maxVel: cfg.MaxVel,
-                    tacc: cfg.Tacc,
-                    tdec: cfg.Tdec,
-                    stopVel: cfg.StopVel,
-                    sPara: cfg.SPara);
+                var result = await _busAxisDevice.MovePmoveAsync(
+                    axisId: _selectedAxis,
+                    distance: distance);
 
                 if (result.IsSuccess)
                     StatusMessage = "移动完成";
@@ -326,14 +318,14 @@ namespace AFOCS.App.ViewModels
 
         public async Task StopAsync()
         {
-            if (_motionCard == null || !_motionCard.IsConnected)
+            if (_busAxisDevice == null || !_busAxisDevice.IsConnected)
             {
-                StatusMessage = "运动控制卡未连接";
+                StatusMessage = "总线轴设备未连接";
                 return;
             }
 
             StatusMessage = "停止中...";
-            var result = await _motionCard.StopAxisAsync((ushort)_selectedAxis);
+            var result = await _busAxisDevice.StopAxisAsync(_selectedAxis);
             StatusMessage = result.IsSuccess ? "已停止" : $"停止失败: {result.Message}";
             IsMoving = false;
         }
@@ -368,7 +360,7 @@ namespace AFOCS.App.ViewModels
 
         private void LoadAxisConfig(AxisId axisId)
         {
-            var config = _motionCard.GetAxisConfig(axisId);
+            var config = _busAxisDevice.GetAxisConfig(axisId);
             _currentConfig = config.Clone();
             _isModify = false;
             NotifyOfPropertyChange(nameof(IsModify));
@@ -395,36 +387,6 @@ namespace AFOCS.App.ViewModels
             NotifyOfPropertyChange(nameof(SoftLimitEnabled));
             NotifyOfPropertyChange(nameof(MaxSpeed));
             NotifyOfPropertyChange(nameof(PulsePerRev));
-        }
-
-        private static string GetAxisDisplayName(AxisId axisId)
-        {
-            return axisId switch
-            {
-                // 左工位
-                AxisId.LeftCamUpX => "左工位-上相机模组X轴",
-                AxisId.LeftCamUpY => "左工位-上相机模组Y轴",
-                AxisId.LeftCamUpZ => "左工位-上相机模组Z轴",
-                AxisId.LeftCamSideY => "左工位-侧相机Y轴",
-                AxisId.LeftCouplingLThetaX => "左工位-左耦合θX轴",
-                AxisId.LeftCouplingLThetaY => "左工位-左耦合θY轴",
-                AxisId.LeftCouplingLThetaZ => "左工位-左耦合θZ轴",
-                AxisId.LeftCouplingRThetaX => "左工位-右耦合θX轴",
-                AxisId.LeftCouplingRThetaY => "左工位-右耦合θY轴",
-                AxisId.LeftCouplingRThetaZ => "左工位-右耦合θZ轴",
-                // 右工位
-                AxisId.RightCamUpX => "右工位-上相机模组X轴",
-                AxisId.RightCamUpY => "右工位-上相机模组Y轴",
-                AxisId.RightCamUpZ => "右工位-上相机模组Z轴",
-                AxisId.RightCamSideY => "右工位-侧相机Y轴",
-                AxisId.RightCouplingLThetaX => "右工位-左耦合θX轴",
-                AxisId.RightCouplingLThetaY => "右工位-左耦合θY轴",
-                AxisId.RightCouplingLThetaZ => "右工位-左耦合θZ轴",
-                AxisId.RightCouplingRThetaX => "右工位-右耦合θX轴",
-                AxisId.RightCouplingRThetaY => "右工位-右耦合θY轴",
-                AxisId.RightCouplingRThetaZ => "右工位-右耦合θZ轴",
-                _ => axisId.ToString()
-            };
         }
     }
 
