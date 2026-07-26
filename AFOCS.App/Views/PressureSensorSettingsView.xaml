@@ -47,7 +47,18 @@
             <Button cal:Message.Attach="SaveAsync"
                     Content="保存配置" Width="100" Padding="8,5"
                     HorizontalAlignment="Left" Margin="0,0,0,8" />
-
+            <!-- ========== 从站地址 ========== -->
+            <Border Background="{StaticResource SectionBg}" CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="从站地址" FontWeight="Bold" Margin="0,0,0,6" />
+                    <DockPanel>
+                        <TextBlock Text="Slave Address" VerticalAlignment="Center" Width="90"
+                                   Foreground="{StaticResource LabelFg}" FontSize="11" />
+                        <TextBox Text="{Binding SlaveAddress, UpdateSourceTrigger=PropertyChanged}" Width="80"
+                                 VerticalContentAlignment="Center" Height="24" />
+                    </DockPanel>
+                </StackPanel>
+            </Border>
             <!-- ========== 实时压力值 ========== -->
             <Border Background="{StaticResource SectionBg}" CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
                 <StackPanel>
@@ -184,18 +195,7 @@
                 </StackPanel>
             </Border>
 
-            <!-- ========== 从站地址 ========== -->
-            <Border Background="{StaticResource SectionBg}" CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
-                <StackPanel>
-                    <TextBlock Text="从站地址" FontWeight="Bold" Margin="0,0,0,6" />
-                    <DockPanel>
-                        <TextBlock Text="Slave Address" VerticalAlignment="Center" Width="90"
-                                   Foreground="{StaticResource LabelFg}" FontSize="11" />
-                        <TextBox Text="{Binding SlaveAddress, UpdateSourceTrigger=PropertyChanged}" Width="80"
-                                 VerticalContentAlignment="Center" Height="24" />
-                    </DockPanel>
-                </StackPanel>
-            </Border>
+    
 
             <!-- ========== 通道映射 ========== -->
             <Border Background="{StaticResource SectionBg}" CornerRadius="4" Padding="10,8" Margin="0,0,0,8">

@@ -9,4 +9,11 @@ namespace AFOCS.App.Views
             InitializeComponent();
         }
     }
+
+    public class PressureSensorLeftCouplingLSettingsView : PressureSensorSettingsView;
+    public class PressureSensorLeftCouplingRSettingsView : PressureSensorSettingsView;
+    public class PressureSensorLeftDispenseSettingsView : PressureSensorSettingsView;
+    public class PressureSensorRightCouplingLSettingsView : PressureSensorSettingsView;
+    public class PressureSensorRightCouplingRSettingsView : PressureSensorSettingsView;
+    public class PressureSensorRightDispenseSettingsView : PressureSensorSettingsView;
 }

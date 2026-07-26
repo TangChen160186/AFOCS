@@ -8,7 +8,7 @@ namespace AFOCS.Devices.Implementation
 {
     public class CameraLightConfig : ICloneable
     {
-        public string PortName { get; set; } = "COM100";
+        public string PortName { get; set; } = "COM7";
         public int BaudRate { get; set; } = 19200;
         public int TimeoutMs { get; set; } = 3000;
 

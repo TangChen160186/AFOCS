@@ -9,4 +9,9 @@ namespace AFOCS.App.Views
             InitializeComponent();
         }
     }
+
+    public class CameraLeftUpSettingsView : CameraSettingsView;
+    public class CameraLeftDownSettingsView : CameraSettingsView;
+    public class CameraRightUpSettingsView : CameraSettingsView;
+    public class CameraRightDownSettingsView : CameraSettingsView;
 }

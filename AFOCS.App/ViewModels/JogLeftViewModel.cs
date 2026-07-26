@@ -34,8 +34,8 @@ namespace AFOCS.App.ViewModels
             AddLinearAxis(LinearAxisId.LeftCouplingRY);
             AddLinearAxis(LinearAxisId.LeftCouplingRZ);
 
-            AddGripper(GripperId.LeftCouplingLGripper);
-            AddGripper(GripperId.LeftCouplingRGripper);
+            AddGripper(0, "左夹爪");
+            AddGripper(1, "右夹爪");
         }
     }
 

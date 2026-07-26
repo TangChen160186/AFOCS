@@ -62,7 +62,10 @@ namespace AFOCS.App.ViewModels
 
         [Import] private ISPBoardDevice _boardDevice = null!;
 
-        [Import] private ISmcGripper _smcGripper = null!;
+        [Import] private LeftCouplingLGripper _leftCouplingLGripper = null!;
+        [Import] private LeftCouplingRGripper _leftCouplingRGripper = null!;
+        [Import] private RightCouplingLGripper _rightCouplingLGripper = null!;
+        [Import] private RightCouplingRGripper _rightCouplingRGripper = null!;
         [Import] private IWindowManager _windowManager = null!;
 
         [Import] private IMainWindow _mainWindow = null!;
@@ -128,27 +131,40 @@ namespace AFOCS.App.ViewModels
 
             List<IDevice> devices =
             [
-                _programmablePowerSupply,
-                _opticalSwitch,
-                _heightGauge,
-                _opticalPowerMeterLeft,
-                _opticalPowerMeterRight,
-                _cameraLight,
 
-                _cameraLeftUp,
-                _cameraLeftDown,
-                _cameraRightUp,
-                _cameraRightDown,
                 _leadShineMotionCard,
                 _busAxisDevice,
                 _ioDevice,
-                _smcGripper,
+
+                _leftCouplingLGripper,
+                _leftCouplingRGripper,
+                _rightCouplingLGripper,
+                _rightCouplingRGripper,
+
                 _leftCouplingLPressure,
                 _leftCouplingRPressure,
                 _leftDispensePressure,
                 _rightCouplingLPressure,
                 _rightCouplingRPressure,
                 _rightDispensePressure,
+
+
+
+                //_programmablePowerSupply,
+
+                //_opticalSwitch,
+                //_heightGauge,
+                //_opticalPowerMeterLeft,
+                //_opticalPowerMeterRight,
+
+                //_cameraLight,
+
+                //_cameraLeftUp,
+                //_cameraLeftDown,
+                //_cameraRightUp,
+                //_cameraRightDown,
+
+              
             ];
             return devices;
         }
@@ -172,6 +188,10 @@ namespace AFOCS.App.ViewModels
                 LeadShineMotionCard => "雷赛控制卡",
                 BusAxisDevice => "总线轴设备",
                 IODevice => "IO 设备",
+                LeftCouplingLGripper => "左耦合左夹爪",
+                LeftCouplingRGripper => "左耦合右夹爪",
+                RightCouplingLGripper => "右耦合左夹爪",
+                RightCouplingRGripper => "右耦合右夹爪",
                 LeftCouplingLPressureSensor => "左工位左耦合压力传感器",
                 LeftCouplingRPressureSensor => "左工位右耦合压力传感器",
                 LeftDispensePressureSensor => "左工位点胶压力传感器",

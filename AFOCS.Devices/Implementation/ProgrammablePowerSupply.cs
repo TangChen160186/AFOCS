@@ -25,7 +25,7 @@ namespace AFOCS.Devices.Implementation
     [method: ImportingConstructor]
     public class ProgrammablePowerSupply(IConfigService configService, ILogger logger) : IProgrammablePowerSupply
     {
-        private ProgrammablePowerSupplyConfig _config = null!;
+        private ProgrammablePowerSupplyConfig _config = new();
         public bool IsConnected { get; private set; }
         private MessageBasedSession? _session;
         private ResourceManager? _resourceManager;

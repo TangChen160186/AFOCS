@@ -8,21 +8,6 @@ namespace AFOCS.Infrastructure
     }
 
     /// <summary>
-    /// 夹爪枚举定义（主从站控制）
-    /// </summary>
-    public enum GripperId
-    {
-        /// <summary>左工位左耦合夹爪</summary>
-        LeftCouplingLGripper = 10,
-        /// <summary>左工位右耦合夹爪</summary>
-        LeftCouplingRGripper = 11,
-        /// <summary>右工位左耦合夹爪</summary>
-        RightCouplingLGripper = 22,
-        /// <summary>右工位右耦合夹爪</summary>
-        RightCouplingRGripper = 23,
-    }
-
-    /// <summary>
     /// 压力传感器枚举定义（EtherCAT 总线控制）
     /// </summary>
     public enum PressureSensorId

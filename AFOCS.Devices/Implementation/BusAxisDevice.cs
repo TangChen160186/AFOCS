@@ -650,32 +650,6 @@ namespace AFOCS.Devices.Implementation
             };
         }
 
-        public static string GetAxisShortName(AxisId id)
-        {
-            return id switch
-            {
-                AxisId.LeftCamUpX => "上视X",
-                AxisId.LeftCamUpY => "上视Y",
-                AxisId.LeftCamUpZ => "上视Z",
-                AxisId.LeftCamSideY => "侧视Y",
-                AxisId.LeftCouplingLThetaX => "LθX",
-                AxisId.LeftCouplingLThetaY => "LθY",
-                AxisId.LeftCouplingLThetaZ => "LθZ",
-                AxisId.LeftCouplingRThetaX => "RθX",
-                AxisId.LeftCouplingRThetaY => "RθY",
-                AxisId.LeftCouplingRThetaZ => "RθZ",
-                AxisId.RightCamUpX => "上视X",
-                AxisId.RightCamUpY => "上视Y",
-                AxisId.RightCamUpZ => "上视Z",
-                AxisId.RightCamSideY => "侧视Y",
-                AxisId.RightCouplingLThetaX => "LθX",
-                AxisId.RightCouplingLThetaY => "LθY",
-                AxisId.RightCouplingLThetaZ => "LθZ",
-                AxisId.RightCouplingRThetaX => "RθX",
-                AxisId.RightCouplingRThetaY => "RθY",
-                AxisId.RightCouplingRThetaZ => "RθZ",
-                _ => id.ToString(),
-            };
-        }
+     
     }
 }

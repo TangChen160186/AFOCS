@@ -273,37 +273,25 @@ namespace AFOCS.App.ViewModels
 
     [Export(typeof(ISettingsEditor))]
     [PartCreationPolicy(CreationPolicy.NonShared)]
-    public class CameraLeftUpSettingsViewModel : CameraSettingsViewModel
-    {
-        [ImportingConstructor]
-        public CameraLeftUpSettingsViewModel(CameraLeftUp camera, IToastService toastService)
-            : base("左上", camera, toastService) { }
-    }
+    [method: ImportingConstructor]
+    public class CameraLeftUpSettingsViewModel(CameraLeftUp camera, IToastService toastService)
+        : CameraSettingsViewModel("左上", camera, toastService);
 
     [Export(typeof(ISettingsEditor))]
     [PartCreationPolicy(CreationPolicy.NonShared)]
-    public class CameraLeftDownSettingsViewModel : CameraSettingsViewModel
-    {
-        [ImportingConstructor]
-        public CameraLeftDownSettingsViewModel(CameraLeftDown camera, IToastService toastService)
-            : base("左下", camera, toastService) { }
-    }
+    [method: ImportingConstructor]
+    public class CameraLeftDownSettingsViewModel(CameraLeftDown camera, IToastService toastService)
+        : CameraSettingsViewModel("左下", camera, toastService);
 
     [Export(typeof(ISettingsEditor))]
     [PartCreationPolicy(CreationPolicy.NonShared)]
-    public class CameraRightUpSettingsViewModel : CameraSettingsViewModel
-    {
-        [ImportingConstructor]
-        public CameraRightUpSettingsViewModel(CameraRightUp camera, IToastService toastService)
-            : base("右上", camera, toastService) { }
-    }
+    [method: ImportingConstructor]
+    public class CameraRightUpSettingsViewModel(CameraRightUp camera, IToastService toastService)
+        : CameraSettingsViewModel("右上", camera, toastService);
 
     [Export(typeof(ISettingsEditor))]
     [PartCreationPolicy(CreationPolicy.NonShared)]
-    public class CameraRightDownSettingsViewModel : CameraSettingsViewModel
-    {
-        [ImportingConstructor]
-        public CameraRightDownSettingsViewModel(CameraRightDown camera, IToastService toastService)
-            : base("右下", camera, toastService) { }
-    }
+    [method: ImportingConstructor]
+    public class CameraRightDownSettingsViewModel(CameraRightDown camera, IToastService toastService)
+        : CameraSettingsViewModel("右下", camera, toastService);
 }

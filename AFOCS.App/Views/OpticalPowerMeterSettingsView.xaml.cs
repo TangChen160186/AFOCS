@@ -9,4 +9,8 @@ namespace AFOCS.App.Views
             InitializeComponent();
         }
     }
+
+
+    public class OpticalPowerMeterLeftSettingsView : OpticalPowerMeterSettingsView;
+    public class OpticalPowerMeterRightSettingsView : OpticalPowerMeterSettingsView;
 }

@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using AFOCS.Devices;
-using AFOCS.Devices.Implementation;
 using AFOCS.Framework.Framework;
 using AFOCS.Framework.Framework.Services;
 using AFOCS.Infrastructure;
@@ -234,7 +233,7 @@ namespace AFOCS.App.ViewModels
 
         protected void AddBusAxis(AxisId id, ObservableCollection<JogAxisItem> group, string? shortName = null)
         {
-            group.Add(new JogAxisItem(this, AxisKind.BusAxis, (int)id, shortName ?? BusAxisDevice.GetAxisShortName(id)));
+            group.Add(new JogAxisItem(this, AxisKind.BusAxis, (int)id, shortName ?? GetAxisShortName(id)));
         }
 
         protected void AddLinearAxis(LinearAxisId id, string? shortName = null)
@@ -242,9 +241,9 @@ namespace AFOCS.App.ViewModels
             LinearAxes.Add(new JogAxisItem(this, AxisKind.LinearAxis, (int)id, shortName ?? GetLinearShortName(id)));
         }
 
-        protected void AddGripper(GripperId id, string? shortName = null)
+        protected void AddGripper(int id, string name)
         {
-            Grippers.Add(new JogAxisItem(this, AxisKind.Gripper, (int)id, shortName ?? GetGripperShortName(id)));
+            Grippers.Add(new JogAxisItem(this, AxisKind.Gripper, id, name));
         }
 
         // ---- 短名称（界面用） ----
@@ -266,13 +265,32 @@ namespace AFOCS.App.ViewModels
             _ => id.ToString(),
         };
 
-        protected static string GetGripperShortName(GripperId id) => id switch
+        public static string GetAxisShortName(AxisId id)
         {
-            GripperId.LeftCouplingLGripper => "左夹爪",
-            GripperId.LeftCouplingRGripper => "右夹爪",
-            GripperId.RightCouplingLGripper => "左夹爪",
-            GripperId.RightCouplingRGripper => "右夹爪",
-            _ => id.ToString(),
-        };
+            return id switch
+            {
+                AxisId.LeftCamUpX => "上视X",
+                AxisId.LeftCamUpY => "上视Y",
+                AxisId.LeftCamUpZ => "上视Z",
+                AxisId.LeftCamSideY => "侧视Y",
+                AxisId.LeftCouplingLThetaX => "LθX",
+                AxisId.LeftCouplingLThetaY => "LθY",
+                AxisId.LeftCouplingLThetaZ => "LθZ",
+                AxisId.LeftCouplingRThetaX => "RθX",
+                AxisId.LeftCouplingRThetaY => "RθY",
+                AxisId.LeftCouplingRThetaZ => "RθZ",
+                AxisId.RightCamUpX => "上视X",
+                AxisId.RightCamUpY => "上视Y",
+                AxisId.RightCamUpZ => "上视Z",
+                AxisId.RightCamSideY => "侧视Y",
+                AxisId.RightCouplingLThetaX => "LθX",
+                AxisId.RightCouplingLThetaY => "LθY",
+                AxisId.RightCouplingLThetaZ => "LθZ",
+                AxisId.RightCouplingRThetaX => "RθX",
+                AxisId.RightCouplingRThetaY => "RθY",
+                AxisId.RightCouplingRThetaZ => "RθZ",
+                _ => id.ToString(),
+            };
+        }
     }
 }
