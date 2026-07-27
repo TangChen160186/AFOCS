@@ -141,21 +141,21 @@ namespace AFOCS.App.ViewModels
             List<IDevice> devices =
             [
 
-                //_leadShineMotionCard,
-                //_busAxisDevice,
-                //_ioDevice,
+                _leadShineMotionCard,
+                _busAxisDevice,
+                _ioDevice,
 
-                //_leftCouplingLGripper,
-                //_leftCouplingRGripper,
-                //_rightCouplingLGripper,
-                //_rightCouplingRGripper,
+                _leftCouplingLGripper,
+                _leftCouplingRGripper,
+                _rightCouplingLGripper,
+                _rightCouplingRGripper,
 
-                //_leftCouplingLPressure,
-                //_leftCouplingRPressure,
-                //_leftDispensePressure,
-                //_rightCouplingLPressure,
-                //_rightCouplingRPressure,
-                //_rightDispensePressure,
+                _leftCouplingLPressure,
+                _leftCouplingRPressure,
+                _leftDispensePressure,
+                _rightCouplingLPressure,
+                _rightCouplingRPressure,
+                _rightDispensePressure,
 
                 _arAkribisLeftCouplingL,
                 _akribisLeftCouplingR,
