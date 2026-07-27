@@ -1,12 +1,12 @@
+using System.ComponentModel.Composition;
+using System.Windows;
+using System.Windows.Media;
 using AFOCS.Framework.Framework.Commands;
 using AFOCS.Framework.Framework.Services;
 using AFOCS.Framework.Framework.Themes;
 using AFOCS.Framework.Modules.MainMenu;
 using AFOCS.Framework.Properties;
 using Caliburn.Micro;
-using System.ComponentModel.Composition;
-using System.Windows;
-using System.Windows.Media;
 
 namespace AFOCS.Framework.Modules.MainWindow.ViewModels
 {

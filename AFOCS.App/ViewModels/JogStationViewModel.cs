@@ -182,7 +182,7 @@ namespace AFOCS.App.ViewModels
                     await BusAxisDevice.MovePmoveAsync(
                         axisId: axisId,
                         distance: dist,
-                        overrideMaxVel: JogSpeed > 0 ? JogSpeed : null);
+                        maxVel: JogSpeed > 0 ? JogSpeed : null);
                 }
                 else if (item.Kind == AxisKind.LinearAxis)
                 {

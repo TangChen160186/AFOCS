@@ -21,11 +21,26 @@ namespace AFOCS.Devices
 
         // ========== 运动控制 ==========
 
-        /// <summary>定长运动（点位运动，自动从 AxisConfig 读取参数）</summary>
-        Task<Result> MovePmoveAsync(AxisId axisId, double distance, ushort posiMode = 0, double? overrideMaxVel = null, int timeoutMs = 0);
+        /// <summary>定长运动（点位运动），参数为 null 时自动从 AxisConfig 读取默认值</summary>
+        Task<Result> MovePmoveAsync(AxisId axisId, double distance,
+            ushort posiMode = 0,
+            double? minVel = null,
+            double? maxVel = null,
+            double? tacc = null,
+            double? tdec = null,
+            double? stopVel = null,
+            double? sPara = null,
+            int timeoutMs = 0);
 
-        /// <summary>回零运动（自动从 AxisConfig 读取参数）</summary>
-        Task<Result> MoveHomeAsync(AxisId axisId, int timeoutMs = 30000);
+        /// <summary>回零运动，参数为 null 时自动从 AxisConfig 读取默认值</summary>
+        Task<Result> MoveHomeAsync(AxisId axisId,
+            ushort? homeMode = null,
+            double? lowVel = null,
+            double? highVel = null,
+            double? tacc = null,
+            double? tdec = null,
+            double? offsetPos = null,
+            int timeoutMs = 30000);
 
         /// <summary>停止指定轴</summary>
         Task<Result> StopAxisAsync(AxisId axisId, bool emergency = false);
@@ -33,8 +48,16 @@ namespace AFOCS.Devices
         /// <summary>紧急停止所有轴</summary>
         Task<Result> EmergencyStopAllAsync();
 
-        /// <summary>直线插补（多轴同步）</summary>
-        Task<Result> MoveLineAsync(AxisId[] axisList, double[] targetPositions, ushort posiMode = 0, double? overrideMaxVel = null, int timeoutMs = 0);
+        /// <summary>直线插补（多轴同步），参数为 null 时自动从第一个轴的 AxisConfig 读取默认值</summary>
+        Task<Result> MoveLineAsync(AxisId[] axisList, double[] targetPositions,
+            ushort posiMode = 0,
+            double? minVel = null,
+            double? maxVel = null,
+            double? tacc = null,
+            double? tdec = null,
+            double? stopVel = null,
+            double? sPara = null,
+            int timeoutMs = 0);
 
         /// <summary>读取轴当前位置</summary>
         Task<Result<double>> GetPositionAsync(AxisId axisId);

@@ -1,7 +1,7 @@
-﻿using AFOCS.Communication;
+﻿using System.ComponentModel.Composition;
+using AFOCS.Communication;
 using AFOCS.Infrastructure;
 using Serilog;
-using System.ComponentModel.Composition;
 
 namespace AFOCS.Devices.Implementation
 {

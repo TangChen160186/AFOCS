@@ -246,12 +246,24 @@ namespace AFOCS.Devices.Implementation
 
         // ========== 运动控制 ==========
 
-        public async Task<Result> MovePmoveAsync(AxisId axisId, double distance, ushort posiMode = 0,
-            double? overrideMaxVel = null, int timeoutMs = 0)
+        public async Task<Result> MovePmoveAsync(AxisId axisId, double distance,
+            ushort posiMode = 0,
+            double? minVel = null,
+            double? maxVel = null,
+            double? tacc = null,
+            double? tdec = null,
+            double? stopVel = null,
+            double? sPara = null,
+            int timeoutMs = 0)
         {
             var axis = (ushort)axisId;
             var cfg = GetAxisConfig(axisId).Motion;
-            var maxVel = overrideMaxVel ?? cfg.MaxVel;
+            var finalMinVel = minVel ?? cfg.MinVel;
+            var finalMaxVel = maxVel ?? cfg.MaxVel;
+            var finalTacc = tacc ?? cfg.Tacc;
+            var finalTdec = tdec ?? cfg.Tdec;
+            var finalStopVel = stopVel ?? cfg.StopVel;
+            var finalSPara = sPara ?? cfg.SPara;
 
             try
             {
@@ -290,16 +302,16 @@ namespace AFOCS.Devices.Implementation
                 if (!equivResult.IsSuccess) return Result.Fail($"设置脉冲当量失败: {equivResult.Message}");
 
                 // 设置速度曲线
-                var profileResult = await motionCard.SetProfileUnitAsync(axis, cfg.MinVel, maxVel, cfg.Tacc, cfg.Tdec, cfg.StopVel);
+                var profileResult = await motionCard.SetProfileUnitAsync(axis, finalMinVel, finalMaxVel, finalTacc, finalTdec, finalStopVel);
                 if (!profileResult.IsSuccess) return Result.Fail($"设置速度曲线失败: {profileResult.Message}");
 
                 // S 段曲线
-                if (cfg.SPara > 0)
+                if (finalSPara > 0)
                 {
-                    await motionCard.SetSProfileAsync(axis, 0, cfg.SPara);
+                    await motionCard.SetSProfileAsync(axis, 0, finalSPara);
                 }
 
-                logger.Information("轴 {Axis} 定长运动启动，距离={Dist}，速度={Vel}", axis, distance, maxVel);
+                logger.Information("轴 {Axis} 定长运动启动，距离={Dist}，速度={Vel}", axis, distance, finalMaxVel);
 
                 // 启动运动
                 var moveResult = await motionCard.PmoveUnitAsync(axis, distance, posiMode);
@@ -333,10 +345,23 @@ namespace AFOCS.Devices.Implementation
             }
         }
 
-        public async Task<Result> MoveHomeAsync(AxisId axisId, int timeoutMs = 30000)
+        public async Task<Result> MoveHomeAsync(AxisId axisId,
+            ushort? homeMode = null,
+            double? lowVel = null,
+            double? highVel = null,
+            double? tacc = null,
+            double? tdec = null,
+            double? offsetPos = null,
+            int timeoutMs = 30000)
         {
             var axis = (ushort)axisId;
             var cfg = GetAxisConfig(axisId).Home;
+            var finalHomeMode = homeMode ?? cfg.HomeMode;
+            var finalLowVel = lowVel ?? cfg.LowVel;
+            var finalHighVel = highVel ?? cfg.HighVel;
+            var finalTacc = tacc ?? cfg.Tacc;
+            var finalTdec = tdec ?? cfg.Tdec;
+            var finalOffsetPos = offsetPos ?? cfg.OffsetPos;
 
             try
             {
@@ -374,10 +399,10 @@ namespace AFOCS.Devices.Implementation
                     return Result.Fail("正负限位同时触发，请检查限位传感器");
 
                 // 设置回零参数
-                var homeResult = await motionCard.SetHomeProfileAsync(axis, cfg.HomeMode, cfg.LowVel, cfg.HighVel, cfg.Tacc, cfg.Tdec, cfg.OffsetPos);
+                var homeResult = await motionCard.SetHomeProfileAsync(axis, finalHomeMode, finalLowVel, finalHighVel, finalTacc, finalTdec, finalOffsetPos);
                 if (!homeResult.IsSuccess) return Result.Fail($"设置回零参数失败: {homeResult.Message}");
 
-                logger.Information("轴 {Axis} 回零启动，模式={Mode}", axis, cfg.HomeMode);
+                logger.Information("轴 {Axis} 回零启动，模式={Mode}", axis, finalHomeMode);
 
                 // 启动回零
                 var startResult = await motionCard.HomeMoveAsync(axis);
@@ -453,7 +478,14 @@ namespace AFOCS.Devices.Implementation
         }
 
         public async Task<Result> MoveLineAsync(AxisId[] axisList, double[] targetPositions,
-            ushort posiMode = 0, double? overrideMaxVel = null, int timeoutMs = 0)
+            ushort posiMode = 0,
+            double? minVel = null,
+            double? maxVel = null,
+            double? tacc = null,
+            double? tdec = null,
+            double? stopVel = null,
+            double? sPara = null,
+            int timeoutMs = 0)
         {
             ushort crd = 0;
             try
@@ -516,13 +548,18 @@ namespace AFOCS.Devices.Implementation
 
                 // 获取速度参数（使用第一个轴的配置）
                 var firstCfg = GetAxisConfig(axisList[0]).Motion;
-                var maxVel = overrideMaxVel ?? firstCfg.MaxVel;
+                var finalMinVel = minVel ?? firstCfg.MinVel;
+                var finalMaxVel = maxVel ?? firstCfg.MaxVel;
+                var finalTacc = tacc ?? firstCfg.Tacc;
+                var finalTdec = tdec ?? firstCfg.Tdec;
+                var finalStopVel = stopVel ?? firstCfg.StopVel;
+                var finalSPara = sPara ?? firstCfg.SPara;
 
-                var vpResult = await motionCard.SetVectorProfileUnitAsync(crd, firstCfg.MinVel, maxVel, firstCfg.Tacc, firstCfg.Tdec, firstCfg.StopVel);
+                var vpResult = await motionCard.SetVectorProfileUnitAsync(crd, finalMinVel, finalMaxVel, finalTacc, finalTdec, finalStopVel);
                 if (!vpResult.IsSuccess) return Result.Fail($"设置插补速度曲线失败: {vpResult.Message}");
 
-                if (firstCfg.SPara > 0)
-                    await motionCard.SetVectorSProfileAsync(crd, 0, firstCfg.SPara);
+                if (finalSPara > 0)
+                    await motionCard.SetVectorSProfileAsync(crd, 0, finalSPara);
 
                 logger.Information("坐标系 {Crd} 直线插补启动", crd);
 

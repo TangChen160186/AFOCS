@@ -1,13 +1,13 @@
-﻿using AFOCS.Framework;
+﻿using System.ComponentModel.Composition;
+using System.ComponentModel.Composition.Hosting;
+using System.Windows;
+using System.Windows.Threading;
+using AFOCS.Framework;
 using AFOCS.Framework.Framework.Services;
 using Caliburn.Micro;
 using Serilog;
 using Serilog.Core;
 using Serilog.Sinks.SystemConsole.Themes;
-using System.ComponentModel.Composition;
-using System.ComponentModel.Composition.Hosting;
-using System.Windows;
-using System.Windows.Threading;
 
 namespace AFOCS.App
 {

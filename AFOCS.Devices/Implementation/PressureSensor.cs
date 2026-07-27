@@ -12,7 +12,7 @@ public abstract class PressureSensor(IMotionControlCard motionCard, IConfigServi
 {
     protected readonly ILogger Logger = logger;
 
-    private PressureSensorConfig _config = null!;
+    private PressureSensorConfig _config = new();
     private CancellationTokenSource? _cts;
     private readonly Lock _lock = new();
 

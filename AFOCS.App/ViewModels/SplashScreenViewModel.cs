@@ -66,6 +66,8 @@ namespace AFOCS.App.ViewModels
         [Import] private LeftCouplingRGripper _leftCouplingRGripper = null!;
         [Import] private RightCouplingLGripper _rightCouplingLGripper = null!;
         [Import] private RightCouplingRGripper _rightCouplingRGripper = null!;
+
+
         [Import] private IWindowManager _windowManager = null!;
 
         [Import] private IMainWindow _mainWindow = null!;
@@ -78,6 +80,13 @@ namespace AFOCS.App.ViewModels
         [Import] private RightCouplingLPressureSensor _rightCouplingLPressure = null!;
         [Import] private RightCouplingRPressureSensor _rightCouplingRPressure = null!;
         [Import] private RightDispensePressureSensor _rightDispensePressure = null!;
+
+        [Import] private AkribisLeftCouplingL _arAkribisLeftCouplingL;
+        [Import] private AkribisLeftCouplingR _akribisLeftCouplingR;
+        [Import] private AkribisRightCouplingL _akribisRightCouplingL;
+        [Import] private AkribisRightCouplingR _akribisRightCouplingR;
+
+        [ImportMany] private IAkribisMotion[] _akribisMotions = null!;
         protected override Task OnActivatedAsync(CancellationToken cancellationToken)
         {
             InitializeDevices();
@@ -132,23 +141,26 @@ namespace AFOCS.App.ViewModels
             List<IDevice> devices =
             [
 
-                _leadShineMotionCard,
-                _busAxisDevice,
-                _ioDevice,
+                //_leadShineMotionCard,
+                //_busAxisDevice,
+                //_ioDevice,
 
-                _leftCouplingLGripper,
-                _leftCouplingRGripper,
-                _rightCouplingLGripper,
-                _rightCouplingRGripper,
+                //_leftCouplingLGripper,
+                //_leftCouplingRGripper,
+                //_rightCouplingLGripper,
+                //_rightCouplingRGripper,
 
-                _leftCouplingLPressure,
-                _leftCouplingRPressure,
-                _leftDispensePressure,
-                _rightCouplingLPressure,
-                _rightCouplingRPressure,
-                _rightDispensePressure,
+                //_leftCouplingLPressure,
+                //_leftCouplingRPressure,
+                //_leftDispensePressure,
+                //_rightCouplingLPressure,
+                //_rightCouplingRPressure,
+                //_rightDispensePressure,
 
-
+                _arAkribisLeftCouplingL,
+                _akribisLeftCouplingR,
+                _akribisRightCouplingL,
+                _akribisRightCouplingR,
 
                 //_programmablePowerSupply,
 
@@ -198,6 +210,10 @@ namespace AFOCS.App.ViewModels
                 RightCouplingLPressureSensor => "右工位左耦合压力传感器",
                 RightCouplingRPressureSensor => "右工位右耦合压力传感器",
                 RightDispensePressureSensor => "右工位点胶压力传感器",
+                LeftCouplingLConfig => "左工位左耦合轴",
+                LeftCouplingRConfig => "左工位右耦合轴",
+                RightCouplingLConfig => "右工位左耦合轴",
+                RightCouplingRConfig => "右工位右耦合轴",
                 _ => device.GetType().Name
             };
         }

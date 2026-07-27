@@ -1,7 +1,7 @@
-﻿using AFOCS.Framework.Framework;
-using Caliburn.Micro;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.ComponentModel.Composition;
+using AFOCS.Framework.Framework;
+using Caliburn.Micro;
 
 namespace AFOCS.Framework.Test.Modules.Test.ViewModels
 {

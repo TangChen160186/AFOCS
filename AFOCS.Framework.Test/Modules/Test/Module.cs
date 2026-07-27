@@ -1,9 +1,9 @@
-﻿using AFOCS.Framework.Framework;
+﻿using System.ComponentModel.Composition;
+using AFOCS.Framework.Framework;
 using AFOCS.Framework.Framework.Menus;
 using AFOCS.Framework.Test.Modules.Test.Commands;
 using AFOCS.Framework.Test.Modules.Test.ViewModels;
 using Caliburn.Micro;
-using System.ComponentModel.Composition;
 
 namespace AFOCS.Framework.Test.Modules.Test
 {

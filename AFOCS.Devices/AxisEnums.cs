@@ -49,12 +49,15 @@ namespace AFOCS.Devices
         LeftCouplingLX = 0,
         LeftCouplingLY = 1,
         LeftCouplingLZ = 2,
+
         LeftCouplingRX = 3,
         LeftCouplingRY = 4,
         LeftCouplingRZ = 5,
+
         RightCouplingLX = 6,
         RightCouplingLY = 7,
         RightCouplingLZ = 8,
+
         RightCouplingRX = 9,
         RightCouplingRY = 10,
         RightCouplingRZ = 11,

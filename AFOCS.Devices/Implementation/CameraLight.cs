@@ -57,7 +57,7 @@ namespace AFOCS.Devices.Implementation
             if (success)
                 return Result.Success("相机光源初始化成功");
             
-            return Result.Fail(ResultCode.Fail, "COM口不对");
+            return Result.Fail(ResultCode.Fail, "可能是 COM口不对");
         }
 
         public async Task<Result> StopAsync(CancellationToken token = default)
