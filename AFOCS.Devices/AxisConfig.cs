@@ -13,11 +13,11 @@ namespace AFOCS.Devices
 
         /// <summary>起始速度（unit/s）</summary>
         [Description("起始速度 (unit/s)")]
-        public double MinVel { get; set; } = 10;
+        public double MinVel { get; set; } = 2;
 
         /// <summary>最大速度（unit/s）</summary>
         [Description("最大速度 (unit/s)")]
-        public double MaxVel { get; set; } = 100;
+        public double MaxVel { get; set; } = 5;
 
         /// <summary>加速时间（s）</summary>
         [Description("加速时间 (s)")]
@@ -29,11 +29,11 @@ namespace AFOCS.Devices
 
         /// <summary>停止速度（unit/s）</summary>
         [Description("停止速度 (unit/s)")]
-        public double StopVel { get; set; } = 10;
+        public double StopVel { get; set; } = 0;
 
         /// <summary>S段曲线时间（s），0 表示梯形曲线</summary>
         [Description("S段时间 (s)")]
-        public double SPara { get; set; } = 0;
+        public double SPara { get; set; } = 0.1;
 
         public AxisMotionParams Clone() => new()
         {
@@ -83,7 +83,9 @@ namespace AFOCS.Devices
             HomeMode = HomeMode, LowVel = LowVel, HighVel = HighVel,
             Tacc = Tacc, Tdec = Tdec, OffsetPos = OffsetPos,
         };
-
+        /// <summary>脉冲当量（pulse/unit），如 1000 表示 1000 脉冲 = 1mm</summary>
+        [Description("脉冲当量 (pulse/unit)")]
+        public double Equiv { get; set; } = 1000;
         object ICloneable.Clone() => Clone();
     }
 
@@ -117,10 +119,6 @@ namespace AFOCS.Devices
         [Description("最高速度 (unit/s)")]
         public double MaxSpeed { get; set; } = 200;
 
-        /// <summary>每圈脉冲数</summary>
-        [Description("每圈脉冲数")]
-        public int PulsePerRev { get; set; } = 10000;
-
         public AxisConfig Clone() => new()
         {
             AxisId = AxisId,
@@ -130,7 +128,6 @@ namespace AFOCS.Devices
             PositiveSoftLimit = PositiveSoftLimit,
             SoftLimitEnabled = SoftLimitEnabled,
             MaxSpeed = MaxSpeed,
-            PulsePerRev = PulsePerRev,
         };
 
         object ICloneable.Clone() => Clone();

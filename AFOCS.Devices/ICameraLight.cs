@@ -10,7 +10,7 @@ public enum CameraLightChannel : byte
     C,
     D
 }
-public interface ICameraLight:IDevice
+public interface ICameraLight:IDevice,IDeviceConnect
 {
     CameraLightConfig GetConfig();
     Task SaveConfigAsync(CameraLightConfig config);

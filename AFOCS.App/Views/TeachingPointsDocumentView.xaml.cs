@@ -2,9 +2,9 @@ using System.Windows.Controls;
 
 namespace AFOCS.App.Views
 {
-    public partial class JogLeftView : UserControl
+    public partial class TeachingPointsDocumentView : UserControl
     {
-        public JogLeftView()
+        public TeachingPointsDocumentView()
         {
             InitializeComponent();
         }

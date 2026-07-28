@@ -1,8 +1,11 @@
 using System.ComponentModel.Composition;
 using AFOCS.App.Commands;
 using AFOCS.App.ViewModels;
+using AFOCS.Framework;
 using AFOCS.Framework.Framework;
 using AFOCS.Framework.Framework.Menus;
+using AFOCS.Infrastructure;
+using Caliburn.Micro;
 
 namespace AFOCS.App
 {
@@ -23,6 +26,15 @@ namespace AFOCS.App
             {
                 yield return typeof(IJogLeft);
                 yield return typeof(IJogRight);
+            }
+        }
+
+        public override IEnumerable<IDocument> DefaultDocuments
+        {
+            get
+            {
+                yield return new TeachingPointsDocumentViewModel(
+                    IoC.Get<IConfigService>());
             }
         }
     }

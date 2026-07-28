@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:cal="http://www.caliburnproject.org"
-             xmlns:viewModels="clr-namespace:AFOCS.App.ViewModels"
              xmlns:settings="clr-namespace:AFOCS.App.ViewModels.Settings"
              mc:Ignorable="d"
              d:DesignHeight="420" d:DesignWidth="480"
@@ -192,45 +191,6 @@
                         </Grid>
                     </Border>
 
-                    <Border BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="4"
-                            Padding="12,10" Margin="0,0,0,8"
-                            Background="#FFF7ED">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-
-                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
-                                <TextBlock Text="冷复位" FontWeight="SemiBold" FontSize="13"
-                                           VerticalAlignment="Center" Width="60"
-                                           Foreground="{StaticResource WarningBrush}" />
-                                <TextBlock Text="硬件复位板卡，需等待 15 秒，ENI/INI 需重新下载"
-                                           VerticalAlignment="Center" Foreground="#92400E"
-                                           FontSize="11" Margin="8,0,0,0" />
-                            </StackPanel>
-
-                            <Button Grid.Row="1" cal:Message.Attach="ColdResetAsync"
-                                    Content="冷复位" Width="80" Height="26"
-                                    FontSize="11" HorizontalAlignment="Left">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Style.Triggers>
-                                            <MultiDataTrigger>
-                                                <MultiDataTrigger.Conditions>
-                                                    <Condition Binding="{Binding IsConnected}" Value="False" />
-                                                </MultiDataTrigger.Conditions>
-                                                <Setter Property="IsEnabled" Value="False" />
-                                            </MultiDataTrigger>
-                                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
-                                                <Setter Property="IsEnabled" Value="False" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                            </Button>
-                        </Grid>
-                    </Border>
                 </StackPanel>
             </Border>
 

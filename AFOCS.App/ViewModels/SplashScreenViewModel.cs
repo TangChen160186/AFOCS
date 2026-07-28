@@ -44,11 +44,13 @@ namespace AFOCS.App.ViewModels
 
         private readonly List<string> _errorMessages = [];
 
+        [Import] private IWindowManager _windowManager = null!;
+        [Import] private IMainWindow _mainWindow = null!;
         [Import] private ILogger _logger = null!;
 
         [Import] private ProgrammablePowerSupply _programmablePowerSupply = null!;
         [Import] private IOpticalSwitch _opticalSwitch = null!;
-        [Import] private HeightGauge _heightGauge = null!;
+        [Import] private IHeightGauge _heightGauge = null!;
         [Import] private IMotionControlCard _leadShineMotionCard = null!;
         [Import] private IBusAxisDevice _busAxisDevice = null!;
 
@@ -68,9 +70,7 @@ namespace AFOCS.App.ViewModels
         [Import] private RightCouplingRGripper _rightCouplingRGripper = null!;
 
 
-        [Import] private IWindowManager _windowManager = null!;
 
-        [Import] private IMainWindow _mainWindow = null!;
 
         [Import] private IIODevice _ioDevice = null!;
 
@@ -81,12 +81,10 @@ namespace AFOCS.App.ViewModels
         [Import] private RightCouplingRPressureSensor _rightCouplingRPressure = null!;
         [Import] private RightDispensePressureSensor _rightDispensePressure = null!;
 
-        [Import] private AkribisLeftCouplingL _arAkribisLeftCouplingL;
-        [Import] private AkribisLeftCouplingR _akribisLeftCouplingR;
-        [Import] private AkribisRightCouplingL _akribisRightCouplingL;
-        [Import] private AkribisRightCouplingR _akribisRightCouplingR;
-
-        [ImportMany] private IAkribisMotion[] _akribisMotions = null!;
+        [Import] private AkribisLeftCouplingL _arAkribisLeftCouplingL = null!;
+        [Import] private AkribisLeftCouplingR _akribisLeftCouplingR = null!;
+        [Import] private AkribisRightCouplingL _akribisRightCouplingL = null!;
+        [Import] private AkribisRightCouplingR _akribisRightCouplingR = null!;
         protected override Task OnActivatedAsync(CancellationToken cancellationToken)
         {
             InitializeDevices();
@@ -140,27 +138,26 @@ namespace AFOCS.App.ViewModels
 
             List<IDevice> devices =
             [
-
                 _leadShineMotionCard,
                 _busAxisDevice,
                 _ioDevice,
 
-                _leftCouplingLGripper,
-                _leftCouplingRGripper,
-                _rightCouplingLGripper,
-                _rightCouplingRGripper,
+                //_leftCouplingLGripper,
+                //_leftCouplingRGripper,
+                //_rightCouplingLGripper,
+                //_rightCouplingRGripper,
 
-                _leftCouplingLPressure,
-                _leftCouplingRPressure,
-                _leftDispensePressure,
-                _rightCouplingLPressure,
-                _rightCouplingRPressure,
-                _rightDispensePressure,
+                //_leftCouplingLPressure,
+                //_leftCouplingRPressure,
+                //_leftDispensePressure,
+                //_rightCouplingLPressure,
+                //_rightCouplingRPressure,
+                //_rightDispensePressure,
 
-                _arAkribisLeftCouplingL,
-                _akribisLeftCouplingR,
-                _akribisRightCouplingL,
-                _akribisRightCouplingR,
+                //_arAkribisLeftCouplingL,
+                //_akribisLeftCouplingR,
+                //_akribisRightCouplingL,
+                //_akribisRightCouplingR,
 
                 //_programmablePowerSupply,
 

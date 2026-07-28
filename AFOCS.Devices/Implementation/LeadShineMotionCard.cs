@@ -1,7 +1,8 @@
-using System.ComponentModel.Composition;
-using System.Text;
 using AFOCS.Infrastructure;
 using Serilog;
+using System.ComponentModel.Composition;
+using System.Text;
+using YamlDotNet.Core.Tokens;
 
 namespace AFOCS.Devices.Implementation;
 
@@ -22,31 +23,20 @@ public class LeadShineMotionCardConfig : ICloneable
 }
 
 [Export]
-[method: ImportingConstructor]
 [Export(typeof(IMotionControlCard))]
+[method: ImportingConstructor]
 public class LeadShineMotionCard(IConfigService configService, ILogger logger) : IMotionControlCard
 {
-    public event EventHandler<MotionCardConnectionChangedEventArgs>? ConnectionChanged;
-
-    public bool IsConnected
-    {
-        get;
-        private set
-        {
-            if (field == value) return;
-            field = value;
-            ConnectionChanged?.Invoke(this, new MotionCardConnectionChangedEventArgs(value));
-        }
-    }
-
     private ushort _cardNo = 0;
-    private LeadShineMotionCardConfig _config = new();
     private const ushort EniFileType = 200;
     private const ushort ConfigFileType = 201;
-    private const ushort EthercatPort = 2;
-
+    private const ushort EtherCatPort = 2;
+    private LeadShineMotionCardConfig _config = new();
+    public bool IsConnected { get; private set; }
     // ========== 板卡初始化 ==========
 
+    #region 初始化 重连
+    private bool _boardInit;
     public async Task<Result> InitializeAsync(CancellationToken token = default)
     {
         try
@@ -59,6 +49,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
                 return Result.Fail($"没有找到控制卡，或者控制卡异常, card num:{cardNum}");
             if (cardNum < 0 || cardNum > 8)
                 return Result.Fail($"控制卡数量异常，card num:{cardNum}");
+            _boardInit = true;
 
             ushort usNum = 0;
             ushort[] cardList = new ushort[8];
@@ -69,44 +60,36 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
             _cardNo = cardList[0];
             logger.Information("当前板卡号为: {CardNo}", _cardNo);
 
-            ret = LTDMC.nmc_set_slave_output_retain(_cardNo, 1);
+            ret = LTDMC.nmc_set_slave_output_retain(_cardNo, 1); //nmc_set_slave_output_retain函数的作用是设置当EtherCAT总线复位时，是否保持从站（如驱动器、I/O模块）的输出状态
             if (ret != 0)
                 return Result.Fail($"调用API失败:{nameof(LTDMC.nmc_set_slave_output_retain)}, error code: {ret}");
 
             ushort nmcErr = 0;
-            LTDMC.nmc_get_errcode(_cardNo, EthercatPort, ref nmcErr);
+            ret = LTDMC.nmc_get_errcode(_cardNo, EtherCatPort, ref nmcErr);
+            if (ret != 0)
+                return Result.Fail($"调用API失败:{nameof(LTDMC.nmc_get_errcode)}, error code: {ret}");
+
+            ret = LTDMC.nmc_set_cycletime(_cardNo, EtherCatPort, 1000);
+            if (ret != 0)
+                return Result.Fail($"调用API失败:{nameof(LTDMC.nmc_set_cycletime)}, error code: {ret}");
 
             if (nmcErr == 0x000C || nmcErr == 0x001E)
             {
-                ret = LTDMC.nmc_set_cycletime(_cardNo, EthercatPort, 1000);
-                if (ret != 0)
-                    return Result.Fail($"调用API失败:{nameof(LTDMC.nmc_set_cycletime)}, error code: {ret}");
-
-                logger.Information("下载ENI总线配置文件");
+                logger.Information("发现拓扑/配置错误,开始下载ENI总线配置文件");
                 var eniResult = DownloadFile(_cardNo, _config.EniPath, EniFileType);
                 if (!eniResult.IsSuccess)
                     return eniResult;
 
-                logger.Information("执行热复位...");
-                var resetResult = await HotResetAsync();
+                var resetResult = await HotResetAsync(token);
                 if (!resetResult.IsSuccess)
                     return resetResult;
 
-                logger.Information("等待总线恢复...");
-                int timeout = 0;
-                while (timeout < 5000)
-                {
-                    if (token.IsCancellationRequested)
-                        return Result.Fail("初始化被取消");
-                    LTDMC.nmc_get_errcode(_cardNo, EthercatPort, ref nmcErr);
-                    if (nmcErr == 0)
-                        break;
-                    await Task.Delay(50, token);
-                    timeout += 50;
-                }
-                if (nmcErr != 0)
-                    return Result.Fail($"总线热复位后仍未恢复，错误码: 0x{nmcErr:X4}");
+                ret = LTDMC.nmc_get_errcode(_cardNo, EtherCatPort, ref nmcErr);
+                if (ret != 0)
+                    return Result.Fail($"调用API失败:{nameof(LTDMC.nmc_get_errcode)}, error code: {ret}");
                 logger.Information("总线恢复成功");
+
+
             }
             else if (nmcErr != 0)
             {
@@ -121,11 +104,16 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
                     return iniResult;
             }
 
-            LTDMC.nmc_get_errcode(_cardNo, EthercatPort, ref nmcErr);
+            ret = LTDMC.nmc_get_errcode(_cardNo, EtherCatPort, ref nmcErr);
+            if (ret != 0)
+                return Result.Fail($"调用API失败:{nameof(LTDMC.nmc_get_errcode)}, error code: {ret}");
+
             if (nmcErr != 0)
                 return Result.Fail($"总线错误: 0x{nmcErr:X4}");
 
-            LTDMC.nmc_set_axis_enable(_cardNo, 255);
+            ret = LTDMC.nmc_set_axis_enable(_cardNo, 255); // 使能所有轴
+            if (ret != 0)
+                return Result.Fail($"调用API失败:{nameof(LTDMC.nmc_set_axis_enable)}, error code: {ret}");
 
             logger.Information("雷赛板卡初始化成功");
             IsConnected = true;
@@ -133,70 +121,51 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "板卡初始化异常");
-            return Result.Fail($"初始化异常: {ex.Message}");
+            logger.Error(ex, "雷赛板卡初始化异常");
+            return Result.Fail($"雷赛办卡初始化异常: {ex.Message}");
         }
-    }
-
-    public async Task<Result> StopAsync(CancellationToken token = default)
-    {
-        if (IsConnected)
-        {
-            await Task.Run(() => LTDMC.dmc_board_close());
-            IsConnected = false;
-        }
-        return Result.Success();
     }
 
     public async Task<Result> ReConnectAsync(CancellationToken token = default)
     {
-        await StopAsync(token);
+        if (_boardInit)
+        {
+            LTDMC.dmc_board_close();
+            _boardInit = false;
+        }
+
+        IsConnected = false;
         return await InitializeAsync(token);
     }
 
+
+    #endregion
+
+
     // ========== 复位 ==========
 
-    public async Task<Result> HotResetAsync()
+    public async Task<Result> HotResetAsync(CancellationToken token = default)
     {
+        logger.Information("执行热复位...");
         var ret = LTDMC.dmc_soft_reset(_cardNo);
         if (ret != 0)
             return Result.Fail($"调用API失败:{nameof(LTDMC.dmc_soft_reset)}, error code: {ret}");
+
+        logger.Information("等待总线恢复 需要用时15 sec...");
+        await Task.Delay(TimeSpan.FromSeconds(15), token);
+
+        logger.Information("开始办卡重连...");
+        await ReConnectAsync(token);
         return Result.Success();
     }
 
-    public async Task<Result> ColdResetAsync()
-    {
-        var ret = LTDMC.dmc_cool_reset(_cardNo);
-        if (ret != 0)
-            return Result.Fail($"调用API失败:{nameof(LTDMC.dmc_cool_reset)}, error code: {ret}");
 
-        ret = LTDMC.dmc_board_close();
-        if (ret != 0)
-            return Result.Fail($"调用API失败:{nameof(LTDMC.dmc_board_close)}, error code: {ret}");
 
-        await Task.Delay(TimeSpan.FromSeconds(15));
-
-        ret = LTDMC.dmc_board_init();
-        if (ret <= 0)
-            return Result.Fail($"冷复位后重新初始化板卡失败, ret: {ret}");
-
-        ushort usNum = 0;
-        ushort[] cardList = new ushort[8];
-        uint[] cardTypes = new uint[8];
-        ret = LTDMC.dmc_get_CardInfList(ref usNum, cardTypes, cardList);
-        if (ret != 0)
-            return Result.Fail($"调用API失败:{nameof(LTDMC.dmc_get_CardInfList)}, error code: {ret}");
-        _cardNo = cardList[0];
-
-        return Result.Success();
-    }
-
-    // ========== 总线状态 ==========
-
+    #region 总线状态
     public Task<Result<(ushort ErrorCode, string Description)>> GetBusStatusAsync()
     {
         ushort nmcErr = 0;
-        var ret = LTDMC.nmc_get_errcode(_cardNo, EthercatPort, ref nmcErr);
+        var ret = LTDMC.nmc_get_errcode(_cardNo, EtherCatPort, ref nmcErr);
         if (ret != 0)
             return Task.FromResult(Result<(ushort, string)>.Fail($"读取总线状态失败, error code: {ret}"));
         return Task.FromResult(Result<(ushort, string)>.Success((nmcErr, GetBusErrorDescription(nmcErr))));
@@ -245,7 +214,11 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
         };
     }
 
-    // ========== 板卡配置 ==========
+
+    #endregion
+
+
+    #region 板卡配置
 
     public LeadShineMotionCardConfig GetConfig() => _config.Clone();
 
@@ -255,10 +228,14 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
         await configService.SaveAsync(_config);
     }
 
-    // ========== IO 读写 ==========
+    #endregion
 
+
+
+    #region IO 读写
     public async Task<Result<bool>> ReadInbitAsync(ushort bitNo)
     {
+        if (!IsConnected) return Result<bool>.Fail("板卡未连接");
         short level = LTDMC.dmc_read_inbit(_cardNo, bitNo);
         if (level < 0)
             return Result<bool>.Fail($"读取输入口 {bitNo} 失败");
@@ -267,6 +244,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result<bool[]>> ReadInbitsAsync(ushort bitCount)
     {
+        if (!IsConnected) return Result<bool[]>.Fail("板卡未连接");
         var bits = new bool[bitCount];
         for (ushort i = 0; i < bitCount; i++)
         {
@@ -280,6 +258,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result<bool>> ReadOutbitAsync(ushort bitNo)
     {
+        if (!IsConnected) return Result<bool>.Fail("板卡未连接");
         short level = LTDMC.dmc_read_outbit(_cardNo, bitNo);
         if (level < 0)
             return Result<bool>.Fail($"读取输出口 {bitNo} 失败");
@@ -288,6 +267,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result> WriteOutbitAsync(ushort bitNo, bool on)
     {
+        if (!IsConnected) return Result.Fail("板卡未连接");
         ushort level = on ? (ushort)1 : (ushort)0;
         var ret = LTDMC.dmc_write_outbit(_cardNo, bitNo, level);
         if (ret != 0)
@@ -295,13 +275,14 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
         return Result.Success();
     }
 
-    // ========== PDO 读写 ==========
+    #endregion
 
+    #region PDO 读写
     public async Task<Result> WriteRxPDOAsync(ushort slaveAddr, ushort index, ushort subIndex, ushort bitLength, int value)
     {
         if (!IsConnected) return Result.Fail("板卡未连接");
         var data = BitConverter.GetBytes(value);
-        var ret = LTDMC.nmc_write_rxpdo(_cardNo, EthercatPort, slaveAddr, index, subIndex, bitLength, data);
+        var ret = LTDMC.nmc_write_rxpdo(_cardNo, EtherCatPort, slaveAddr, index, subIndex, bitLength, data);
         if (ret != 0)
             return Result.Fail($"写RxPDO从站{slaveAddr} 0x{index:X4}:{subIndex} 失败, error code: {ret}");
         return Result.Success();
@@ -311,16 +292,22 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
     {
         if (!IsConnected) return Result<int>.Fail("板卡未连接");
         var data = new byte[bitLength / 8];
-        var ret = LTDMC.nmc_read_txpdo(_cardNo, EthercatPort, slaveAddr, index, subIndex, bitLength, data);
+        var ret = LTDMC.nmc_read_txpdo(_cardNo, EtherCatPort, slaveAddr, index, subIndex, bitLength, data);
         if (ret != 0)
             return Result<int>.Fail($"读TxPDO从站{slaveAddr} 0x{index:X4}:{subIndex} 失败, error code: {ret}");
         return Result<int>.Success(BytesToInt(data));
     }
 
+
+    #endregion
+
+
+
     // ========== 底层轴操作（薄封装，供 BusAxisDevice 调用） ==========
 
     public async Task<Result<double>> GetPositionAsync(ushort axis)
     {
+        if (!IsConnected) return Result<double>.Fail("板卡未连接");
         double pos = 0;
         var ret = LTDMC.dmc_get_position_unit(_cardNo, axis, ref pos);
         if (ret != 0)
@@ -330,6 +317,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result<double>> GetSpeedAsync(ushort axis)
     {
+        if (!IsConnected) return Result<double>.Fail("板卡未连接");
         double speed = 0;
         var ret = LTDMC.dmc_read_current_speed_unit(_cardNo, axis, ref speed);
         if (ret != 0)
@@ -339,6 +327,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result> SetEquivAsync(ushort axis, double equiv)
     {
+        if (!IsConnected) return Result.Fail("板卡未连接");
         var ret = LTDMC.dmc_set_equiv(_cardNo, axis, equiv);
         if (ret != 0)
             return Result.Fail($"设置脉冲当量失败, error code: {ret}");
@@ -347,6 +336,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result> SetProfileUnitAsync(ushort axis, double minVel, double maxVel, double tacc, double tdec, double stopVel)
     {
+        if (!IsConnected) return Result.Fail("板卡未连接");
         var ret = LTDMC.dmc_set_profile_unit(_cardNo, axis, minVel, maxVel, tacc, tdec, stopVel);
         if (ret != 0)
             return Result.Fail($"设置速度曲线失败, error code: {ret}");
@@ -355,6 +345,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result> SetSProfileAsync(ushort axis, ushort mode, double sPara)
     {
+        if (!IsConnected) return Result.Fail("板卡未连接");
         var ret = LTDMC.dmc_set_s_profile(_cardNo, axis, mode, sPara);
         if (ret != 0)
             return Result.Fail($"设置S段曲线失败, error code: {ret}");
@@ -363,6 +354,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result> PmoveUnitAsync(ushort axis, double distance, ushort posiMode)
     {
+        if (!IsConnected) return Result.Fail("板卡未连接");
         var ret = LTDMC.dmc_pmove_unit(_cardNo, axis, distance, posiMode);
         if (ret != 0)
             return Result.Fail($"启动定长运动失败, error code: {ret}");
@@ -371,16 +363,19 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result<int>> CheckDoneAsync(ushort axis)
     {
+        if (!IsConnected) return Result<int>.Fail("板卡未连接");
         return Result<int>.Success(LTDMC.dmc_check_done(_cardNo, axis));
     }
 
     public async Task<Result<uint>> GetAxisIoStatusAsync(ushort axis)
     {
+        if (!IsConnected) return Result<uint>.Fail("板卡未连接");
         return Result<uint>.Success(LTDMC.dmc_axis_io_status(_cardNo, axis));
     }
 
     public async Task<Result<ushort>> GetAxisStateMachineAsync(ushort axis)
     {
+        if (!IsConnected) return Result<ushort>.Fail("板卡未连接");
         ushort stateMachine = 0;
         var ret = LTDMC.nmc_get_axis_state_machine(_cardNo, axis, ref stateMachine);
         if (ret != 0)
@@ -390,6 +385,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result> SetHomeProfileAsync(ushort axis, ushort homeMode, double lowVel, double highVel, double tacc, double tdec, double offsetPos)
     {
+        if (!IsConnected) return Result.Fail("板卡未连接");
         var ret = LTDMC.nmc_set_home_profile(_cardNo, axis, homeMode, lowVel, highVel, tacc, tdec, offsetPos);
         if (ret != 0)
             return Result.Fail($"设置回零参数失败, error code: {ret}");
@@ -398,6 +394,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result> HomeMoveAsync(ushort axis)
     {
+        if (!IsConnected) return Result.Fail("板卡未连接");
         var ret = LTDMC.nmc_home_move(_cardNo, axis);
         if (ret != 0)
             return Result.Fail($"启动回零失败, error code: {ret}");
@@ -406,6 +403,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result<ushort>> GetHomeResultAsync(ushort axis)
     {
+        if (!IsConnected) return Result<ushort>.Fail("板卡未连接");
         ushort homeResult = 0;
         var ret = LTDMC.dmc_get_home_result(_cardNo, axis, ref homeResult);
         if (ret != 0)
@@ -415,6 +413,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result<int>> GetStopReasonAsync(ushort axis)
     {
+        if (!IsConnected) return Result<int>.Fail("板卡未连接");
         int stopReason = 0;
         LTDMC.dmc_get_stop_reason(_cardNo, axis, ref stopReason);
         return Result<int>.Success(stopReason);
@@ -422,8 +421,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result> EnableAxisAsync(ushort axis, int timeoutMs = 3000)
     {
-        if (!IsConnected)
-            return Result.Fail("板卡未连接");
+        if (!IsConnected) return Result.Fail("板卡未连接");
 
         var ret = LTDMC.nmc_set_axis_enable(_cardNo, axis);
         if (ret != 0)
@@ -449,8 +447,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public Result DisableAxis(ushort axis)
     {
-        if (!IsConnected)
-            return Result.Fail("板卡未连接");
+        if (!IsConnected) return Result.Fail("板卡未连接");
 
         var ret = LTDMC.nmc_set_axis_disable(_cardNo, axis);
         if (ret != 0)
@@ -462,6 +459,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result> EmergencyStopAllAsync()
     {
+        if (!IsConnected) return Result.Fail("板卡未连接");
         var ret = LTDMC.dmc_emg_stop(_cardNo);
         if (ret != 0)
             return Result.Fail($"紧急停止失败, error code: {ret}");
@@ -470,6 +468,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result> SetSoftLimitAsync(ushort axis, double negativeLimit, double positiveLimit, bool enable = true)
     {
+        if (!IsConnected) return Result.Fail("板卡未连接");
         var ret = LTDMC.dmc_set_softlimit_unit(
             _cardNo, axis,
             enable ? (ushort)1 : (ushort)0,
@@ -483,6 +482,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result> StopAxisAsync(ushort axis, bool emergency = false)
     {
+        if (!IsConnected) return Result.Fail("板卡未连接");
         ushort stopMode = emergency ? (ushort)1 : (ushort)0;
         var ret = LTDMC.dmc_stop(_cardNo, axis, stopMode);
         if (ret != 0)
@@ -498,6 +498,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result> SetVectorProfileUnitAsync(ushort crd, double minVel, double maxVel, double tacc, double tdec, double stopVel)
     {
+        if (!IsConnected) return Result.Fail("板卡未连接");
         var ret = LTDMC.dmc_set_vector_profile_unit(_cardNo, crd, minVel, maxVel, tacc, tdec, stopVel);
         if (ret != 0)
             return Result.Fail($"设置插补速度曲线失败, error code: {ret}");
@@ -506,6 +507,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result> SetVectorSProfileAsync(ushort crd, ushort mode, double sPara)
     {
+        if (!IsConnected) return Result.Fail("板卡未连接");
         var ret = LTDMC.dmc_set_vector_s_profile(_cardNo, crd, mode, sPara);
         if (ret != 0)
             return Result.Fail($"设置插补S段曲线失败, error code: {ret}");
@@ -514,6 +516,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result> LineUnitAsync(ushort crd, ushort axisCount, ushort[] axisList, double[] targetPositions, ushort posiMode)
     {
+        if (!IsConnected) return Result.Fail("板卡未连接");
         var ret = LTDMC.dmc_line_unit(_cardNo, crd, axisCount, axisList, targetPositions, posiMode);
         if (ret != 0)
             return Result.Fail($"启动直线插补失败, error code: {ret}");
@@ -522,11 +525,13 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     public async Task<Result<int>> CheckDoneMultiCoorAsync(ushort crd)
     {
+        if (!IsConnected) return Result<int>.Fail("板卡未连接");
         return Result<int>.Success(LTDMC.dmc_check_done_multicoor(_cardNo, crd));
     }
 
     public async Task<Result> StopMultiCoorAsync(ushort crd, ushort mode)
     {
+        if (!IsConnected) return Result.Fail("板卡未连接");
         var ret = LTDMC.dmc_stop_multicoor(_cardNo, crd, mode);
         if (ret != 0)
             return Result.Fail($"停止坐标系 {crd} 失败, error code: {ret}");
@@ -535,6 +540,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
 
     // ========== 内部 ==========
 
+    #region 辅助方法
     private Result DownloadFile(ushort cardNo, string path, ushort fileType)
     {
         try
@@ -557,7 +563,7 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
         }
     }
 
-    private byte[] ReadTextFileToUtf8Bytes(string filePath)
+    private static byte[] ReadTextFileToUtf8Bytes(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
             throw new ArgumentNullException(nameof(filePath), "文件路径不能为空");
@@ -586,12 +592,14 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
         return BitConverter.ToInt32(buffer, 0);
     }
 
+
+    #endregion
+
+
     public void Dispose()
     {
-        if (IsConnected)
-        {
-            LTDMC.dmc_board_close();
-            IsConnected = false;
-        }
+        if (!_boardInit) return;
+        LTDMC.dmc_board_close();
+        IsConnected = false;
     }
 }

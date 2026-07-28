@@ -209,19 +209,6 @@
                 </StackPanel>
             </Border>
 
-            <!-- ========== 基础参数 ========== -->
-            <Border Background="{StaticResource SectionBg}" CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
-                <StackPanel>
-                    <TextBlock Text="基础参数" FontWeight="Bold" Margin="0,0,0,8" />
-                    <StackPanel Margin="0,2">
-                        <TextBlock Text="脉冲当量" FontSize="10"
-                                   Foreground="{StaticResource LabelFg}" />
-                        <TextBox Text="{Binding PulsePerRev, UpdateSourceTrigger=PropertyChanged}"
-                                 Width="120" HorizontalAlignment="Left" />
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-
             <!-- ========== 运动测试 ========== -->
             <Border Background="{StaticResource SectionBg}" CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
                 <StackPanel>

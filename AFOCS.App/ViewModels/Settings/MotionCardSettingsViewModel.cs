@@ -212,6 +212,7 @@ namespace AFOCS.App.ViewModels.Settings
             try
             {
                 var result = await _card.HotResetAsync();
+                await Task.Delay(TimeSpan.FromSeconds(15)); //热复位需要等待15
                 StatusMessage = result.IsSuccess ? "热复位成功（仅复位 EtherCAT 协议栈）" : $"热复位失败: {result.Message}";
             }
             catch (Exception ex) { StatusMessage = $"热复位异常: {ex.Message}"; }
@@ -222,25 +223,6 @@ namespace AFOCS.App.ViewModels.Settings
             }
         }
 
-        public async Task ColdResetAsync()
-        {
-            if (!IsConnected) { _toastService.ShowWarning("设备未连接"); return; }
-
-            IsBusy = true;
-            StatusMessage = "正在冷复位（等待 15 秒）...";
-            try
-            {
-                var result = await _card.ColdResetAsync();
-                StatusMessage = result.IsSuccess ? "冷复位成功（板卡已重新初始化）" : $"冷复位失败: {result.Message}";
-                NotifyOfPropertyChange(() => IsConnected);
-            }
-            catch (Exception ex) { StatusMessage = $"冷复位异常: {ex.Message}"; }
-            finally
-            {
-                IsBusy = false;
-                _ = RefreshBusStatusAsync();
-            }
-        }
 
         // ========== NotifyOfPropertyChange 重写 ==========
 

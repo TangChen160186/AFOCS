@@ -1,3 +1,4 @@
+using AFOCS.Devices.Implementation;
 using AFOCS.Infrastructure;
 
 namespace AFOCS.Devices
@@ -6,7 +7,7 @@ namespace AFOCS.Devices
     {
         // ========== 轴状态监控 ==========
 
-        event EventHandler<AxisStateChangedEventArgs>? AxisStateChanged;
+        event EventHandler<BusAxisStateChangedEventArgs>? AxisStateChanged;
         bool IsAxisMonitoring { get; }
         Task StartAxisMonitorAsync(int pollIntervalMs = 200);
         void StopAxisMonitor();

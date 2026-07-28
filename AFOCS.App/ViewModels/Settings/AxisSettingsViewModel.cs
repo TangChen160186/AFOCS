@@ -26,11 +26,7 @@ namespace AFOCS.App.ViewModels.Settings
             nameof(HomeMode), nameof(HomeLowVel), nameof(HomeHighVel),
             nameof(HomeTacc), nameof(HomeTdec), nameof(HomeOffsetPos),
             nameof(NegativeSoftLimit), nameof(PositiveSoftLimit), nameof(SoftLimitEnabled),
-            nameof(MaxSpeed), nameof(PulsePerRev),
         ];
-
-        private string _statusMessage = string.Empty;
-        private bool _isBusy;
 
         [ImportingConstructor]
         public AxisSettingsViewModel(IBusAxisDevice busAxisDevice)
@@ -90,20 +86,20 @@ namespace AFOCS.App.ViewModels.Settings
 
         public string StatusMessage
         {
-            get => _statusMessage;
+            get;
             set
             {
-                _statusMessage = value;
+                field = value;
                 NotifyOfPropertyChange();
             }
-        }
+        } = string.Empty;
 
         public bool IsBusy
         {
-            get => _isBusy;
+            get;
             set
             {
-                _isBusy = value;
+                field = value;
                 NotifyOfPropertyChange();
             }
         }
@@ -230,11 +226,6 @@ namespace AFOCS.App.ViewModels.Settings
         {
             get => _currentConfig.MaxSpeed;
             set { _currentConfig.MaxSpeed = value; NotifyOfPropertyChange(); }
-        }
-        public int PulsePerRev
-        {
-            get => _currentConfig.PulsePerRev;
-            set { _currentConfig.PulsePerRev = value; NotifyOfPropertyChange(); }
         }
 
         // ========== 回零模式选项 ==========
@@ -386,7 +377,6 @@ namespace AFOCS.App.ViewModels.Settings
             NotifyOfPropertyChange(nameof(PositiveSoftLimit));
             NotifyOfPropertyChange(nameof(SoftLimitEnabled));
             NotifyOfPropertyChange(nameof(MaxSpeed));
-            NotifyOfPropertyChange(nameof(PulsePerRev));
         }
     }
 
