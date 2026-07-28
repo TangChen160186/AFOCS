@@ -13,8 +13,6 @@ namespace AFOCS.App.ViewModels.Settings;
 public abstract class AkribisCouplingSettingsBase(string name, IAkribisMotion motion)
     : Screen, ISettingsEditor
 {
-    private readonly IAkribisMotion _motion = motion;
-
     public string Name { get; } = name;
 
     string ISettingsEditor.SettingsPageName => Name;
@@ -111,9 +109,9 @@ public abstract class AkribisCouplingSettingsBase(string name, IAkribisMotion mo
 
     // ========== 状态 ==========
 
-    public bool AreConnected => _motion.IsConnected;
+    public bool AreConnected => motion.IsConnected;
 
-    public bool IsMonitoringDisplay => _motion.IsMonitoring;
+    public bool IsMonitoringDisplay => motion.IsMonitoring;
 
     public string StatusMessage
     {
@@ -141,8 +139,8 @@ public abstract class AkribisCouplingSettingsBase(string name, IAkribisMotion mo
 
     private void RefreshStatus()
     {
-        StatusMessage = _motion.IsConnected
-            ? (_motion.IsMonitoring ? "已连接 · 监控中" : "已连接 · 未监控")
+        StatusMessage = motion.IsConnected
+            ? (motion.IsMonitoring ? "已连接 · 监控中" : "已连接 · 未监控")
             : "未连接";
     }
 
@@ -168,12 +166,12 @@ public abstract class AkribisCouplingSettingsBase(string name, IAkribisMotion mo
 
     private void Subscribe()
     {
-        _motion.PositionChanged += OnPositionChanged;
+        motion.PositionChanged += OnPositionChanged;
     }
 
     private void Unsubscribe()
     {
-        _motion.PositionChanged -= OnPositionChanged;
+        motion.PositionChanged -= OnPositionChanged;
     }
 
     // ========== 操作 ==========
@@ -184,7 +182,7 @@ public abstract class AkribisCouplingSettingsBase(string name, IAkribisMotion mo
         StatusMessage = "保存中...";
         try
         {
-            await _motion.SaveConfigAsync(_editConfig);
+            await motion.SaveConfigAsync(_editConfig);
             _isModify = false;
             NotifyOfPropertyChange(nameof(IsModify));
             StatusMessage = "已保存";
@@ -201,7 +199,7 @@ public abstract class AkribisCouplingSettingsBase(string name, IAkribisMotion mo
 
     public void Reset()
     {
-        _editConfig = _motion.GetConfig();
+        _editConfig = motion.GetConfig();
         _isModify = true;
         NotifyOfPropertyChange(nameof(IsModify));
         RefreshAllProperties();
@@ -214,7 +212,7 @@ public abstract class AkribisCouplingSettingsBase(string name, IAkribisMotion mo
         StatusMessage = "正在重连...";
         try
         {
-            var r = await _motion.ReConnectAsync();
+            var r = await motion.ReConnectAsync();
             StatusMessage = r.IsSuccess ? "重连成功" : $"重连失败: {r.Message}";
             RefreshStatus();
         }
@@ -262,7 +260,7 @@ public abstract class AkribisCouplingSettingsBase(string name, IAkribisMotion mo
         if (IsBusy) return;
         IsBusy = true;
         StatusMessage = $"{_testAxis} 正向运动 {_testDistance} ...";
-        var r = await _motion.MoveRelativeAsync(_testAxis, _testDistance);
+        var r = await motion.MoveRelativeAsync(_testAxis, _testDistance);
         StatusMessage = r.IsSuccess ? $"{_testAxis} 正向运动完成" : $"运动失败: {r.Message}";
         IsBusy = false;
     }
@@ -272,7 +270,7 @@ public abstract class AkribisCouplingSettingsBase(string name, IAkribisMotion mo
         if (IsBusy) return;
         IsBusy = true;
         StatusMessage = $"{_testAxis} 反向运动 {-TestDistance} ...";
-        var r = await _motion.MoveRelativeAsync(_testAxis, -TestDistance);
+        var r = await motion.MoveRelativeAsync(_testAxis, -TestDistance);
         StatusMessage = r.IsSuccess ? $"{_testAxis} 反向运动完成" : $"运动失败: {r.Message}";
         IsBusy = false;
     }
@@ -280,14 +278,14 @@ public abstract class AkribisCouplingSettingsBase(string name, IAkribisMotion mo
     public async Task TestEnableAsync()
     {
         StatusMessage = $"{_testAxis} 使能中...";
-        var r = await _motion.EnableAsync(_testAxis);
+        var r = await motion.EnableAsync(_testAxis);
         StatusMessage = r.IsSuccess ? $"{_testAxis} 使能完成" : $"使能失败: {r.Message}";
     }
 
     public async Task TestDisEnableAsync()
     {
         StatusMessage = $"{_testAxis} 关使能中...";
-        var r = await _motion.DisEnableAsync(_testAxis);
+        var r = await motion.DisEnableAsync(_testAxis);
         StatusMessage = r.IsSuccess ? $"{_testAxis} 关使能完成" : $"关使能失败: {r.Message}";
     }
 
@@ -296,7 +294,7 @@ public abstract class AkribisCouplingSettingsBase(string name, IAkribisMotion mo
         if (IsBusy) return;
         IsBusy = true;
         StatusMessage = $"{_testAxis} 回零中...";
-        var r = await _motion.HomeAsync(_testAxis);
+        var r = await motion.HomeAsync(_testAxis);
         StatusMessage = r.IsSuccess ? $"{_testAxis} 回零完成" : $"回零失败: {r.Message}";
         IsBusy = false;
     }
@@ -304,21 +302,21 @@ public abstract class AkribisCouplingSettingsBase(string name, IAkribisMotion mo
     public async Task TestStopAsync()
     {
         StatusMessage = $"{_testAxis} 停止中...";
-        var r = await _motion.StopAxisAsync(_testAxis);
+        var r = await motion.StopAxisAsync(_testAxis);
         StatusMessage = r.IsSuccess ? $"{_testAxis} 已停止" : $"停止失败: {r.Message}";
     }
 
     public async Task TestEmergencyStopAsync()
     {
         StatusMessage = $"{_testAxis} 急停中...";
-        var r = await _motion.EmergencyStopAsync(_testAxis);
+        var r = await motion.EmergencyStopAsync(_testAxis);
         StatusMessage = r.IsSuccess ? $"{_testAxis} 已急停" : $"急停失败: {r.Message}";
     }
 
     public async Task TestEmergencyStopAllAsync()
     {
         StatusMessage = "全部急停中...";
-        var r = await _motion.EmergencyStopAllAsync();
+        var r = await motion.EmergencyStopAllAsync();
         StatusMessage = r.IsSuccess ? "全部急停完成" : $"急停失败: {r.Message}";
     }
 

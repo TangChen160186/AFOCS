@@ -6,213 +6,171 @@
              xmlns:cal="http://www.caliburnproject.org"
              xmlns:vm="clr-namespace:AFOCS.App.ViewModels"
              mc:Ignorable="d"
-             d:DesignHeight="600" d:DesignWidth="780"
+             d:DesignHeight="600" d:DesignWidth="900"
              d:DataContext="{d:DesignInstance vm:TeachingPointsDocumentViewModel}"
-             Background="{DynamicResource EnvironmentWindowBackground}"
+             Background="#F3F3F3"
              IsTabStop="False">
 
     <UserControl.Resources>
-        <!-- 颜色定义 -->
-        <SolidColorBrush x:Key="AccentBrush" Color="#FF2563EB" />
-        <SolidColorBrush x:Key="AccentLightBrush" Color="#FFDBEAFE" />
-        <SolidColorBrush x:Key="CardBg" Color="#FFF8FAFC" />
-        <SolidColorBrush x:Key="CardBorder" Color="#FFE2E8F0" />
-        <SolidColorBrush x:Key="TextPrimary" Color="#FF1E293B" />
-        <SolidColorBrush x:Key="TextSecondary" Color="#FF64748B" />
-        <SolidColorBrush x:Key="TextMuted" Color="#FF94A3B8" />
-        <SolidColorBrush x:Key="DangerBrush" Color="#FFEF4444" />
-        <SolidColorBrush x:Key="DangerLightBrush" Color="#FFFEE2E2" />
-        <SolidColorBrush x:Key="SuccessBrush" Color="#FF059669" />
-        <SolidColorBrush x:Key="GridLineBrush" Color="#FFF1F5F9" />
+        <!-- ===== 亮色主题颜色 ===== -->
+        <SolidColorBrush x:Key="AccentBrush" Color="#0078D4" />
+        <SolidColorBrush x:Key="AccentLightBrush" Color="#EBF3FB" />
+        <SolidColorBrush x:Key="CardBg" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="CardBorder" Color="#E0E0E0" />
+        <SolidColorBrush x:Key="TextPrimary" Color="#1A1A1A" />
+        <SolidColorBrush x:Key="TextSecondary" Color="#888888" />
+        <SolidColorBrush x:Key="TextMuted" Color="#B0B0B0" />
+        <SolidColorBrush x:Key="DangerBrush" Color="#DC2626" />
+        <SolidColorBrush x:Key="DangerLightBrush" Color="#FEE2E2" />
+        <SolidColorBrush x:Key="SuccessBrush" Color="#16A34A" />
+        <SolidColorBrush x:Key="WarningBrush" Color="#F59E0B" />
 
-        <!-- 示教点列表项样式 -->
-        <Style x:Key="TeachingPointListBoxItem" TargetType="ListBoxItem">
-            <Setter Property="Padding" Value="12,7" />
-            <Setter Property="Margin" Value="2,1" />
-            <Setter Property="FontSize" Value="12.5" />
-            <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Cursor" Value="Hand" />
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- ===== 按钮样式 ===== -->
+
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="14,5"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1558B3"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#CBD5E1"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource CardBorder}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#CBD5E1"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DangerButton" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource DangerLightBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#FECACA"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ===== 示教点列表项 ===== -->
+        <Style x:Key="PointListBoxItem" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="Margin" Value="1,1"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
-                        <Border x:Name="Bd"
-                                Background="{TemplateBinding Background}"
-                                Padding="{TemplateBinding Padding}"
-                                CornerRadius="6"
-                                Margin="1,1">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Ellipse x:Name="Dot" Grid.Column="0"
-                                         Width="8" Height="8"
-                                         Fill="{StaticResource TextMuted}"
-                                         VerticalAlignment="Center" Margin="0,0,8,0" />
-                                <ContentPresenter Grid.Column="1"
-                                                  VerticalAlignment="Center" />
-                            </Grid>
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}" CornerRadius="6">
+                            <ContentPresenter VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentLightBrush}" />
-                                <Setter TargetName="Dot" Property="Fill" Value="{StaticResource AccentBrush}" />
-                                <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentLightBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#FFDBEAFE" />
-                                <Setter TargetName="Dot" Property="Fill" Value="{StaticResource AccentBrush}" />
-                                <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
-                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentLightBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
-
-        <!-- 按钮样式：主按钮 -->
-        <Style x:Key="PrimaryButton" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="16,5" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                CornerRadius="5" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#FF1D4ED8" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Background" Value="#FFCBD5E1" />
-                                <Setter Property="Foreground" Value="White" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- 按钮样式：次要按钮 -->
-        <Style x:Key="SecondaryButton" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource CardBorder}" />
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="12,5" />
-            <Setter Property="FontSize" Value="11.5" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                CornerRadius="5" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#FFCBD5E1" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- 按钮样式：危险按钮 -->
-        <Style x:Key="DangerButton" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource DangerLightBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="12,5" />
-            <Setter Property="FontSize" Value="11.5" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                CornerRadius="5" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#FFFECACA" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Background" Value="{StaticResource CardBorder}" />
-                                <Setter Property="Foreground" Value="{StaticResource TextMuted}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- 卡片样式 -->
-        <Style x:Key="Card" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource CardBg}" />
-            <Setter Property="BorderBrush" Value="{StaticResource CardBorder}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-        </Style>
-
-        <!-- 区段标题样式 -->
-        <Style x:Key="SectionTitle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
-            <Setter Property="Margin" Value="0,0,0,6" />
         </Style>
     </UserControl.Resources>
 
-    <DockPanel Margin="12,10">
+    <DockPanel Margin="10">
 
         <!-- ========== 底部状态栏 ========== -->
-        <Border DockPanel.Dock="Bottom" Margin="0,10,0,0"
-                Padding="10,7" Background="{StaticResource CardBg}"
+        <Border DockPanel.Dock="Bottom" Margin="0,8,0,0"
+                Background="{StaticResource CardBg}"
                 BorderBrush="{StaticResource CardBorder}" BorderThickness="0,1,0,0"
-                CornerRadius="0,0,8,8">
+                CornerRadius="0,0,8,8" Padding="10,6">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Orientation="Horizontal" Grid.Column="0">
+                <StackPanel Orientation="Horizontal">
+                    <!-- 状态指示灯 -->
                     <Ellipse Width="7" Height="7" VerticalAlignment="Center" Margin="0,0,6,0">
                         <Ellipse.Style>
                             <Style TargetType="Ellipse">
-                                <Setter Property="Fill" Value="{StaticResource TextMuted}" />
+                                <Setter Property="Fill" Value="{StaticResource TextMuted}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsModified}" Value="True">
-                                        <Setter Property="Fill" Value="#FFF59E0B" />
+                                        <Setter Property="Fill" Value="{StaticResource WarningBrush}"/>
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding IsBusy}" Value="True">
-                                        <Setter Property="Fill" Value="{StaticResource AccentBrush}" />
+                                        <Setter Property="Fill" Value="{StaticResource AccentBrush}"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </Ellipse.Style>
                     </Ellipse>
-                    <TextBlock Text="{Binding StatusMessage}"
-                               VerticalAlignment="Center" FontSize="11"
-                               Foreground="{StaticResource TextSecondary}" />
+                    <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center"
+                               FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                     <ProgressBar Width="80" Height="5" IsIndeterminate="True" Margin="10,0,0,0">
                         <ProgressBar.Style>
                             <Style TargetType="ProgressBar">
-                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Setter Property="Visibility" Value="Collapsed"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsBusy}" Value="True">
-                                        <Setter Property="Visibility" Value="Visible" />
+                                        <Setter Property="Visibility" Value="Visible"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -220,31 +178,30 @@
                     </ProgressBar>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Grid.Column="1">
-                    <TextBlock Text="● 已修改" FontSize="10"
-                               Foreground="#FFF59E0B" VerticalAlignment="Center"
-                               Margin="0,0,10,0">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <TextBlock FontSize="10" Foreground="{StaticResource WarningBrush}"
+                               VerticalAlignment="Center" Margin="0,0,10,0">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="● 已修改"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsModified}" Value="False">
-                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Setter Property="Visibility" Value="Collapsed"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
                     <Button cal:Message.Attach="SaveAsync" Content="保存"
-                            Width="72" Height="28"
-                            Padding="0">
+                            Width="72" Height="28" Padding="0">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsModified}" Value="False">
-                                        <Setter Property="IsEnabled" Value="False" />
+                                        <Setter Property="IsEnabled" Value="False"/>
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding IsBusy}" Value="True">
-                                        <Setter Property="IsEnabled" Value="False" />
+                                        <Setter Property="IsEnabled" Value="False"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -257,245 +214,256 @@
         <!-- ========== 主内容 ========== -->
         <Grid>
             <Grid.RowDefinitions>
-                <!-- 轴选择区 -->
-                <RowDefinition Height="Auto" />
-                <!-- 示教点编辑区 -->
-                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- ========== 轴选择卡片 ========== -->
-            <Border Grid.Row="0" Style="{StaticResource Card}" Padding="12,10"
-                    Margin="0,0,0,8">
-                <StackPanel>
-                    <TextBlock Text="轴选择" Style="{StaticResource SectionTitle}" />
-                    <TextBlock Text="勾选示教点需要包含的轴，应用于所有示教点"
-                               FontSize="11" Foreground="{StaticResource TextMuted}"
-                               Margin="0,0,0,8" />
-
-                    <WrapPanel>
-                        <ItemsControl ItemsSource="{Binding AvailableAxes}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <CheckBox IsChecked="{Binding IsSelected}"
-                                              Content="{Binding DisplayName}"
-                                              Margin="0,0,14,5"
-                                              FontSize="11"
-                                              Foreground="{StaticResource TextSecondary}"
-                                              VerticalAlignment="Center" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </WrapPanel>
-
-                    <Button cal:Message.Attach="ApplyAxisSelection"
-                            Content="应用轴选择"
-                            Style="{StaticResource SecondaryButton}"
-                            Width="88" Height="26" Margin="0,6,0,0" Padding="0" />
+            <!-- ===== 工位选择 ===== -->
+            <Border Grid.Row="0" Background="{StaticResource CardBg}"
+                    BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
+                    CornerRadius="8" Padding="8" Margin="0,0,0,6">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button cal:Message.Attach="SelectStation('左工位')"
+                            Width="96" Height="32" FontSize="14" FontWeight="SemiBold"
+                            Cursor="Hand" Margin="0,0,8,0">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="{StaticResource CardBorder}"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                                    CornerRadius="6">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="bd" Property="Background" Value="#EBEBEB"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedStation}" Value="左工位">
+                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <TextBlock Text="左工位"/>
+                    </Button>
+                    <Button cal:Message.Attach="SelectStation('右工位')"
+                            Width="96" Height="32" FontSize="14" FontWeight="SemiBold"
+                            Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="{StaticResource CardBorder}"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                                    CornerRadius="6">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="bd" Property="Background" Value="#EBEBEB"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedStation}" Value="右工位">
+                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <TextBlock Text="右工位"/>
+                    </Button>
                 </StackPanel>
             </Border>
 
-            <!-- ========== 示教点编辑卡片 ========== -->
-            <Border Grid.Row="1" Style="{StaticResource Card}" Padding="0">
+            <!-- ===== 轴选择 ===== -->
+            <Border Grid.Row="1" Background="{StaticResource CardBg}"
+                    BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
+                    CornerRadius="8" Padding="12,10" Margin="0,0,0,6">
+                <StackPanel>
+                    <TextBlock Text="轴选择" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimary}" Margin="0,0,0,6"/>
+                    <TextBlock Text="勾选当前工位需要包含的轴，自由命名示教点后可添加"
+                               FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,6"/>
+
+                    <ItemsControl ItemsSource="{Binding StationAxisGroups}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding GroupName}" FontSize="11"
+                                               FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"
+                                               Margin="0,4,0,2"/>
+                                    <WrapPanel>
+                                        <ItemsControl ItemsSource="{Binding Axes}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox IsChecked="{Binding IsSelected}"
+                                                              Content="{Binding DisplayName}"
+                                                              Margin="0,0,14,4" FontSize="11"
+                                                              Foreground="{StaticResource TextSecondary}"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </WrapPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <Button cal:Message.Attach="AddTeachingPoint"
+                                Content="+ 添加示教点" Style="{StaticResource PrimaryButton}"
+                                Width="98" Height="28" Padding="0"/>
+                        <Button cal:Message.Attach="ReadCurrentPosition"
+                                Content="读取坐标" Style="{StaticResource SecondaryButton}"
+                                Width="72" Height="28" Padding="0" Margin="8,0,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ===== 示教点编辑区（两列） ===== -->
+            <Border Grid.Row="2" Background="{StaticResource CardBg}"
+                    BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
+                    CornerRadius="8" Padding="0">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <!-- 左侧列表 -->
-                        <ColumnDefinition Width="200" MinWidth="160" />
-                        <ColumnDefinition Width="Auto" />
-                        <!-- 右侧编辑 -->
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="210" MinWidth="160"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- 左侧：示教点列表 -->
+                    <!-- === 左侧：示教点列表 === -->
                     <Border Grid.Column="0"
-                            BorderBrush="{StaticResource CardBorder}"
-                            BorderThickness="0,0,1,0"
-                            Background="Transparent">
+                            BorderBrush="{StaticResource CardBorder}" BorderThickness="0,0,1,0">
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
                             <!-- 列表标题 -->
                             <Border Grid.Row="0" Padding="14,10"
-                                    BorderBrush="{StaticResource CardBorder}"
-                                    BorderThickness="0,0,0,1">
-                                <TextBlock Text="示教点列表"
-                                           FontSize="12" FontWeight="SemiBold"
-                                           Foreground="{StaticResource TextPrimary}" />
+                                    BorderBrush="{StaticResource CardBorder}" BorderThickness="0,0,0,1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding SelectedStation}" FontSize="12"
+                                               FontWeight="Bold" Foreground="{StaticResource AccentBrush}"/>
+                                    <TextBlock Text=" 示教点" FontSize="12"
+                                               FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                </StackPanel>
                             </Border>
 
-                            <!-- 示教点列表 -->
+                            <!-- 列表 -->
                             <ListBox Grid.Row="1"
-                                     ItemsSource="{Binding TeachingPoints}"
+                                     ItemsSource="{Binding StationPoints}"
                                      SelectedItem="{Binding SelectedTeachingPoint, Mode=TwoWay}"
                                      DisplayMemberPath="Name"
-                                     BorderThickness="0"
-                                     Background="Transparent"
-                                     ItemContainerStyle="{StaticResource TeachingPointListBoxItem}"
+                                     BorderThickness="0" Background="Transparent"
+                                     ItemContainerStyle="{StaticResource PointListBoxItem}"
                                      Padding="4,3"
-                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                <ListBox.Style>
-                                    <Style TargetType="ListBox">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding TeachingPoints.Count}" Value="0">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </ListBox.Style>
-                            </ListBox>
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
 
-                            <!-- 空状态提示 -->
-                            <TextBlock Grid.Row="1" Text="暂无示教点&#x0a;点击添加创建"
-                                       FontSize="12" Foreground="{StaticResource TextMuted}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       TextAlignment="Center" LineHeight="20">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding TeachingPoints.Count}"
-                                                         Value="0">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-
-                            <!-- 按钮 -->
+                            <!-- 底部操作 -->
                             <Border Grid.Row="2" Padding="8,7"
-                                    BorderBrush="{StaticResource CardBorder}"
-                                    BorderThickness="0,1,0,0">
-                                <StackPanel Orientation="Horizontal">
-                                    <Button cal:Message.Attach="AddTeachingPoint"
-                                            Content="+ 添加"
-                                            Style="{StaticResource SecondaryButton}"
-                                            Width="54" Height="24" Padding="0"
-                                            Margin="0,0,5,0" />
-                                    <Button cal:Message.Attach="DeleteTeachingPoint"
-                                            Content="− 删除"
-                                            Style="{StaticResource DangerButton}"
-                                            Width="54" Height="24" Padding="0" />
-                                </StackPanel>
+                                    BorderBrush="{StaticResource CardBorder}" BorderThickness="0,1,0,0">
+                                <Button cal:Message.Attach="DeleteTeachingPoint"
+                                        Content="删除选中" Style="{StaticResource DangerButton}"
+                                        Width="72" Height="24" Padding="0">
+                                   
+                                </Button>
                             </Border>
                         </Grid>
                     </Border>
 
-                    <!-- 分隔线 -->
+                    <!-- 分隔 -->
                     <GridSplitter Grid.Column="1" Width="4"
                                   HorizontalAlignment="Center" VerticalAlignment="Stretch"
-                                  Background="Transparent"
-                                  ShowsPreview="True" />
+                                  Background="Transparent" ShowsPreview="True"/>
 
-                    <!-- 右侧：坐标编辑 -->
-                    <Border Grid.Column="2" Padding="14,10">
+                    <!-- === 右侧：点编辑 === -->
+                    <Border Grid.Column="2" Padding="16,12">
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
-                            <!-- 标题 -->
-                            <Border Grid.Row="0"
-                                    BorderBrush="{StaticResource GridLineBrush}"
-                                    BorderThickness="0,0,0,1"
-                                    Padding="0,0,0,6" Margin="0,0,0,6">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="示教点坐标"
-                                               FontSize="12" FontWeight="SemiBold"
-                                               Foreground="{StaticResource TextPrimary}" />
-                                    <TextBlock Text=" — "
-                                               Foreground="{StaticResource TextMuted}"
-                                               FontSize="12" />
-                                    <TextBlock Text="{Binding SelectedTeachingPoint.Name}"
-                                               FontSize="12" Foreground="{StaticResource AccentBrush}"
-                                               FontWeight="SemiBold">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SelectedTeachingPoint}"
-                                                                 Value="{x:Null}">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </StackPanel>
+                            <!-- 点名称编辑 -->
+                            <Border Grid.Row="0" Padding="0,0,0,10"
+                                    BorderBrush="{StaticResource CardBorder}" BorderThickness="0,0,0,1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="名称:" VerticalAlignment="Center" FontSize="12"
+                                               Foreground="{StaticResource TextSecondary}" Margin="0,0,8,0"/>
+                                    <TextBox Grid.Column="1" Text="{Binding PointName, UpdateSourceTrigger=PropertyChanged}"
+                                             FontSize="13" FontWeight="SemiBold"
+                                             Foreground="{StaticResource AccentBrush}"
+                                             Background="White" BorderBrush="#D0D0D0"
+                                             VerticalContentAlignment="Center" Padding="6,3"
+                                             IsEnabled="{Binding IsPointSelected}"/>
+                                </Grid>
                             </Border>
 
-                            <!-- 空状态 -->
-                            <TextBlock Grid.Row="1"
-                                       Text="请在左侧选择或创建一个示教点"
-                                       FontSize="12" Foreground="{StaticResource TextMuted}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SelectedTeachingPoint}"
-                                                         Value="{x:Null}">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding CurrentPositions.Count}"
-                                                         Value="0">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
+                            <!-- 选择的轴（只读显示） -->
+                            <Border Grid.Row="1" Padding="0,8,0,6">
+                                <TextBlock FontSize="11" Foreground="{StaticResource TextMuted}">
+                                    <Run Text="当前编辑: "/>
+                                    <Run Text="{Binding SelectedTeachingPoint.Name, TargetNullValue='—'}" FontWeight="SemiBold"/>
+                                </TextBlock>
+                            </Border>
 
                             <!-- 坐标表格 -->
-                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
                                 <ItemsControl ItemsSource="{Binding CurrentPositions}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Padding="8,4"
-                                                    BorderBrush="{StaticResource GridLineBrush}"
-                                                    BorderThickness="0,0,0,1">
+                                            <Border Padding="6,3"
+                                                    BorderBrush="#F0F0F0" BorderThickness="0,0,0,1">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="130"/>
+                                                        <ColumnDefinition Width="*"/>
                                                     </Grid.ColumnDefinitions>
 
-                                                    <!-- 轴名称 -->
                                                     <TextBlock Grid.Column="0"
-                                                               Text="{Binding DisplayName}"
-                                                               FontSize="11.5"
+                                                               Text="{Binding DisplayName}" FontSize="11.5"
                                                                VerticalAlignment="Center"
-                                                               Foreground="{StaticResource TextSecondary}"
-                                                               Margin="0,0,8,0" />
+                                                               Foreground="{StaticResource TextSecondary}"/>
 
-                                                    <!-- 单位 -->
-                                                    <TextBlock Grid.Column="1"
-                                                               Text="unit"
-                                                               FontSize="10"
-                                                               VerticalAlignment="Center"
-                                                               Foreground="{StaticResource TextMuted}"
-                                                               Margin="0,0,6,0" />
-
-                                                    <!-- 位置输入 -->
-                                                    <TextBox Grid.Column="2"
+                                                    <TextBox Grid.Column="1"
                                                              Text="{Binding Position, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F4}}"
                                                              FontSize="12"
-                                                             FontWeight="SemiBold"
                                                              Foreground="{StaticResource TextPrimary}"
                                                              VerticalContentAlignment="Center"
                                                              HorizontalContentAlignment="Right"
-                                                             Width="88" Height="24"
-                                                             BorderBrush="{StaticResource CardBorder}"
-                                                             Background="White" />
+                                                             Width="100" Height="26"
+                                                             HorizontalAlignment="Right"
+                                                             BorderBrush="#E5E5E5"
+                                                             Background="{StaticResource CardBg}"/>
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
