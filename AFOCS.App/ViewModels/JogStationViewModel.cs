@@ -436,6 +436,23 @@ public class JogStationViewModel : Tool, IJogStation
             _toastService.ShowError(r.Message);
     }
 
+    public async Task BusHomeAsync(BusAxisJogItem item)
+    {
+        if (IsBusy) return;
+        IsBusy = true;
+        try
+        {
+            var r = await _busAxisDevice.MoveHomeAsync(item.AxisId);
+            if (!r.IsSuccess)
+                _toastService.ShowError($"{item.Name} 回零失败: {r.Message}");
+        }
+        catch (Exception ex)
+        {
+            _toastService.ShowError($"{item.Name} 回零异常: {ex.Message}");
+        }
+        finally { IsBusy = false; }
+    }
+
     // ========== 雅克贝斯 Jog ==========
 
     public async Task AkribisJogPlusLargeAsync(AkribisStationJogItem station, string axisName)
@@ -477,5 +494,23 @@ public class JogStationViewModel : Tool, IJogStation
         var r = await station.Motion.StopAxisAsync();
         if (!r.IsSuccess)
             _toastService.ShowError($"{station.Name}: {r.Message}");
+    }
+
+    public async Task AkribisHomeAsync(AkribisStationJogItem station, string axisName)
+    {
+        if (IsBusy) return;
+        var axis = ParseAxis(axisName);
+        IsBusy = true;
+        try
+        {
+            var r = await station.Motion.HomeAsync(axis);
+            if (!r.IsSuccess)
+                _toastService.ShowError($"{station.Name} {axis} 回零失败: {r.Message}");
+        }
+        catch (Exception ex)
+        {
+            _toastService.ShowError($"{station.Name} {axis} 回零异常: {ex.Message}");
+        }
+        finally { IsBusy = false; }
     }
 }

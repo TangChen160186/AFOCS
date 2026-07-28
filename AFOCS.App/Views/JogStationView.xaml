@@ -75,6 +75,12 @@
             <Setter Property="Background" Value="#2563EB"/>
             <Setter Property="Content" Value="▶▶"/>
         </Style>
+        <Style x:Key="BtnHome" TargetType="Button" BasedOn="{StaticResource JogBtn}">
+            <Setter Property="Background" Value="#6B7280"/>
+            <Setter Property="Content" Value="H"/>
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
 
         <!-- ===== 步长输入 ===== -->
         <Style x:Key="StepInput" TargetType="TextBox">
@@ -280,6 +286,8 @@
                                                                     cal:Message.Attach="BusJogMinusSmallAsync($dataContext)"/>
                                                             <Button Style="{StaticResource BtnStop}"
                                                                     cal:Message.Attach="BusStopAsync($dataContext)"/>
+                                                            <Button Style="{StaticResource BtnHome}"
+                                                                    cal:Message.Attach="BusHomeAsync($dataContext)"/>
                                                             <Button Style="{StaticResource BtnSlowFwd}"
                                                                     cal:Message.Attach="BusJogPlusSmallAsync($dataContext)"/>
                                                             <Button Style="{StaticResource BtnFastFwd}"
@@ -393,6 +401,8 @@
                                                         cal:Message.Attach="AkribisJogMinusSmallAsync($dataContext, 'X')"/>
                                                 <Button Style="{StaticResource BtnStop}"
                                                         cal:Message.Attach="AkribisStopAsync($dataContext)"/>
+                                                <Button Style="{StaticResource BtnHome}"
+                                                        cal:Message.Attach="AkribisHomeAsync($dataContext, 'X')"/>
                                                 <Button Style="{StaticResource BtnSlowFwd}"
                                                         cal:Message.Attach="AkribisJogPlusSmallAsync($dataContext, 'X')"/>
                                                 <Button Style="{StaticResource BtnFastFwd}"
@@ -429,6 +439,8 @@
                                                         cal:Message.Attach="AkribisJogMinusSmallAsync($dataContext, 'Y')"/>
                                                 <Button Style="{StaticResource BtnStop}"
                                                         cal:Message.Attach="AkribisStopAsync($dataContext)"/>
+                                                <Button Style="{StaticResource BtnHome}"
+                                                        cal:Message.Attach="AkribisHomeAsync($dataContext, 'Y')"/>
                                                 <Button Style="{StaticResource BtnSlowFwd}"
                                                         cal:Message.Attach="AkribisJogPlusSmallAsync($dataContext, 'Y')"/>
                                                 <Button Style="{StaticResource BtnFastFwd}"
@@ -465,6 +477,8 @@
                                                         cal:Message.Attach="AkribisJogMinusSmallAsync($dataContext, 'Z')"/>
                                                 <Button Style="{StaticResource BtnStop}"
                                                         cal:Message.Attach="AkribisStopAsync($dataContext)"/>
+                                                <Button Style="{StaticResource BtnHome}"
+                                                        cal:Message.Attach="AkribisHomeAsync($dataContext, 'Z')"/>
                                                 <Button Style="{StaticResource BtnSlowFwd}"
                                                         cal:Message.Attach="AkribisJogPlusSmallAsync($dataContext, 'Z')"/>
                                                 <Button Style="{StaticResource BtnFastFwd}"

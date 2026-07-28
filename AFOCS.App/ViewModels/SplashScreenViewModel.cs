@@ -154,7 +154,7 @@ namespace AFOCS.App.ViewModels
                 //_rightCouplingRPressure,
                 //_rightDispensePressure,
 
-                //_arAkribisLeftCouplingL,
+                _arAkribisLeftCouplingL,
                 //_akribisLeftCouplingR,
                 //_akribisRightCouplingL,
                 //_akribisRightCouplingR,

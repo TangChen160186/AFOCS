@@ -11,7 +11,7 @@ public abstract class AkribisMotion : IAkribisMotion
     private readonly MotionController _controller;
     private AkribisCouplingConfig _config = new();
 
-    private  const int DefaultEquip = 2048_00;
+    private  const int DefaultEquip = 205; // 本来是204.8
     public bool IsConnected => _controller.IsConnected;
 
     /// <summary>子类覆写：返回专用的配置类型（用于 ConfigService 区分配置文件）</summary>
