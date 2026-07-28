@@ -207,10 +207,18 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
 
                     var speedResult = await motionCard.GetSpeedAsync((ushort)id);
                     var speed = speedResult.IsSuccess ? speedResult.Data : -999999;
+
+                    var ioResult = await motionCard.GetAxisIoStatusAsync((ushort)id);
+                    var ioStatus = ioResult.IsSuccess ? ioResult.Data : 0;
+
+                    var smResult = await motionCard.GetAxisStateMachineAsync((ushort)id);
+                    var stateMachine = smResult.IsSuccess ? smResult.Data : (ushort)0;
+
                     var name = GetAxisDisplayName(id);
                     changes.Add(new BusAxisStateChangedEventArgs(
                         id, name,
-                        pos, speed));
+                        pos, speed,
+                        ioStatus, stateMachine));
                 }
 
                 foreach (var change in changes)
@@ -270,13 +278,16 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
             if (doneResult.Data == 0)
                 return Result.Fail($"轴 {axis} 正在运动中，请等待完成");
 
-            // 检查硬限位
+            // 检查硬限位（方向感知：正限位只阻止正向移动，负限位只阻止负向移动）
             var ioResult = await motionCard.GetAxisIoStatusAsync(axis);
             if (!ioResult.IsSuccess) return Result.Fail($"读取轴IO状态失败: {ioResult.Message}");
             var ioStatus = ioResult.Data;
-            if ((ioStatus & 0x08) != 0) return Result.Fail("急停已触发，请复位急停按钮后再试");
-            if ((ioStatus & 0x02) != 0) return Result.Fail($"轴 {axis} 正方向硬限位已触发");
-            if ((ioStatus & 0x04) != 0) return Result.Fail($"轴 {axis} 负方向硬限位已触发");
+            //if ((ioStatus & 0x08) != 0) return Result.Fail("急停已触发，请复位急停按钮后再试");
+            //if ((ioStatus & 0x01) != 0) return Result.Fail($"轴 {axis} 驱动器报警，请检查驱动器状态");
+            //if ((ioStatus & 0x02) != 0 && distance > 0)
+            //    return Result.Fail($"轴 {axis} 已触发正限位，无法继续正向移动，请先反向移动脱困");
+            //if ((ioStatus & 0x04) != 0 && distance < 0)
+            //    return Result.Fail($"轴 {axis} 已触发负限位，无法继续负向移动，请先反向移动脱困");
 
             // 设置脉冲当量
             var equivResult = await motionCard.SetEquivAsync(axis, cfg.Equiv);
@@ -372,12 +383,17 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
             var ioResult = await motionCard.GetAxisIoStatusAsync(axis);
             if (!ioResult.IsSuccess) return Result.Fail($"读取轴IO状态失败: {ioResult.Message}");
             var ioStatus = ioResult.Data;
-            if ((ioStatus & 0x08) != 0) return Result.Fail("急停已触发，请复位急停按钮后再试");
+            //if ((ioStatus & 0x08) != 0) return Result.Fail("急停已触发，请复位急停按钮后再试");
+            //if ((ioStatus & 0x01) != 0) return Result.Fail($"轴 {axis} 驱动器报警，请检查驱动器状态");
 
-            var isPositiveLimit = (ioStatus & 0x02) != 0;
-            var isNegativeLimit = (ioStatus & 0x04) != 0;
-            if (isPositiveLimit && isNegativeLimit)
-                return Result.Fail("正负限位同时触发，请检查限位传感器");
+            //var isPositiveLimit = (ioStatus & 0x02) != 0;
+            //var isNegativeLimit = (ioStatus & 0x04) != 0;
+            //if (isPositiveLimit && isNegativeLimit)
+            //    return Result.Fail("正负限位同时触发，请检查限位传感器");
+            //if (isPositiveLimit)
+            //    logger.Warning("轴 {Axis} 正限位已触发，回零将向负方向寻原点", axis);
+            //if (isNegativeLimit)
+            //    logger.Warning("轴 {Axis} 负限位已触发，回零将向正方向寻原点", axis);
 
             // 设置脉冲当量
             var equivResult = await motionCard.SetEquivAsync(axis, cfg.Equiv);
@@ -520,15 +536,24 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
                     return Result.Fail($"设置轴 {rawAxisList[i]} 脉冲当量失败: {eqResult.Message}");
             }
 
-            // 检查限位
+            // 检查限位（方向感知：正限位只阻止正向移动，负限位只阻止负向移动）
             for (int i = 0; i < axisCount; i++)
             {
                 var ioResult = await motionCard.GetAxisIoStatusAsync(rawAxisList[i]);
                 if (!ioResult.IsSuccess) return Result.Fail($"读取轴 {rawAxisList[i]} IO状态失败: {ioResult.Message}");
                 var ioStatus = ioResult.Data;
-                if ((ioStatus & 0x08) != 0) return Result.Fail($"轴 {rawAxisList[i]} 急停已触发");
-                if ((ioStatus & 0x02) != 0) return Result.Fail($"轴 {rawAxisList[i]} 正方向硬限位已触发");
-                if ((ioStatus & 0x04) != 0) return Result.Fail($"轴 {rawAxisList[i]} 负方向硬限位已触发");
+                //if ((ioStatus & 0x08) != 0) return Result.Fail($"轴 {rawAxisList[i]} 急停已触发");
+                //if ((ioStatus & 0x01) != 0) return Result.Fail($"轴 {rawAxisList[i]} 驱动器报警");
+
+                // 获取当前位置判断移动方向
+                var posRes = await motionCard.GetPositionAsync(rawAxisList[i]);
+                if (!posRes.IsSuccess) return Result.Fail($"读取轴 {rawAxisList[i]} 位置失败: {posRes.Message}");
+                var delta = targetPositions[i] - posRes.Data;
+
+                if ((ioStatus & 0x02) != 0 && delta > 0)
+                    return Result.Fail($"轴 {rawAxisList[i]} 已触发正限位，目标方向为正向，无法插补");
+                if ((ioStatus & 0x04) != 0 && delta < 0)
+                    return Result.Fail($"轴 {rawAxisList[i]} 已触发负限位，目标方向为负向，无法插补");
             }
 
             // 获取速度参数（使用第一个轴的配置）
@@ -674,16 +699,59 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
 }
 
 /// <summary>轴状态变化事件参数</summary>
-public class BusAxisStateChangedEventArgs(
-    AxisId axisId,
-    string name,
-    double position,
-    double speed)
-    : EventArgs
+public class BusAxisStateChangedEventArgs : EventArgs
 {
-    public AxisId AxisId { get; } = axisId;
-    public string Name { get; } = name;
-    public double Position { get; } = position;
-    public double Speed { get; } = speed;
+    public AxisId AxisId { get; }
+    public string Name { get; }
+    public double Position { get; }
+    public double Speed { get; }
     public DateTime Timestamp { get; } = DateTime.Now;
+
+    // ========== IO 状态 ==========
+
+    /// <summary>原始 IO 状态值（位掩码）</summary>
+    public uint IoStatusRaw { get; }
+
+    /// <summary>报警信号（ALM）</summary>
+    public bool IsAlarm { get; }
+
+    /// <summary>正方向硬限位（PEL）</summary>
+    public bool IsPositiveLimit { get; }
+
+    /// <summary>负方向硬限位（NEL）</summary>
+    public bool IsNegativeLimit { get; }
+
+    /// <summary>急停信号（EMG）</summary>
+    public bool IsEmergencyStop { get; }
+
+    // ========== 轴状态 ==========
+
+    /// <summary>轴状态机值</summary>
+    public ushort StateMachine { get; }
+
+    /// <summary>轴是否已使能（状态机 == 4 表示 Operation Enabled）</summary>
+    public bool IsEnabled => StateMachine == 4;
+
+    public BusAxisStateChangedEventArgs(
+        AxisId axisId,
+        string name,
+        double position,
+        double speed,
+        uint ioStatusRaw,
+        ushort stateMachine)
+    {
+        AxisId = axisId;
+        Name = name;
+        Position = position;
+        Speed = speed;
+        IoStatusRaw = ioStatusRaw;
+        StateMachine = stateMachine;
+
+        // 解析 IO 状态位
+        // bit0: ALM (报警), bit1: PEL (正限位), bit2: NEL (负限位), bit3: EMG (急停)
+        IsAlarm = (ioStatusRaw & 0x01) != 0;
+        IsPositiveLimit = (ioStatusRaw & 0x02) != 0;
+        IsNegativeLimit = (ioStatusRaw & 0x04) != 0;
+        IsEmergencyStop = (ioStatusRaw & 0x08) != 0;
+    }
 }

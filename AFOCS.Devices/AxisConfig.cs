@@ -13,11 +13,11 @@ namespace AFOCS.Devices
 
         /// <summary>起始速度（unit/s）</summary>
         [Description("起始速度 (unit/s)")]
-        public double MinVel { get; set; } = 2;
+        public double MinVel { get; set; } = 200;
 
         /// <summary>最大速度（unit/s）</summary>
         [Description("最大速度 (unit/s)")]
-        public double MaxVel { get; set; } = 5;
+        public double MaxVel { get; set; } = 500;
 
         /// <summary>加速时间（s）</summary>
         [Description("加速时间 (s)")]

@@ -1,7 +1,6 @@
 using System.ComponentModel.Composition;
 using AFOCS.App.Commands;
 using AFOCS.App.ViewModels;
-using AFOCS.Framework;
 using AFOCS.Framework.Framework;
 using AFOCS.Framework.Framework.Menus;
 using AFOCS.Infrastructure;
@@ -13,19 +12,14 @@ namespace AFOCS.App
     public class Module : ModuleBase
     {
         [Export]
-        public static readonly MenuItemDefinition ViewJogLeftMenuItem = new CommandMenuItemDefinition<ViewJogLeftCommandDefinition>(
-            AFOCS.Framework.Modules.MainMenu.MenuDefinitions.ViewToolsMenuGroup, 5);
-
-        [Export]
-        public static readonly MenuItemDefinition ViewJogRightMenuItem = new CommandMenuItemDefinition<ViewJogRightCommandDefinition>(
-            AFOCS.Framework.Modules.MainMenu.MenuDefinitions.ViewToolsMenuGroup, 6);
+        public static readonly MenuItemDefinition ViewJogStationMenuItem = new CommandMenuItemDefinition<ViewJogStationCommandDefinition>(
+            AFOCS.Framework.Modules.MainMenu.MenuDefinitions.ViewToolsMenuGroup, 7);
 
         public override IEnumerable<Type> DefaultTools
         {
             get
             {
-                yield return typeof(IJogLeft);
-                yield return typeof(IJogRight);
+                yield return typeof(JogStationViewModel);
             }
         }
 
