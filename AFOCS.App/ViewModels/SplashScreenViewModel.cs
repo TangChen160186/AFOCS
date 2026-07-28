@@ -142,10 +142,10 @@ namespace AFOCS.App.ViewModels
                 _busAxisDevice,
                 _ioDevice,
 
-                //_leftCouplingLGripper,
-                //_leftCouplingRGripper,
-                //_rightCouplingLGripper,
-                //_rightCouplingRGripper,
+                _leftCouplingLGripper,
+                _leftCouplingRGripper,
+                _rightCouplingLGripper,
+                _rightCouplingRGripper,
 
                 //_leftCouplingLPressure,
                 //_leftCouplingRPressure,

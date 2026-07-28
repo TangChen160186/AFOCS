@@ -15,6 +15,14 @@ namespace AFOCS.App
         public static readonly MenuItemDefinition ViewJogStationMenuItem = new CommandMenuItemDefinition<ViewJogStationCommandDefinition>(
             AFOCS.Framework.Modules.MainMenu.MenuDefinitions.ViewToolsMenuGroup, 7);
 
+        [Export]
+        public static readonly MenuItemDefinition ViewTestToolMenuItem = new CommandMenuItemDefinition<ViewTestToolCommandDefinition>(
+            AFOCS.Framework.Modules.MainMenu.MenuDefinitions.ViewToolsMenuGroup, 8);
+
+        [Export]
+        public static readonly MenuItemDefinition ViewTeachingPointsMenuItem = new CommandMenuItemDefinition<ViewTeachingPointsCommandDefinition>(
+            AFOCS.Framework.Modules.MainMenu.MenuDefinitions.ViewToolsMenuGroup, 9);
+
         public override IEnumerable<Type> DefaultTools
         {
             get

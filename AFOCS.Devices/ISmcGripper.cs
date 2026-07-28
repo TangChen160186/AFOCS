@@ -1,4 +1,4 @@
-﻿using AFOCS.Devices.Implementation;
+using AFOCS.Devices.Implementation;
 using AFOCS.Infrastructure;
 
 namespace AFOCS.Devices;
@@ -10,6 +10,13 @@ namespace AFOCS.Devices;
 public interface ISmcGripper : IDevice
 {
     string DisplayName { get; }
+
+    /// <summary>当前位置缓存值 [0.01mm]</summary>
+    int CurrentPosition { get; }
+    /// <summary>使能状态缓存</summary>
+    bool IsEnabledCached { get; }
+    /// <summary>报警状态缓存</summary>
+    bool IsAlarmCached { get; }
 
     /// <summary>数据变化事件（轮询检测到位置/状态变化时触发）</summary>
     event EventHandler<GripperDataChangedEventArgs>? DataChanged;

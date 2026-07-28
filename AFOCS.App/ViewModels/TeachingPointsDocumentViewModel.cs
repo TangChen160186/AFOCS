@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.ComponentModel.Composition;
 using System.Runtime.CompilerServices;
 using AFOCS.Devices;
 using AFOCS.Devices.Implementation;
@@ -81,7 +82,7 @@ namespace AFOCS.App.ViewModels
     }
 
     // ========== Document ViewModel ==========
-
+    [Export]
     public class TeachingPointsDocumentViewModel : Document
     {
         private readonly IConfigService _configService;
@@ -133,6 +134,7 @@ namespace AFOCS.App.ViewModels
         // 内存中的示教点数据
         private readonly Dictionary<string, Dictionary<string, double>> _pointData = [];
 
+        [ImportingConstructor]
         public TeachingPointsDocumentViewModel(IConfigService configService)
         {
             _configService = configService;

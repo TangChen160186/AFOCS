@@ -215,6 +215,86 @@ public class AkribisStationJogItem : INotifyPropertyChanged
 }
 
 // ====================================================================
+// 数据项：夹爪 Jog 项
+// ====================================================================
+
+public class GripperJogItem : INotifyPropertyChanged
+{
+    private readonly ISmcGripper _gripper;
+    private bool _subscribed;
+
+    public string Name => _gripper.DisplayName;
+    public ISmcGripper Gripper => _gripper;
+
+    private int _position;
+    public int Position
+    {
+        get => _position;
+        set { if (_position != value) { _position = value; OnPropertyChanged(); } }
+    }
+
+    private bool _isEnabled;
+    public bool IsEnabled
+    {
+        get => _isEnabled;
+        set { if (_isEnabled != value) { _isEnabled = value; OnPropertyChanged(); OnPropertyChanged(nameof(StatusText)); } }
+    }
+
+    private bool _isAlarm;
+    public bool IsAlarm
+    {
+        get => _isAlarm;
+        set { if (_isAlarm != value) { _isAlarm = value; OnPropertyChanged(); OnPropertyChanged(nameof(StatusText)); } }
+    }
+
+    public string StatusText
+    {
+        get
+        {
+            if (IsAlarm) return "报警";
+            if (IsEnabled) return "已使能";
+            return "未使能";
+        }
+    }
+
+    public GripperJogItem(ISmcGripper gripper)
+    {
+        _gripper = gripper;
+    }
+
+    public void Subscribe()
+    {
+        if (_subscribed) return;
+        _subscribed = true;
+        _gripper.DataChanged += OnDataChanged;
+        _position = _gripper.CurrentPosition;
+        _isEnabled = _gripper.IsEnabledCached;
+        _isAlarm = _gripper.IsAlarmCached;
+    }
+
+    public void Unsubscribe()
+    {
+        if (!_subscribed) return;
+        _subscribed = false;
+        _gripper.DataChanged -= OnDataChanged;
+    }
+
+    private void OnDataChanged(object? sender, GripperDataChangedEventArgs e)
+    {
+        Application.Current.Dispatcher.BeginInvoke(() =>
+        {
+            Position = e.CurrentPosition;
+            IsEnabled = e.IsEnabled;
+            IsAlarm = e.IsAlarm;
+        });
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnPropertyChanged([CallerMemberName] string? name = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+}
+
+// ====================================================================
 // JogStation ViewModel
 // ====================================================================
 
@@ -247,6 +327,7 @@ public class JogStationViewModel : Tool, IJogStation
             NotifyOfPropertyChange();
             NotifyOfPropertyChange(nameof(FilteredBusAxisGroups));
             NotifyOfPropertyChange(nameof(FilteredAkribisStations));
+            NotifyOfPropertyChange(nameof(FilteredGrippers));
         }
     }
 
@@ -285,6 +366,23 @@ public class JogStationViewModel : Tool, IJogStation
         }
     }
 
+    // ========== 夹爪数据 ==========
+
+    public ObservableCollection<GripperJogItem> Grippers { get; } = [];
+
+    public IEnumerable<GripperJogItem> FilteredGrippers
+    {
+        get
+        {
+            return _selectedStation switch
+            {
+                StationFilter.左工位 => Grippers.Where(x => x.Name.Contains("左")),
+                StationFilter.右工位 => Grippers.Where(x => x.Name.Contains("右")),
+                _ => Grippers,
+            };
+        }
+    }
+
     // ========== Jog 步长 ==========
 
     private double _busJogStepLarge = 10;
@@ -315,6 +413,20 @@ public class JogStationViewModel : Tool, IJogStation
         set { _akribisJogStepSmall = value; NotifyOfPropertyChange(); }
     }
 
+    private ushort _gripperSpeed = 50;
+    public ushort GripperSpeed
+    {
+        get => _gripperSpeed;
+        set { _gripperSpeed = value; NotifyOfPropertyChange(); }
+    }
+
+    private ushort _gripperTargetPosition = 200;
+    public ushort GripperTargetPosition
+    {
+        get => _gripperTargetPosition;
+        set { _gripperTargetPosition = value; NotifyOfPropertyChange(); }
+    }
+
     // ========== 状态 ==========
 
     private bool _isBusy;
@@ -331,13 +443,18 @@ public class JogStationViewModel : Tool, IJogStation
         AkribisLeftCouplingL leftL,
         AkribisLeftCouplingR leftR,
         AkribisRightCouplingL rightL,
-        AkribisRightCouplingR rightR)
+        AkribisRightCouplingR rightR,
+        LeftCouplingLGripper gripperLL,
+        LeftCouplingRGripper gripperLR,
+        RightCouplingLGripper gripperRL,
+        RightCouplingRGripper gripperRR)
     {
         _busAxisDevice = busAxisDevice;
         _toastService = toastService;
 
         BuildBusAxisItems();
         BuildAkribisItems(leftL, leftR, rightL, rightR);
+        BuildGripperItems(gripperLL, gripperLR, gripperRL, gripperRR);
     }
 
     // ========== 构建数据 ==========
@@ -384,6 +501,16 @@ public class JogStationViewModel : Tool, IJogStation
         AkribisStations.Add(new AkribisStationJogItem("右工位右耦合", rightR));
     }
 
+    private void BuildGripperItems(
+        LeftCouplingLGripper ll, LeftCouplingRGripper lr,
+        RightCouplingLGripper rl, RightCouplingRGripper rr)
+    {
+        Grippers.Add(new GripperJogItem(ll));
+        Grippers.Add(new GripperJogItem(lr));
+        Grippers.Add(new GripperJogItem(rl));
+        Grippers.Add(new GripperJogItem(rr));
+    }
+
     // ========== 生命周期 ==========
 
     protected override void OnViewAttached(object view, object context)
@@ -392,6 +519,7 @@ public class JogStationViewModel : Tool, IJogStation
 
         foreach (var item in BusAxes) item.Subscribe(_busAxisDevice);
         foreach (var item in AkribisStations) item.Subscribe();
+        foreach (var item in Grippers) item.Subscribe();
 
         if (view is FrameworkElement fe)
             fe.Unloaded += OnViewUnloaded;
@@ -403,6 +531,7 @@ public class JogStationViewModel : Tool, IJogStation
             fe.Unloaded -= OnViewUnloaded;
         foreach (var item in BusAxes) item.Unsubscribe(_busAxisDevice);
         foreach (var item in AkribisStations) item.Unsubscribe();
+        foreach (var item in Grippers) item.Unsubscribe();
     }
 
     // ========== 总线轴 Jog ==========
@@ -510,6 +639,56 @@ public class JogStationViewModel : Tool, IJogStation
         catch (Exception ex)
         {
             _toastService.ShowError($"{station.Name} {axis} 回零异常: {ex.Message}");
+        }
+        finally { IsBusy = false; }
+    }
+
+    // ========== 夹爪控制 ==========
+
+    public async Task GripperHomeAsync(GripperJogItem item)
+    {
+        if (IsBusy) return;
+        IsBusy = true;
+        try
+        {
+            var r = await item.Gripper.HomeAsync();
+            if (!r.IsSuccess)
+                _toastService.ShowError($"{item.Name} 回零失败: {r.Message}");
+        }
+        catch (Exception ex)
+        {
+            _toastService.ShowError($"{item.Name} 回零异常: {ex.Message}");
+        }
+        finally { IsBusy = false; }
+    }
+
+    public async Task GripperEnableAsync(GripperJogItem item)
+    {
+        var r = await item.Gripper.EnableAsync();
+        if (!r.IsSuccess)
+            _toastService.ShowError($"{item.Name} 使能失败: {r.Message}");
+    }
+
+    public async Task GripperAlarmResetAsync(GripperJogItem item)
+    {
+        var r = await item.Gripper.AlarmResetAsync();
+        if (!r.IsSuccess)
+            _toastService.ShowError($"{item.Name} 报警复位失败: {r.Message}");
+    }
+
+    public async Task GripperMoveAsync(GripperJogItem item)
+    {
+        if (IsBusy) return;
+        IsBusy = true;
+        try
+        {
+            var r = await item.Gripper.MoveAsync(GripperSpeed, GripperTargetPosition);
+            if (!r.IsSuccess)
+                _toastService.ShowError($"{item.Name} 动作失败: {r.Message}");
+        }
+        catch (Exception ex)
+        {
+            _toastService.ShowError($"{item.Name} 动作异常: {ex.Message}");
         }
         finally { IsBusy = false; }
     }

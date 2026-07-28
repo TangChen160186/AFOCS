@@ -12,15 +12,17 @@ public partial class JogStationView : UserControl
 
     private void OnTabSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (BusPanel is null || AkribisPanel is null) return;
+        if (BusPanel is null || AkribisPanel is null || GripperPanel is null) return;
 
         var tabControl = (TabControl)sender;
+
         BusPanel.Visibility = tabControl.SelectedIndex == 0
-            ? Visibility.Visible
-            : Visibility.Collapsed;
+            ? Visibility.Visible : Visibility.Collapsed;
 
         AkribisPanel.Visibility = tabControl.SelectedIndex == 1
-            ? Visibility.Visible
-            : Visibility.Collapsed;
+            ? Visibility.Visible : Visibility.Collapsed;
+
+        GripperPanel.Visibility = tabControl.SelectedIndex == 2
+            ? Visibility.Visible : Visibility.Collapsed;
     }
 }
