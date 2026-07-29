@@ -1,46 +1,37 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.ComponentModel.Composition;
-using System.Runtime.CompilerServices;
+using System.Windows;
+using AFOCS.App.Models;
 using AFOCS.Devices;
-using AFOCS.Devices.Implementation;
 using AFOCS.Framework.Framework;
 using AFOCS.Infrastructure;
+using AFOCS.Infrastructure.Extensions;
+using Caliburn.Micro;
+using GongSolutions.Wpf.DragDrop;
+using Action = System.Action;
 
 namespace AFOCS.App.ViewModels;
 
-// ==================== JSON 持久化 POCO ====================
-
-public class TeachingPointsConfig
-{
-    public List<TeachingPointPoco> Points { get; set; } = [];
-}
-
-public class TeachingPointPoco
-{
-    public string Name { get; set; } = string.Empty;
-    public string Station { get; set; } = string.Empty; // "左工位" / "右工位"
-    public List<string> AxisKeys { get; set; } = []; // 该点包含的轴
-    public Dictionary<string, double> AxisPositions { get; set; } = [];
-}
 
 // ==================== UI 绑定辅助类型 ====================
 
-public class AxisSelectionItem : INotifyPropertyChanged
+public class AxisSelectionItem : PropertyChangedBase
 {
-    public string Key { get; set; } = string.Empty;
-    public string DisplayName { get; set; } = string.Empty;
+    public required EAxis Axis { get; init; }
+    public string DisplayName => Axis.GetDescription();
 
-    private bool _isSelected;
+    /// <summary>勾选状态变化回调（用于自动更新示教点轴列表）</summary>
+    public Action? OnSelectionChanged { get; set; }
+
     public bool IsSelected
     {
-        get => _isSelected;
-        set { _isSelected = value; OnPropertyChanged(); }
+        get;
+        set
+        {
+            if (Set(ref field, value))
+                OnSelectionChanged?.Invoke();
+        }
     }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-    private void OnPropertyChanged([CallerMemberName] string? name = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
 public class AxisGroupItem
@@ -49,82 +40,71 @@ public class AxisGroupItem
     public ObservableCollection<AxisSelectionItem> Axes { get; set; } = [];
 }
 
-public class TeachingPointItem : INotifyPropertyChanged
+public class TeachingPointItem : PropertyChangedBase
 {
-    private string _name = string.Empty;
+    public Guid Id { get; init; } = Guid.NewGuid();
+
     public string Name
     {
-        get => _name;
-        set { _name = value; OnPropertyChanged(); }
-    }
+        get;
+        set => Set(ref field, value);
+    } = string.Empty;
 
-    public string Station { get; set; } = string.Empty;
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-    private void OnPropertyChanged([CallerMemberName] string? name = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    public WorkPos Station { get; set; } = WorkPos.Left;
 }
 
-public class AxisPositionItem : INotifyPropertyChanged
+public class AxisPositionItem : PropertyChangedBase
 {
     public Action? OnChanged { get; set; }
 
-    public string AxisKey { get; set; } = string.Empty;
-    public string DisplayName { get; set; } = string.Empty;
+    public required EAxis Axis { get; init; }
+    public string DisplayName => Axis.GetDescription();
 
-    private double _position;
     public double Position
     {
-        get => _position;
+        get;
         set
         {
-            if (Math.Abs(_position - value) < 0.0001) return;
-            _position = value;
-            OnPropertyChanged();
-            OnChanged?.Invoke();
+            if (Set(ref field, value))
+                OnChanged?.Invoke();
         }
     }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-    private void OnPropertyChanged([CallerMemberName] string? name = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
 // ==================== Document ViewModel ====================
 
 [Export]
-public class TeachingPointsDocumentViewModel : Document
+public class TeachingPointsDocumentViewModel : Document, IDropTarget
 {
+    public override string DisplayName { get; set; } = "示教点";
+
     private readonly IConfigService _configService;
+    private readonly IBusAxisDevice _busAxisDevice;
+    private readonly Dictionary<string, IAkribisMotion> _akribisInstances = [];
 
     // ========== 工位 ==========
 
-    public string[] Stations { get; } = ["左工位", "右工位"];
-
-    private string _selectedStation = "左工位";
-    public string SelectedStation
+    private WorkPos _selectedStation = WorkPos.Left;
+    public WorkPos SelectedStation
     {
         get => _selectedStation;
         set
         {
-            if (_selectedStation == value) return;
-            _selectedStation = value;
-            NotifyOfPropertyChange();
-            RefreshStationGroups();
-            NotifyOfPropertyChange(nameof(StationAxisGroups));
-            NotifyOfPropertyChange(nameof(StationPoints));
-            SelectedTeachingPoint = null;
+            if (Set(ref _selectedStation, value))
+            {
+                NotifyOfPropertyChange(nameof(StationPoints));
+                SelectedTeachingPoint = null;
+                ResetCheckboxesToDefault();
+            }
         }
     }
 
-    public void SelectStation(string station) => SelectedStation = station;
-
-    // ========== 全量轴列表（存储用） ==========
+    // ========== 轴列表（静态，16 个角色与工位无关）==========
 
     public ObservableCollection<AxisSelectionItem> AllAxes { get; } = [];
-
-    /// <summary>当前工位的轴分组（相机轴 / 耦合轴）</summary>
     public ObservableCollection<AxisGroupItem> StationAxisGroups { get; } = [];
+
+
 
     // ========== 示教点列表 ==========
 
@@ -146,24 +126,23 @@ public class TeachingPointsDocumentViewModel : Document
             NotifyOfPropertyChange(nameof(IsPointSelected));
             NotifyOfPropertyChange(nameof(PointName));
             LoadPointData(value);
+
+            if (value == null)
+                ResetCheckboxesToDefault();
+            else
+                SyncCheckboxesToPoint(value);
         }
     }
 
     public bool IsPointSelected => _selectedTeachingPoint != null;
 
-    // 当前编辑的名字
     public string PointName
     {
         get => _selectedTeachingPoint?.Name ?? string.Empty;
         set
         {
             if (_selectedTeachingPoint == null || _selectedTeachingPoint.Name == value) return;
-            var oldName = _selectedTeachingPoint.Name;
             _selectedTeachingPoint.Name = value;
-            if (_pointData.Remove(oldName, out var data))
-                _pointData[value] = data;
-            if (_pointAxisKeys.Remove(oldName, out var keys))
-                _pointAxisKeys[value] = keys;
             NotifyOfPropertyChange();
             IsModified = true;
         }
@@ -173,89 +152,145 @@ public class TeachingPointsDocumentViewModel : Document
 
     public ObservableCollection<AxisPositionItem> CurrentPositions { get; } = [];
 
-    private bool _isModified;
     public bool IsModified
     {
-        get => _isModified;
-        set { _isModified = value; NotifyOfPropertyChange(); }
+        get;
+        set => Set(ref field, value);
     }
 
-    private string _statusMessage = string.Empty;
     public string StatusMessage
     {
-        get => _statusMessage;
-        set { _statusMessage = value; NotifyOfPropertyChange(); }
-    }
+        get;
+        set => Set(ref field, value);
+    } = string.Empty;
 
-    private bool _isBusy;
     public bool IsBusy
     {
-        get => _isBusy;
-        set { _isBusy = value; NotifyOfPropertyChange(); }
+        get;
+        set => Set(ref field, value);
     }
 
-    // 内存中的数据：pointName -> (axisKey -> position)
-    private readonly Dictionary<string, Dictionary<string, double>> _pointData = [];
-    // 每个点独立的轴键列表
-    private readonly Dictionary<string, List<string>> _pointAxisKeys = [];
+    // pointId → 轴顺序
+    private readonly Dictionary<Guid, List<EAxis>> _pointAxisKeys = [];
+    // pointId → (EAxis → position)
+    private readonly Dictionary<Guid, Dictionary<EAxis, double>> _pointData = [];
+
+    private bool _isSyncingAxes;
+
+    // ========== 构造 ==========
 
     [ImportingConstructor]
-    public TeachingPointsDocumentViewModel(IConfigService configService)
+    public TeachingPointsDocumentViewModel(
+        IConfigService configService,
+        IBusAxisDevice busAxisDevice,
+        [ImportMany] IEnumerable<IAkribisMotion> akribisMotions)
     {
         _configService = configService;
-        DisplayName = "示教点";
+        _busAxisDevice = busAxisDevice;
+        foreach (var motion in akribisMotions)
+            _akribisInstances[motion.GetType().Name] = motion;
 
         InitializeAxes();
         _ = LoadAsync();
     }
 
-    // ========== 初始化 ==========
+    #region 初始化轴列表
 
     private void InitializeAxes()
     {
-        // 按顺序添加所有轴：左工位 → 右工位（相机 → 耦合）
-        AddBusAxes(Array.FindAll((AxisId[])Enum.GetValues<AxisId>(),
-            id => id.ToString().StartsWith("Left")),
-            "左工位", "相机轴", "耦合轴");
-        AddBusAxes(Array.FindAll((AxisId[])Enum.GetValues<AxisId>(),
-            id => id.ToString().StartsWith("Right")),
-            "右工位", "相机轴", "耦合轴");
-    }
-
-    private void AddBusAxes(AxisId[] ids, string station, string camGroup, string couplingGroup)
-    {
-        foreach (var id in ids)
+        AxisGroupItem _camGroup = new() { GroupName = "相机轴（总线）", Axes = [] };
+        AxisGroupItem _thetaGroup = new() { GroupName = "耦合旋转轴（总线）", Axes = [] };
+        AxisGroupItem _linearGroup = new() { GroupName = "耦合直线轴（雅克贝斯）", Axes = [] };
+        // 相机轴 0–3
+        foreach (var axis in Enum.GetValues<EAxis>().Take(4))
         {
-            var displayName = BusAxisDevice.GetAxisDisplayName(id);
-            var groupName = displayName.Contains("相机") ? camGroup : couplingGroup;
-            AllAxes.Add(new AxisSelectionItem
+            var item = new AxisSelectionItem()
             {
-                Key = AxisKey(id),
-                DisplayName = $"{displayName}",
-                // 默认选中：内调芯 θX/θY/θZ 都选
-                IsSelected = displayName.Contains("θ")
-            });
+                Axis = axis,
+                OnSelectionChanged = OnAxisSelectionChanged,
+            };
+            AllAxes.Add(item);
+            _camGroup.Axes.Add(item);
         }
+
+        // 耦合旋转轴 4–9
+        foreach (var axis in Enum.GetValues<EAxis>().Skip(4).Take(6))
+        {
+            var item = new AxisSelectionItem()
+            {
+                Axis = axis,
+                OnSelectionChanged = OnAxisSelectionChanged,
+            };
+            AllAxes.Add(item);
+            _thetaGroup.Axes.Add(item);
+        }
+
+        // 耦合直线轴 10–15
+        foreach (var axis in Enum.GetValues<EAxis>().Skip(10).Take(6))
+        {
+            var item = new AxisSelectionItem()
+            {
+                Axis = axis,
+                OnSelectionChanged = OnAxisSelectionChanged,
+            };
+            AllAxes.Add(item);
+            _linearGroup.Axes.Add(item);
+        }
+        StationAxisGroups.Add(_camGroup);
+        StationAxisGroups.Add(_thetaGroup);
+        StationAxisGroups.Add(_linearGroup);
     }
 
-    private void RefreshStationGroups()
+    #endregion
+
+
+
+    // ========== 复选框 ↔ 示教点 ==========
+    private void SyncCheckboxesToPoint(TeachingPointItem point)
     {
-        StationAxisGroups.Clear();
-        // 分类：当前工位的相机轴和耦合轴
-        var prefix = SelectedStation == "左工位" ? "左" : "右";
-        var camGroup = "相机轴";
-        var couplingGroup = "耦合轴";
-
-        var camAxes = AllAxes.Where(a => a.DisplayName.StartsWith(prefix) && a.DisplayName.Contains("相机")).ToList();
-        var couplingAxes = AllAxes.Where(a => a.DisplayName.StartsWith(prefix) && a.DisplayName.Contains("耦合")).ToList();
-
-        if (camAxes.Count > 0)
-            StationAxisGroups.Add(new AxisGroupItem { GroupName = camGroup, Axes = new ObservableCollection<AxisSelectionItem>(camAxes) });
-        if (couplingAxes.Count > 0)
-            StationAxisGroups.Add(new AxisGroupItem { GroupName = couplingGroup, Axes = new ObservableCollection<AxisSelectionItem>(couplingAxes) });
+        _isSyncingAxes = true;
+        var keys = _pointAxisKeys.TryGetValue(point.Id, out var axisKeys) ? axisKeys : [];
+        var keySet = new HashSet<EAxis>(keys);
+        foreach (var axis in AllAxes)
+            axis.IsSelected = keySet.Contains(axis.Axis);
+        _isSyncingAxes = false;
     }
 
-    // ========== 加载 ==========
+    private void ResetCheckboxesToDefault()
+    {
+        _isSyncingAxes = true;
+        foreach (var axis in AllAxes)
+            axis.IsSelected = axis.Axis.IsBusAxis() && axis.Axis >= EAxis.CouplingLThetaX;
+        _isSyncingAxes = false;
+    }
+
+    private void OnAxisSelectionChanged()
+    {
+        if (_isSyncingAxes || _selectedTeachingPoint == null) return;
+
+        var newKeys = AllAxes.Where(a => a.IsSelected).Select(a => a.Axis).ToList();
+        if (newKeys.Count == 0) return;
+
+        SaveCurrentPointData();
+
+        var id = _selectedTeachingPoint.Id;
+        _pointAxisKeys[id] = newKeys;
+
+        var positions = _pointData[id];
+        foreach (var key in newKeys)
+        {
+            positions.TryAdd(key, 0);
+        }
+        var toRemove = positions.Keys.Except(newKeys).ToList();
+        foreach (var key in toRemove)
+            positions.Remove(key);
+
+        LoadPointData(_selectedTeachingPoint);
+        IsModified = true;
+        StatusMessage = $"已更新轴列表: {newKeys.Count} 个轴";
+    }
+
+    // ========== 加载 / 保存 ==========
 
     private async Task LoadAsync()
     {
@@ -266,7 +301,6 @@ public class TeachingPointsDocumentViewModel : Document
             var config = await _configService.LoadAsync<TeachingPointsConfig>();
             if (config == null)
             {
-                RefreshStationGroups();
                 StatusMessage = "就绪";
                 return;
             }
@@ -274,18 +308,16 @@ public class TeachingPointsDocumentViewModel : Document
             _pointData.Clear();
             _pointAxisKeys.Clear();
             AllPoints.Clear();
+
             foreach (var point in config.Points)
             {
-                _pointData[point.Name] = new Dictionary<string, double>(point.AxisPositions);
-                _pointAxisKeys[point.Name] = point.AxisKeys.Count > 0
-                    ? new List<string>(point.AxisKeys)
-                    : point.AxisPositions.Keys.ToList(); // 兼容旧数据
-                AllPoints.Add(new TeachingPointItem { Name = point.Name, Station = point.Station });
+                var id = point.Id != Guid.Empty ? point.Id : Guid.NewGuid();
+                _pointData[id] = new Dictionary<EAxis, double>(point.AxisPositions);
+                _pointAxisKeys[id] = point.AxisKeys;
+                AllPoints.Add(new TeachingPointItem { Id = id, Name = point.Name, Station = point.Station });
             }
 
-            RefreshStationGroups();
             NotifyOfPropertyChange(nameof(StationPoints));
-
             StatusMessage = $"已加载 {AllPoints.Count} 个示教点";
         }
         catch (Exception ex)
@@ -299,8 +331,6 @@ public class TeachingPointsDocumentViewModel : Document
         }
     }
 
-    // ========== 保存 ==========
-
     public async Task SaveAsync()
     {
         IsBusy = true;
@@ -311,12 +341,13 @@ public class TeachingPointsDocumentViewModel : Document
 
             var config = new TeachingPointsConfig
             {
-                Points = _pointData.Select(kvp => new TeachingPointPoco
+                Points = AllPoints.Select(p => new TeachingPointPoco
                 {
-                    Name = kvp.Key,
-                    Station = AllPoints.FirstOrDefault(p => p.Name == kvp.Key)?.Station ?? "",
-                    AxisKeys = _pointAxisKeys.TryGetValue(kvp.Key, out var keys) ? keys : [],
-                    AxisPositions = kvp.Value,
+                    Id = p.Id,
+                    Name = p.Name,
+                    Station = p.Station,
+                    AxisKeys = _pointAxisKeys.TryGetValue(p.Id, out var keys) ? keys : [],
+                    AxisPositions = _pointData.TryGetValue(p.Id, out var pos) ? pos : [],
                 }).ToList(),
             };
 
@@ -344,31 +375,18 @@ public class TeachingPointsDocumentViewModel : Document
 
     public void AddTeachingPoint()
     {
-        var selectedKeys = AllAxes.Where(a => a.IsSelected).ToList();
-        if (selectedKeys.Count == 0)
-        {
-            StatusMessage = "请至少勾选一个轴";
-            return;
-        }
-
-        // 生成唯一名称
-        var baseName = $"{SelectedStation}示教点";
+        var baseName = $"{SelectedStation.GetDescription()}示教点";
         var name = baseName;
         var idx = 1;
-        while (_pointData.ContainsKey(name))
+        while (AllPoints.Any(p => p.Name == name))
             name = $"{baseName}_{++idx}";
 
-        var item = new TeachingPointItem { Name = name, Station = SelectedStation };
+        var id = Guid.NewGuid();
+        var item = new TeachingPointItem { Id = id, Name = name, Station = SelectedStation };
         AllPoints.Add(item);
 
-        // 记录当前勾选的轴作为该点专属轴列表
-        var keys = selectedKeys.Select(a => a.Key).ToList();
-        _pointAxisKeys[name] = keys;
-
-        var positions = new Dictionary<string, double>();
-        foreach (var key in keys)
-            positions[key] = 0;
-        _pointData[name] = positions;
+        _pointAxisKeys[id] = [];
+        _pointData[id] = [];
 
         NotifyOfPropertyChange(nameof(StationPoints));
         SelectedTeachingPoint = item;
@@ -381,8 +399,16 @@ public class TeachingPointsDocumentViewModel : Document
         if (_selectedTeachingPoint == null) return;
 
         var name = _selectedTeachingPoint.Name;
-        _pointData.Remove(name);
-        _pointAxisKeys.Remove(name);
+        var result = MessageBox.Show(
+            $"确定要删除示教点 \"{name}\" 吗？此操作不可撤销。",
+            "删除确认",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (result != MessageBoxResult.Yes) return;
+
+        _pointData.Remove(_selectedTeachingPoint.Id);
+        _pointAxisKeys.Remove(_selectedTeachingPoint.Id);
         AllPoints.Remove(_selectedTeachingPoint);
         SelectedTeachingPoint = null;
         NotifyOfPropertyChange(nameof(StationPoints));
@@ -392,14 +418,66 @@ public class TeachingPointsDocumentViewModel : Document
 
     // ========== 读取当前坐标 ==========
 
-    public void ReadCurrentPosition()
+    public async Task ReadCurrentPosition()
     {
-        if (CurrentPositions.Count == 0)
+        if (_selectedTeachingPoint == null)
         {
-            StatusMessage = "没有可读取的轴";
+            StatusMessage = "请先选择要读取的示教点";
             return;
         }
-        StatusMessage = "需要设备支持，暂未实现位置读取";
+
+        var name = _selectedTeachingPoint.Name;
+        if (!_pointAxisKeys.TryGetValue(_selectedTeachingPoint.Id, out var keys) || keys.Count == 0)
+        {
+            StatusMessage = "该示教点没有关联的轴";
+            return;
+        }
+
+        IsBusy = true;
+        StatusMessage = "读取中...";
+        try
+        {
+            foreach (var item in CurrentPositions)
+            {
+                if (item.Axis.IsBusAxis())
+                    _ = ReadBusAxisAsync(item);
+                else if (item.Axis.IsAkribisAxis())
+                    ReadAkribisPosition(item);
+            }
+            IsModified = true;
+            StatusMessage = "坐标读取完成";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"读取失败: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task ReadBusAxisAsync(AxisPositionItem item)
+    {
+        if (!_busAxisDevice.IsConnected) return;
+        var busId = item.Axis.ToBusAxisId(SelectedStation);
+        var result = await _busAxisDevice.GetPositionAsync(busId);
+        if (result.IsSuccess)
+            item.Position = result.Data;
+    }
+
+    private void ReadAkribisPosition(AxisPositionItem item)
+    {
+        var (instanceName, akAxis) = item.Axis.ToAkribis(SelectedStation);
+        if (!_akribisInstances.TryGetValue(instanceName, out var motion)) return;
+
+        item.Position = akAxis switch
+        {
+            AkribisAxisId.X => motion.PositionX,
+            AkribisAxisId.Y => motion.PositionY,
+            AkribisAxisId.Z => motion.PositionZ,
+            _ => 0,
+        };
     }
 
     // ========== 内部 ==========
@@ -407,13 +485,11 @@ public class TeachingPointsDocumentViewModel : Document
     private void SaveCurrentPointData()
     {
         if (_selectedTeachingPoint == null) return;
-        var name = _selectedTeachingPoint.Name;
-        if (string.IsNullOrWhiteSpace(name)) return;
 
-        var positions = new Dictionary<string, double>();
+        var positions = new Dictionary<EAxis, double>();
         foreach (var item in CurrentPositions)
-            positions[item.AxisKey] = item.Position;
-        _pointData[name] = positions;
+            positions[item.Axis] = item.Position;
+        _pointData[_selectedTeachingPoint.Id] = positions;
     }
 
     private void LoadPointData(TeachingPointItem? point)
@@ -421,38 +497,103 @@ public class TeachingPointsDocumentViewModel : Document
         CurrentPositions.Clear();
         if (point == null) return;
 
-        // 用该点自己的轴键列表，不从全局 IsSelected 读取
-        var keys = _pointAxisKeys.TryGetValue(point.Name, out var axisKeys)
+        var keys = _pointAxisKeys.TryGetValue(point.Id, out var axisKeys)
             ? axisKeys : [];
-        var selectedAxes = AllAxes.Where(a => keys.Contains(a.Key)).ToList();
+        // 按 keys 顺序构建（拖动排序后的顺序）
+        var selectedAxes = keys
+            .Select(k => AllAxes.FirstOrDefault(a => a.Axis == k))
+            .Where(a => a != null)
+            .Cast<AxisSelectionItem>()
+            .ToList();
 
-        if (_pointData.TryGetValue(point.Name, out var positions))
+        if (_pointData.TryGetValue(point.Id, out var positions))
         {
             foreach (var axis in selectedAxes)
             {
-                positions.TryGetValue(axis.Key, out var pos);
-                CurrentPositions.Add(MakePositionItem(axis.Key, axis.DisplayName, pos));
+                positions.TryGetValue(axis.Axis, out var pos);
+                CurrentPositions.Add(new AxisPositionItem
+                {
+                    Axis = axis.Axis,
+                    Position = pos,
+                    OnChanged = () => IsModified = true,
+                });
             }
         }
         else
         {
             foreach (var axis in selectedAxes)
-                CurrentPositions.Add(MakePositionItem(axis.Key, axis.DisplayName, 0));
+                CurrentPositions.Add(new AxisPositionItem
+                {
+                    Axis = axis.Axis,
+                    Position = 0,
+                    OnChanged = () => IsModified = true,
+                });
         }
     }
 
-    private AxisPositionItem MakePositionItem(string key, string displayName, double position)
+    // ========== 拖拽排序 ==========
+
+    public void DragOver(IDropInfo dropInfo)
     {
-        return new AxisPositionItem
+        if (dropInfo.Data is TeachingPointItem tpi && tpi.Station == _selectedStation)
         {
-            AxisKey = key,
-            DisplayName = displayName,
-            Position = position,
-            OnChanged = () => { IsModified = true; },
-        };
+            dropInfo.Effects = DragDropEffects.Move;
+            dropInfo.DropTargetAdorner = DropTargetAdorners.Insert;
+        }
+        else if (dropInfo.Data is AxisPositionItem)
+        {
+            dropInfo.Effects = DragDropEffects.Move;
+            dropInfo.DropTargetAdorner = DropTargetAdorners.Insert;
+        }
     }
 
-    // ========== 静态辅助 ==========
+    public void Drop(IDropInfo dropInfo)
+    {
+        if (dropInfo.Data is TeachingPointItem dragged)
+            DropTeachingPoint(dragged, dropInfo.InsertIndex);
+        else if (dropInfo.Data is AxisPositionItem axisItem)
+            DropAxisPosition(axisItem, dropInfo.InsertIndex);
+    }
 
-    public static string AxisKey(AxisId id) => $"BusAxis_{(int)id}";
+    private void DropTeachingPoint(TeachingPointItem dragged, int insertIndex)
+    {
+        var stationItems = AllPoints.Where(p => p.Station == _selectedStation).ToList();
+
+        int targetAllIndex;
+        if (insertIndex < stationItems.Count)
+            targetAllIndex = AllPoints.IndexOf(stationItems[insertIndex]);
+        else
+            targetAllIndex = AllPoints.Count;
+
+        var draggedIdx = AllPoints.IndexOf(dragged);
+        if (draggedIdx < 0 || draggedIdx == targetAllIndex) return;
+
+        if (draggedIdx < targetAllIndex)
+            targetAllIndex--;
+
+        AllPoints.Move(draggedIdx, targetAllIndex);
+        NotifyOfPropertyChange(nameof(StationPoints));
+        IsModified = true;
+        StatusMessage = "示教点已重新排序";
+    }
+
+    private void DropAxisPosition(AxisPositionItem axisItem, int insertIndex)
+    {
+        var draggedIdx = CurrentPositions.IndexOf(axisItem);
+        if (draggedIdx < 0 || draggedIdx == insertIndex) return;
+
+        var targetIdx = insertIndex;
+        if (draggedIdx < targetIdx)
+            targetIdx--;
+
+        if (draggedIdx == targetIdx) return;
+
+        SaveCurrentPointData();
+        CurrentPositions.Move(draggedIdx, targetIdx);
+        IsModified = true;
+        if (_selectedTeachingPoint != null)
+        {
+            _pointAxisKeys[_selectedTeachingPoint.Id] = CurrentPositions.Select(p => p.Axis).ToList();
+        }
+    }
 }

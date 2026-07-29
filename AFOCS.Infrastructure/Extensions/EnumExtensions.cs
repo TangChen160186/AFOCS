@@ -1,4 +1,7 @@
-﻿namespace AFOCS.Infrastructure.Extensions
+﻿using System.ComponentModel;
+using System.Reflection;
+
+namespace AFOCS.Infrastructure.Extensions
 {
     public static class EnumExtensions
     {
@@ -10,6 +13,13 @@
             return Enum.IsDefined(typeof(T), enumValue)
                 ? enumValue.ToString()
                 : defaultValue;
+        }
+
+        public static string GetDescription(this Enum value)
+        {
+            var field = value.GetType().GetField(value.ToString());
+            var attr = field?.GetCustomAttribute<DescriptionAttribute>();
+            return attr?.Description ?? value.ToString();
         }
     }
 }

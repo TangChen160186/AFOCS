@@ -11,7 +11,7 @@ public abstract class AkribisMotion : IAkribisMotion
     private readonly MotionController _controller;
     private AkribisCouplingConfig _config = new();
 
-    private  const int DefaultEquip = 205; // 本来是204.8
+    private  const int DefaultEquip = 2048; // 本来是204800
     public bool IsConnected => _controller.IsConnected;
 
     /// <summary>子类覆写：返回专用的配置类型（用于 ConfigService 区分配置文件）</summary>
@@ -171,8 +171,7 @@ public abstract class AkribisMotion : IAkribisMotion
         var a = (accel ?? p.Accel) * DefaultEquip;
         var d = (decel ?? p.Decel) * DefaultEquip;
         position *= DefaultEquip;
-        if (!AAMotionAPI.MoveAbs(_controller, a, s, d, [_controller.GetAxis(ar)], [position]))
-            return Result.Fail(ResultCode.Fail, "绝对运动指令发送失败");
+        AAMotionAPI.MoveAbs(_controller, ar, position, s, a, d);
 
         return await WaitForMotionDone(ar, axis, timeoutMs);
     }
@@ -377,12 +376,12 @@ public abstract class AkribisMotion : IAkribisMotion
 
     private bool EnsureAxisReady(AxisRef axis)
     {
-        if (!_controller.GetAxis(axis).IsCommutated())
-        {
-            _logger.Information("[{Type}] 换向未完成，正在执行 AutoPhase...", ConfigType.Name);
-            AAMotionAPI.AutoPhase(_controller, axis, 5000);
-            if (!_controller.GetAxis(axis).IsCommutated()) return false;
-        }
+        //if (!_controller.GetAxis(axis).IsCommutated())
+        //{
+        //    _logger.Information("[{Type}] 换向未完成，正在执行 AutoPhase...", ConfigType.Name);
+        //    AAMotionAPI.AutoPhase(_controller, axis, 5000);
+        //    if (!_controller.GetAxis(axis).IsCommutated()) return false;
+        //}
         if (_controller.GetAxis(axis).MotorOn == 0)
         {
             _logger.Information("[{Type}] 电机未使能，正在使能...", ConfigType.Name);

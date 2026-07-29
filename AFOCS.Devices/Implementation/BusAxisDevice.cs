@@ -9,7 +9,7 @@ namespace AFOCS.Devices.Implementation;
 [method: ImportingConstructor]
 public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configService, ILogger logger) : IBusAxisDevice
 {
-    private readonly Dictionary<AxisId, AxisConfig> _axisConfigs = [];
+    private readonly Dictionary<BusAxisId, AxisConfig> _axisConfigs = [];
     private CancellationTokenSource? _monitorCts;
     private bool _isAxisMonitoring;
 
@@ -56,19 +56,19 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
     }
 
     #region 轴配置管理
-    public AxisConfig GetAxisConfig(AxisId axisId)
+    public AxisConfig GetAxisConfig(BusAxisId busAxisId)
     {
-        if (_axisConfigs.TryGetValue(axisId, out var config))
+        if (_axisConfigs.TryGetValue(busAxisId, out var config))
             return config;
 
-        var defaults = GetDefaultAxisConfig(axisId);
-        _axisConfigs[axisId] = defaults;
+        var defaults = GetDefaultAxisConfig(busAxisId);
+        _axisConfigs[busAxisId] = defaults;
         return defaults;
     }
 
-    public void SetAxisConfig(AxisId axisId, AxisConfig config)
+    public void SetAxisConfig(BusAxisId busAxisId, AxisConfig config)
     {
-        _axisConfigs[axisId] = config.Clone();
+        _axisConfigs[busAxisId] = config.Clone();
     }
 
     public async Task LoadAllAxisConfigsAsync()
@@ -79,10 +79,10 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
             if (collection?.Axes != null)
             {
                 foreach (var (key, config) in collection.Axes)
-                    _axisConfigs[(AxisId)key] = config;
+                    _axisConfigs[(BusAxisId)key] = config;
             }
 
-            foreach (AxisId axisId in Enum.GetValues<AxisId>())
+            foreach (BusAxisId axisId in Enum.GetValues<BusAxisId>())
             {
                 if (!_axisConfigs.ContainsKey(axisId))
                     _axisConfigs[axisId] = GetDefaultAxisConfig(axisId);
@@ -93,7 +93,7 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
         catch (Exception ex)
         {
             logger.Error(ex, "加载轴配置失败");
-            foreach (AxisId axisId in Enum.GetValues<AxisId>())
+            foreach (BusAxisId axisId in Enum.GetValues<BusAxisId>())
                 _axisConfigs[axisId] = GetDefaultAxisConfig(axisId);
         }
     }
@@ -108,47 +108,61 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
         logger.Information("轴配置已保存");
     }
 
-    public AxisConfig GetDefaultAxisConfig(AxisId axisId)
+    public AxisConfig GetDefaultAxisConfig(BusAxisId busAxisId)
     {
-        var config = new AxisConfig { AxisId = axisId };
+        var config = new AxisConfig { BusAxisId = busAxisId };
 
-        switch (axisId)
+        switch (busAxisId)
         {
-            case AxisId.LeftCamUpX:
-            case AxisId.RightCamUpX:
-                config.Motion.Equiv = 8388608 / (5.0 * 1000); // um
+            case BusAxisId.LeftCamUpX:
+            case BusAxisId.RightCamUpX:
+                config.Motion.Equiv = 8388608 / (5.0 * 100); // 10um
+                config.Motion.MinVel = 200;
+                config.Motion.MaxVel = 500;
                 break;
-            case AxisId.LeftCamUpY:
-            case AxisId.RightCamUpY:
-                config.Motion.Equiv = 8388608 / (10.0 * 1000); // um
+            case BusAxisId.LeftCamUpY:
+            case BusAxisId.RightCamUpY:
+                config.Motion.Equiv = 8388608 / (10.0 * 100); // 10um
+                config.Motion.MinVel = 200;
+                config.Motion.MaxVel = 500;
                 break;
-            case AxisId.LeftCamUpZ:
-            case AxisId.RightCamUpZ:
-                config.Motion.Equiv = 8388608 / (1.0 * 1000);
+            case BusAxisId.LeftCamUpZ:
+            case BusAxisId.RightCamUpZ:
+                config.Motion.Equiv = 8388608 / (1.0 * 100);// 10um
+                config.Motion.MinVel = 200;
+                config.Motion.MinVel = 500;
                 break;
-            case AxisId.LeftCamSideY:
-            case AxisId.RightCamSideY:
-                config.Motion.Equiv = 8388608 / (1.0 * 1000);
+            case BusAxisId.LeftCamSideY:
+            case BusAxisId.RightCamSideY:
+                config.Motion.Equiv = 8388608 / (1.0 * 100);// 10um
+                config.Motion.MinVel = 200;
+                config.Motion.MinVel = 500;
                 break;
 
-            case AxisId.LeftCouplingLThetaX:
-            case AxisId.RightCouplingLThetaX:
-            case AxisId.LeftCouplingRThetaX:
-            case AxisId.RightCouplingRThetaX:
+            case BusAxisId.LeftCouplingLThetaX:
+            case BusAxisId.RightCouplingLThetaX:
+            case BusAxisId.LeftCouplingRThetaX:
+            case BusAxisId.RightCouplingRThetaX:
                 config.Motion.Equiv = 50000 / 1.0324;
+                config.Motion.MinVel = 0.5;
+                config.Motion.MinVel = 1;
                 break;
 
-            case AxisId.LeftCouplingLThetaY:
-            case AxisId.LeftCouplingRThetaY:
-            case AxisId.RightCouplingLThetaY:
-            case AxisId.RightCouplingRThetaY:
+            case BusAxisId.LeftCouplingLThetaY:
+            case BusAxisId.LeftCouplingRThetaY:
+            case BusAxisId.RightCouplingLThetaY:
+            case BusAxisId.RightCouplingRThetaY:
                 config.Motion.Equiv = 50000 / 1.0324;
+                config.Motion.MinVel = 0.5;
+                config.Motion.MinVel = 5;
                 break;
-            case AxisId.LeftCouplingRThetaZ:
-            case AxisId.LeftCouplingLThetaZ:
-            case AxisId.RightCouplingLThetaZ:
-            case AxisId.RightCouplingRThetaZ:
+            case BusAxisId.LeftCouplingRThetaZ:
+            case BusAxisId.LeftCouplingLThetaZ:
+            case BusAxisId.RightCouplingLThetaZ:
+            case BusAxisId.RightCouplingRThetaZ:
                 config.Motion.Equiv = 50000 / 1.8789;
+                config.Motion.MinVel = 0.5;
+                config.Motion.MinVel = 5;
                 break;
         }
 
@@ -198,7 +212,7 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
 
                 var changes = new List<BusAxisStateChangedEventArgs>();
 
-                foreach (AxisId id in Enum.GetValues<AxisId>())
+                foreach (BusAxisId id in Enum.GetValues<BusAxisId>())
                 {
                     ct.ThrowIfCancellationRequested();
 
@@ -235,7 +249,7 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
     #endregion
     // ========== 运动控制 ==========
 
-    public async Task<Result> MovePmoveAsync(AxisId axisId, double distance,
+    public async Task<Result> MovePmoveAsync(BusAxisId busAxisId, double distance,
         ushort posiMode = 0,
         double? minVel = null,
         double? maxVel = null,
@@ -245,8 +259,8 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
         double? sPara = null,
         int timeoutMs = 0)
     {
-        var axis = (ushort)axisId;
-        var cfg = GetAxisConfig(axisId).Motion;
+        var axis = (ushort)busAxisId;
+        var cfg = GetAxisConfig(busAxisId).Motion;
         var finalMinVel = minVel ?? cfg.MinVel;
         var finalMaxVel = maxVel ?? cfg.MaxVel;
         var finalTacc = tacc ?? cfg.Tacc;
@@ -337,7 +351,7 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
         }
     }
 
-    public async Task<Result> MoveHomeAsync(AxisId axisId,
+    public async Task<Result> MoveHomeAsync(BusAxisId busAxisId,
         ushort? homeMode = null,
         double? lowVel = null,
         double? highVel = null,
@@ -346,8 +360,8 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
         double? offsetPos = null,
         int timeoutMs = 30000)
     {
-        var axis = (ushort)axisId;
-        var cfg = GetAxisConfig(axisId).Home;
+        var axis = (ushort)busAxisId;
+        var cfg = GetAxisConfig(busAxisId).Home;
         var finalHomeMode = homeMode ?? cfg.HomeMode;
         var finalLowVel = lowVel ?? cfg.LowVel;
         var finalHighVel = highVel ?? cfg.HighVel;
@@ -468,9 +482,9 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
         }
     }
 
-    public async Task<Result> StopAxisAsync(AxisId axisId, bool emergency = false)
+    public async Task<Result> StopAxisAsync(BusAxisId busAxisId, bool emergency = false)
     {
-        return await motionCard.StopAxisAsync((ushort)axisId, emergency);
+        return await motionCard.StopAxisAsync((ushort)busAxisId, emergency);
     }
 
     public async Task<Result> EmergencyStopAllAsync()
@@ -478,7 +492,7 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
         return await motionCard.EmergencyStopAllAsync();
     }
 
-    public async Task<Result> MoveLineAsync(AxisId[] axisList, double[] targetPositions,
+    public async Task<Result> MoveLineAsync(BusAxisId[] axisList, double[] targetPositions,
         ushort posiMode = 0,
         double? minVel = null,
         double? maxVel = null,
@@ -604,58 +618,58 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
         }
     }
 
-    public async Task<Result<double>> GetPositionAsync(AxisId axisId)
+    public async Task<Result<double>> GetPositionAsync(BusAxisId busAxisId)
     {
-        return await motionCard.GetPositionAsync((ushort)axisId);
+        return await motionCard.GetPositionAsync((ushort)busAxisId);
     }
 
-    public async Task<Result<double>> GetSpeedAsync(AxisId axisId)
+    public async Task<Result<double>> GetSpeedAsync(BusAxisId busAxisId)
     {
-        return await motionCard.GetSpeedAsync((ushort)axisId);
+        return await motionCard.GetSpeedAsync((ushort)busAxisId);
     }
 
-    public async Task<Result> SetSoftLimitAsync(AxisId axisId)
+    public async Task<Result> SetSoftLimitAsync(BusAxisId busAxisId)
     {
-        var cfg = GetAxisConfig(axisId);
-        return await motionCard.SetSoftLimitAsync((ushort)axisId, cfg.NegativeSoftLimit, cfg.PositiveSoftLimit, cfg.SoftLimitEnabled);
+        var cfg = GetAxisConfig(busAxisId);
+        return await motionCard.SetSoftLimitAsync((ushort)busAxisId, cfg.NegativeSoftLimit, cfg.PositiveSoftLimit, cfg.SoftLimitEnabled);
     }
 
-    public async Task<Result> EnableAxisAsync(AxisId axisId, int timeoutMs = 3000)
+    public async Task<Result> EnableAxisAsync(BusAxisId busAxisId, int timeoutMs = 3000)
     {
-        return await motionCard.EnableAxisAsync((ushort)axisId, timeoutMs);
+        return await motionCard.EnableAxisAsync((ushort)busAxisId, timeoutMs);
     }
 
-    public Result DisableAxis(AxisId axisId)
+    public Result DisableAxis(BusAxisId busAxisId)
     {
-        return motionCard.DisableAxis((ushort)axisId);
+        return motionCard.DisableAxis((ushort)busAxisId);
     }
 
     // ========== 辅助 ==========
 
-    public static string GetAxisDisplayName(AxisId id)
+    public static string GetAxisDisplayName(BusAxisId id)
     {
         return id switch
         {
-            AxisId.LeftCamUpX => "左上相机X轴",
-            AxisId.LeftCamUpY => "左上相机Y轴",
-            AxisId.LeftCamUpZ => "左上相机Z轴",
-            AxisId.LeftCamSideY => "左侧相机Y轴",
-            AxisId.LeftCouplingLThetaX => "左耦合左θX轴",
-            AxisId.LeftCouplingLThetaY => "左耦合左θY轴",
-            AxisId.LeftCouplingLThetaZ => "左耦合左θZ轴",
-            AxisId.LeftCouplingRThetaX => "左耦合右θX轴",
-            AxisId.LeftCouplingRThetaY => "左耦合右θY轴",
-            AxisId.LeftCouplingRThetaZ => "左耦合右θZ轴",
-            AxisId.RightCamUpX => "右上相机X轴",
-            AxisId.RightCamUpY => "右上相机Y轴",
-            AxisId.RightCamUpZ => "右上相机Z轴",
-            AxisId.RightCamSideY => "右侧相机Y轴",
-            AxisId.RightCouplingLThetaX => "右耦合左θX轴",
-            AxisId.RightCouplingLThetaY => "右耦合左θY轴",
-            AxisId.RightCouplingLThetaZ => "右耦合左θZ轴",
-            AxisId.RightCouplingRThetaX => "右耦合右θX轴",
-            AxisId.RightCouplingRThetaY => "右耦合右θY轴",
-            AxisId.RightCouplingRThetaZ => "右耦合右θZ轴",
+            BusAxisId.LeftCamUpX => "左上相机X轴",
+            BusAxisId.LeftCamUpY => "左上相机Y轴",
+            BusAxisId.LeftCamUpZ => "左上相机Z轴",
+            BusAxisId.LeftCamSideY => "左侧相机Y轴",
+            BusAxisId.LeftCouplingLThetaX => "左耦合左θX轴",
+            BusAxisId.LeftCouplingLThetaY => "左耦合左θY轴",
+            BusAxisId.LeftCouplingLThetaZ => "左耦合左θZ轴",
+            BusAxisId.LeftCouplingRThetaX => "左耦合右θX轴",
+            BusAxisId.LeftCouplingRThetaY => "左耦合右θY轴",
+            BusAxisId.LeftCouplingRThetaZ => "左耦合右θZ轴",
+            BusAxisId.RightCamUpX => "右上相机X轴",
+            BusAxisId.RightCamUpY => "右上相机Y轴",
+            BusAxisId.RightCamUpZ => "右上相机Z轴",
+            BusAxisId.RightCamSideY => "右侧相机Y轴",
+            BusAxisId.RightCouplingLThetaX => "右耦合左θX轴",
+            BusAxisId.RightCouplingLThetaY => "右耦合左θY轴",
+            BusAxisId.RightCouplingLThetaZ => "右耦合左θZ轴",
+            BusAxisId.RightCouplingRThetaX => "右耦合右θX轴",
+            BusAxisId.RightCouplingRThetaY => "右耦合右θY轴",
+            BusAxisId.RightCouplingRThetaZ => "右耦合右θZ轴",
             _ => id.ToString(),
         };
     }
@@ -701,7 +715,7 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
 /// <summary>轴状态变化事件参数</summary>
 public class BusAxisStateChangedEventArgs : EventArgs
 {
-    public AxisId AxisId { get; }
+    public BusAxisId BusAxisId { get; }
     public string Name { get; }
     public double Position { get; }
     public double Speed { get; }
@@ -733,14 +747,14 @@ public class BusAxisStateChangedEventArgs : EventArgs
     public bool IsEnabled => StateMachine == 4;
 
     public BusAxisStateChangedEventArgs(
-        AxisId axisId,
+        BusAxisId busAxisId,
         string name,
         double position,
         double speed,
         uint ioStatusRaw,
         ushort stateMachine)
     {
-        AxisId = axisId;
+        BusAxisId = busAxisId;
         Name = name;
         Position = position;
         Speed = speed;

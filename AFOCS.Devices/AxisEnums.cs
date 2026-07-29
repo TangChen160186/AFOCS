@@ -1,20 +1,10 @@
 namespace AFOCS.Devices
 {
-    /// <summary>
-    /// 轴控制类型
-    /// </summary>
-    public enum AxisControlType
-    {
-        /// <summary>EtherCAT 总线控制</summary>
-        EtherCAT,
-        /// <summary>API 直连电脑控制</summary>
-        ApiDirect,
-    }
 
     /// <summary>
     /// 设备轴枚举定义（EtherCAT 总线轴，共 20 轴）
     /// </summary>
-    public enum AxisId
+    public enum BusAxisId
     {
         // ==================== 左工位 EtherCAT 总线轴 ====================
         LeftCamUpX = 0,

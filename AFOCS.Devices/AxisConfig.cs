@@ -95,7 +95,7 @@ namespace AFOCS.Devices
     public class AxisConfig : ICloneable
     {
         /// <summary>轴标识</summary>
-        public AxisId AxisId { get; set; }
+        public BusAxisId BusAxisId { get; set; }
 
         /// <summary>运动参数</summary>
         public AxisMotionParams Motion { get; set; } = new();
@@ -121,7 +121,7 @@ namespace AFOCS.Devices
 
         public AxisConfig Clone() => new()
         {
-            AxisId = AxisId,
+            BusAxisId = BusAxisId,
             Motion = Motion.Clone(),
             Home = Home.Clone(),
             NegativeSoftLimit = NegativeSoftLimit,

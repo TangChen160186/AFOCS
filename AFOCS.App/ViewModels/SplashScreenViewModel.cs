@@ -70,8 +70,6 @@ namespace AFOCS.App.ViewModels
         [Import] private RightCouplingRGripper _rightCouplingRGripper = null!;
 
 
-
-
         [Import] private IIODevice _ioDevice = null!;
 
         [Import] private LeftCouplingLPressureSensor _leftCouplingLPressure = null!;

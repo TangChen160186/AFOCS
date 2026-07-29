@@ -14,7 +14,7 @@ namespace AFOCS.App.ViewModels.Settings;
 public class AxisSettingsViewModel : Screen, ISettingsEditor
 {
     private readonly IBusAxisDevice _busAxisDevice;
-    private AxisId _selectedAxis;
+    private BusAxisId _selectedBusAxis;
     private AxisConfig _currentConfig = new();
     private bool _isModify;
 
@@ -33,9 +33,9 @@ public class AxisSettingsViewModel : Screen, ISettingsEditor
         _busAxisDevice = busAxisDevice;
 
         AxisList = new ObservableCollection<AxisInfo>(
-            Enum.GetValues<AxisId>().Select(a => new AxisInfo
+            Enum.GetValues<BusAxisId>().Select(a => new AxisInfo
             {
-                AxisId = a,
+                BusAxisId = a,
                 DisplayName = BusAxisDevice.GetAxisDisplayName(a),
                 AxisNumber = (int)a
             }));
@@ -77,8 +77,8 @@ public class AxisSettingsViewModel : Screen, ISettingsEditor
             NotifyOfPropertyChange();
             if (value != null)
             {
-                _selectedAxis = value.AxisId;
-                LoadAxisConfig(value.AxisId);
+                _selectedBusAxis = value.BusAxisId;
+                LoadAxisConfig(value.BusAxisId);
             }
         }
     }
@@ -248,7 +248,7 @@ public class AxisSettingsViewModel : Screen, ISettingsEditor
         StatusMessage = "保存中...";
         try
         {
-            _busAxisDevice.SetAxisConfig(_selectedAxis, _currentConfig);
+            _busAxisDevice.SetAxisConfig(_selectedBusAxis, _currentConfig);
             await _busAxisDevice.SaveAllAxisConfigsAsync();
             _isModify = false;
             NotifyOfPropertyChange(nameof(IsModify));
@@ -266,7 +266,7 @@ public class AxisSettingsViewModel : Screen, ISettingsEditor
 
     public void ResetToDefault()
     {
-        var defaults = _busAxisDevice.GetDefaultAxisConfig(_selectedAxis);
+        var defaults = _busAxisDevice.GetDefaultAxisConfig(_selectedBusAxis);
         _currentConfig = defaults.Clone();
         _isModify = true;
         NotifyOfPropertyChange(nameof(IsModify));
@@ -288,7 +288,7 @@ public class AxisSettingsViewModel : Screen, ISettingsEditor
         {
             var distance = _movePositive ? _moveDistance : -_moveDistance;
             var result = await _busAxisDevice.MovePmoveAsync(
-                axisId: _selectedAxis,
+                busAxisId: _selectedBusAxis,
                 distance: distance);
 
             if (result.IsSuccess)
@@ -315,7 +315,7 @@ public class AxisSettingsViewModel : Screen, ISettingsEditor
         }
 
         StatusMessage = "停止中...";
-        var result = await _busAxisDevice.StopAxisAsync(_selectedAxis);
+        var result = await _busAxisDevice.StopAxisAsync(_selectedBusAxis);
         StatusMessage = result.IsSuccess ? "已停止" : $"停止失败: {result.Message}";
         IsMoving = false;
     }
@@ -345,12 +345,12 @@ public class AxisSettingsViewModel : Screen, ISettingsEditor
     private async Task InitializeAsync()
     {
         if (SelectedAxisInfo != null)
-            LoadAxisConfig(SelectedAxisInfo.AxisId);
+            LoadAxisConfig(SelectedAxisInfo.BusAxisId);
     }
 
-    private void LoadAxisConfig(AxisId axisId)
+    private void LoadAxisConfig(BusAxisId busAxisId)
     {
-        var config = _busAxisDevice.GetAxisConfig(axisId);
+        var config = _busAxisDevice.GetAxisConfig(busAxisId);
         _currentConfig = config.Clone();
         _isModify = false;
         NotifyOfPropertyChange(nameof(IsModify));
@@ -383,7 +383,7 @@ public class AxisSettingsViewModel : Screen, ISettingsEditor
 
 public class AxisInfo
 {
-    public AxisId AxisId { get; set; }
+    public BusAxisId BusAxisId { get; set; }
     public string DisplayName { get; set; } = string.Empty;
     public int AxisNumber { get; set; }
     public string HeaderText => $"Axis{AxisNumber} — {DisplayName}";

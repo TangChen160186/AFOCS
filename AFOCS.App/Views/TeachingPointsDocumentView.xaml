@@ -4,7 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:cal="http://www.caliburnproject.org"
-             xmlns:vm="clr-namespace:AFOCS.App.ViewModels"
+             xmlns:dd="urn:gong-wpf-dragdrop"
+             xmlns:vm="clr-namespace:AFOCS.App.ViewModels" 
+             xmlns:converter="clr-namespace:AFOCS.App.Converter"
+             xmlns:infrastructure="clr-namespace:AFOCS.Infrastructure;assembly=AFOCS.Infrastructure"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="900"
              d:DataContext="{d:DesignInstance vm:TeachingPointsDocumentViewModel}"
@@ -26,6 +29,8 @@
         <SolidColorBrush x:Key="WarningBrush" Color="#F59E0B" />
 
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+ 
+        <converter:EnumToCollectionConverter x:Key="EnumToCollection" />
 
         <!-- ===== 按钮样式 ===== -->
 
@@ -223,72 +228,62 @@
             <Border Grid.Row="0" Background="{StaticResource CardBg}"
                     BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
                     CornerRadius="8" Padding="8" Margin="0,0,0,6">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <Button cal:Message.Attach="SelectStation('左工位')"
-                            Width="96" Height="32" FontSize="14" FontWeight="SemiBold"
-                            Cursor="Hand" Margin="0,0,8,0">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Setter Property="Background" Value="{StaticResource CardBorder}"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                                    CornerRadius="6">
-                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="bd" Property="Background" Value="#EBEBEB"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedStation}" Value="左工位">
-                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                        <TextBlock Text="左工位"/>
-                    </Button>
-                    <Button cal:Message.Attach="SelectStation('右工位')"
-                            Width="96" Height="32" FontSize="14" FontWeight="SemiBold"
-                            Cursor="Hand">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Setter Property="Background" Value="{StaticResource CardBorder}"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                                    CornerRadius="6">
-                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="bd" Property="Background" Value="#EBEBEB"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedStation}" Value="右工位">
-                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                        <TextBlock Text="右工位"/>
-                    </Button>
-                </StackPanel>
+                <ListBox   ItemsSource="{Binding 
+                  Converter={StaticResource EnumToCollection}, 
+                  ConverterParameter={x:Type infrastructure:WorkPos}}"
+                          DisplayMemberPath="Description"
+                          SelectedValuePath="Value"
+                           SelectedValue="{Binding SelectedStation}"
+                           HorizontalAlignment="Center" 
+                          BorderThickness="0"
+                           Background="Transparent"
+                          BorderBrush="Transparent">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Width" Value="96"/>
+                            <Setter Property="Height" Value="32"/>
+                            <Setter Property="FontSize" Value="14"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                            <Setter Property="Background" Value="{StaticResource CardBorder}"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Margin" Value="0,0,8,0"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                            <Setter Property="VerticalContentAlignment" Value="Center"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                                CornerRadius="6">
+                                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="bd" Property="Background" Value="#EBEBEB"/>
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="bd" Property="Background" Value="{StaticResource AccentBrush}"/>
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                </ListBox>
             </Border>
 
             <!-- ===== 轴选择 ===== -->
@@ -308,23 +303,21 @@
                                     <TextBlock Text="{Binding GroupName}" FontSize="11"
                                                FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"
                                                Margin="0,4,0,2"/>
-                                    <WrapPanel>
-                                        <ItemsControl ItemsSource="{Binding Axes}">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <WrapPanel/>
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <CheckBox IsChecked="{Binding IsSelected}"
-                                                              Content="{Binding DisplayName}"
-                                                              Margin="0,0,14,4" FontSize="11"
-                                                              Foreground="{StaticResource TextSecondary}"/>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </WrapPanel>
+                                    <ItemsControl ItemsSource="{Binding Axes}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <CheckBox IsChecked="{Binding IsSelected}"
+                                                          Content="{Binding DisplayName}"
+                                                          Margin="0,0,14,4" FontSize="11"
+                                                          Foreground="{StaticResource TextSecondary}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -334,9 +327,6 @@
                         <Button cal:Message.Attach="AddTeachingPoint"
                                 Content="+ 添加示教点" Style="{StaticResource PrimaryButton}"
                                 Width="98" Height="28" Padding="0"/>
-                        <Button cal:Message.Attach="ReadCurrentPosition"
-                                Content="读取坐标" Style="{StaticResource SecondaryButton}"
-                                Width="72" Height="28" Padding="0" Margin="8,0,0,0"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -375,22 +365,25 @@
 
                             <!-- 列表 -->
                             <ListBox Grid.Row="1"
+                                     x:Name="TeachingPointsListBox"
                                      ItemsSource="{Binding StationPoints}"
                                      SelectedItem="{Binding SelectedTeachingPoint, Mode=TwoWay}"
                                      DisplayMemberPath="Name"
                                      BorderThickness="0" Background="Transparent"
                                      ItemContainerStyle="{StaticResource PointListBoxItem}"
                                      Padding="4,3"
-                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     dd:DragDrop.IsDragSource="True"
+                                     dd:DragDrop.IsDropTarget="True"
+                                     dd:DragDrop.DropHandler="{Binding}"
+                                     PreviewMouseLeftButtonDown="TeachingPointsListBox_PreviewMouseLeftButtonDown"/>
 
                             <!-- 底部操作 -->
                             <Border Grid.Row="2" Padding="8,7"
                                     BorderBrush="{StaticResource CardBorder}" BorderThickness="0,1,0,0">
                                 <Button cal:Message.Attach="DeleteTeachingPoint"
                                         Content="删除选中" Style="{StaticResource DangerButton}"
-                                        Width="72" Height="24" Padding="0">
-                                   
-                                </Button>
+                                        Width="72" Height="24" Padding="0"/>
                             </Border>
                         </Grid>
                     </Border>
@@ -428,17 +421,30 @@
                                 </Grid>
                             </Border>
 
-                            <!-- 选择的轴（只读显示） -->
+                            <!-- 当前编辑点标题 + 操作按钮 -->
                             <Border Grid.Row="1" Padding="0,8,0,6">
-                                <TextBlock FontSize="11" Foreground="{StaticResource TextMuted}">
-                                    <Run Text="当前编辑: "/>
-                                    <Run Text="{Binding SelectedTeachingPoint.Name, TargetNullValue='—'}" FontWeight="SemiBold"/>
-                                </TextBlock>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" FontSize="11" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center">
+                                        <Run Text="当前编辑: "/>
+                                        <Run Text="{Binding SelectedTeachingPoint.Name, TargetNullValue='—'}" FontWeight="SemiBold"/>
+                                    </TextBlock>
+                                    <Button Grid.Column="1" cal:Message.Attach="ReadCurrentPosition"
+                                            Content="读取坐标" Style="{StaticResource SecondaryButton}"
+                                            Width="72" Height="24" Padding="0"
+                                            IsEnabled="{Binding IsPointSelected}"/>
+                                </Grid>
                             </Border>
 
                             <!-- 坐标表格 -->
                             <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{Binding CurrentPositions}">
+                                <ItemsControl ItemsSource="{Binding CurrentPositions}"
+                                              dd:DragDrop.IsDragSource="True"
+                                              dd:DragDrop.IsDropTarget="True"
+                                              dd:DragDrop.DropHandler="{Binding}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border Padding="6,3"
@@ -455,7 +461,7 @@
                                                                Foreground="{StaticResource TextSecondary}"/>
 
                                                     <TextBox Grid.Column="1"
-                                                             Text="{Binding Position, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F4}}"
+                                                             Text="{Binding Position, UpdateSourceTrigger=LostFocus, StringFormat={}{0:F4}}"
                                                              FontSize="12"
                                                              Foreground="{StaticResource TextPrimary}"
                                                              VerticalContentAlignment="Center"

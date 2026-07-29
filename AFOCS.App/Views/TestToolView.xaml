@@ -9,7 +9,63 @@
              d:DataContext="{d:DesignInstance Type=vm:TestToolViewModel}"
              Background="#F3F3F3">
 
-        <StackPanel>
-        <Button Content="测试" cal:Message.Attach="Test"/>
+        <UserControl.Resources>
+                <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        </UserControl.Resources>
+
+        <StackPanel Margin="10">
+                <!-- ===== 示教点运动 ===== -->
+                <TextBlock Text="示教点运动" FontSize="13" FontWeight="SemiBold"
+                           Foreground="#1A1A1A" Margin="0,0,0,8"/>
+
+                <!-- 示教点选择 -->
+                <TextBlock Text="选择示教点:" FontSize="11" Foreground="#888888" Margin="0,0,0,4"/>
+                <ComboBox ItemsSource="{Binding TeachingPoints}"
+                          SelectedItem="{Binding SelectedPoint, Mode=TwoWay}"
+                          DisplayMemberPath="Name"
+                          Height="30" FontSize="12"
+                          VerticalContentAlignment="Center"/>
+
+                <!-- 刷新按钮 -->
+                <Button cal:Message.Attach="LoadTeachingPointsAsync" Content="刷新列表"
+                        Width="70" Height="24" FontSize="11" Margin="0,6,0,0"
+                        Padding="0"/>
+
+                <!-- 示教点信息 -->
+                <Border Background="#FFFFFF" BorderBrush="#E0E0E0" BorderThickness="1"
+                        CornerRadius="4" Padding="8,6" Margin="0,8,0,0"
+                        Visibility="{Binding IsPointSelected, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="{Binding PointAxisInfo}" FontSize="11"
+                                   Foreground="#555555" TextWrapping="Wrap"/>
+                </Border>
+
+                <!-- 运动按钮 -->
+                <Button cal:Message.Attach="MoveToTeachingPoint"
+                        Content="运动到示教点"
+                        Width="120" Height="32" FontSize="12" FontWeight="SemiBold"
+                        Margin="0,10,0,0" Padding="0"
+                        Foreground="White" Background="#0078D4" BorderThickness="0"
+                        IsEnabled="{Binding IsPointSelected}" Cursor="Hand">
+                        <Button.Resources>
+                                <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="5"/>
+                                </Style>
+                        </Button.Resources>
+                </Button>
+
+                <!-- 运动中进度 -->
+                <ProgressBar IsIndeterminate="True" Height="4" Margin="0,10,0,0"
+                             Visibility="{Binding IsMoving, Converter={StaticResource BoolToVis}}"/>
+
+                <!-- 状态 -->
+                <TextBlock Text="{Binding MoveStatus}" FontSize="11"
+                           Foreground="#888888" Margin="0,8,0,0" TextWrapping="Wrap"/>
+
+                <!-- ===== 分隔 ===== -->
+                <Separator Margin="0,16,0,8"/>
+
+                <!-- ===== 原有测试 ===== -->
+                <Button Content="测试" cal:Message.Attach="Test" Width="60" Height="24"
+                        FontSize="11" Padding="0"/>
         </StackPanel>
 </UserControl>

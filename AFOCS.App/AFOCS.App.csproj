@@ -35,6 +35,7 @@
     <ItemGroup>
         <ApplicationDefinition Remove="App.xaml" />
         <PackageReference Include="Caliburn.Micro" />
+        <PackageReference Include="gong-wpf-dragdrop" />
         <PackageReference Include="MahApps.Metro" />
         <PackageReference Include="Serilog" />
         <PackageReference Include="Serilog.Sinks.Console" />
