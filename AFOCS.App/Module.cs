@@ -4,6 +4,7 @@ using AFOCS.App.ViewModels;
 using AFOCS.Devices;
 using AFOCS.Framework.Framework;
 using AFOCS.Framework.Framework.Menus;
+using AFOCS.Framework.Modules.MainMenu;
 using AFOCS.Infrastructure;
 using Caliburn.Micro;
 
@@ -12,13 +13,39 @@ namespace AFOCS.App
     [Export(typeof(IModule))]
     public class Module : ModuleBase
     {
+        // ===== 菜单 =====
+
+        [Export]
+        public static readonly MenuDefinition TestMenu = new MenuDefinition(
+            MenuDefinitions.MainMenuBar, 5, "测试");
+
+        [Export]
+        public static readonly MenuItemGroupDefinition TestMenuGroup = new MenuItemGroupDefinition(
+            TestMenu, 0);
+
+        // ===== "测试"菜单项 =====
+
+        [Export]
+        public static readonly MenuItemDefinition ViewTeachingPointTestMenuItem = new CommandMenuItemDefinition<ViewTeachingPointTestCommandDefinition>(
+            TestMenuGroup, 0);
+
+        [Export]
+        public static readonly MenuItemDefinition ViewHomeTestMenuItem = new CommandMenuItemDefinition<ViewHomeTestCommandDefinition>(
+            TestMenuGroup, 1);
+
+        // ===== "视图"菜单项 =====
+
         [Export]
         public static readonly MenuItemDefinition ViewTestToolMenuItem = new CommandMenuItemDefinition<ViewTestToolCommandDefinition>(
-            AFOCS.Framework.Modules.MainMenu.MenuDefinitions.ViewToolsMenuGroup, 8);
+            MenuDefinitions.ViewToolsMenuGroup, 8);
 
         [Export]
         public static readonly MenuItemDefinition ViewTeachingPointsMenuItem = new CommandMenuItemDefinition<ViewTeachingPointsCommandDefinition>(
-            AFOCS.Framework.Modules.MainMenu.MenuDefinitions.ViewToolsMenuGroup, 9);
+            MenuDefinitions.ViewToolsMenuGroup, 9);
+
+        [Export]
+        public static readonly MenuItemDefinition ViewGamepadControlMenuItem = new CommandMenuItemDefinition<ViewGamepadControlCommandDefinition>(
+            MenuDefinitions.ViewToolsMenuGroup, 10);
 
 
 

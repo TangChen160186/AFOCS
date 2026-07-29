@@ -145,33 +145,33 @@ namespace AFOCS.App.ViewModels
                 _rightCouplingLGripper,
                 _rightCouplingRGripper,
 
-                //_leftCouplingLPressure,
-                //_leftCouplingRPressure,
-                //_leftDispensePressure,
-                //_rightCouplingLPressure,
-                //_rightCouplingRPressure,
-                //_rightDispensePressure,
+                _leftCouplingLPressure,
+                _leftCouplingRPressure,
+                _leftDispensePressure,
+                _rightCouplingLPressure,
+                _rightCouplingRPressure,
+                _rightDispensePressure,
 
                 _arAkribisLeftCouplingL,
-                //_akribisLeftCouplingR,
-                //_akribisRightCouplingL,
-                //_akribisRightCouplingR,
+                _akribisLeftCouplingR,
+                _akribisRightCouplingL,
+                _akribisRightCouplingR,
 
-                //_programmablePowerSupply,
+                _programmablePowerSupply,
 
                 //_opticalSwitch,
                 //_heightGauge,
                 //_opticalPowerMeterLeft,
                 //_opticalPowerMeterRight,
 
-                //_cameraLight,
+                _cameraLight,
 
-                //_cameraLeftUp,
-                //_cameraLeftDown,
-                //_cameraRightUp,
-                //_cameraRightDown,
+                _cameraLeftUp,
+                _cameraLeftDown,
+                _cameraRightUp,
+                _cameraRightDown,
 
-              
+
             ];
             return devices;
         }

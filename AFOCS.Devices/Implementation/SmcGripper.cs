@@ -9,7 +9,6 @@ namespace AFOCS.Devices.Implementation;
 public class SmcGripperConfig : ICloneable
 {
     public ushort SlaveAddress { get; set; }
-
     public SmcGripperConfig Clone() => new() { SlaveAddress = SlaveAddress };
     object ICloneable.Clone() => Clone();
 }
@@ -51,6 +50,7 @@ public abstract class SmcGripperBase(
     protected abstract Type ConfigType { get; }
 
     // OD 地址常量
+    private const ushort OdPushForce = 0x7011;  // RxPDO 推理推力
     private const ushort OdStatus = 0x6010;
     private const ushort OdCurrentPosition = 0x6020;
     private const ushort OdControlWord = 0x7010;
@@ -103,7 +103,7 @@ public abstract class SmcGripperBase(
 
         if (!motionCard.IsConnected)
             return Result.Fail("运动控制卡未连接，夹爪无法初始化");
-
+        await EnablePushForceAsync();
         // 步骤1: 使能
         var enableResult = await EnableAsync();
         if (!enableResult.IsSuccess)
@@ -209,6 +209,22 @@ public abstract class SmcGripperBase(
     // 公开方法
     // ====================================================================
 
+    /// <summary>
+    /// 开启推理推力模式（写 0x7011:00 = 34400）
+    /// </summary>
+    public async Task<Result> EnablePushForceAsync()
+    {
+        if (!motionCard.IsConnected)
+            return Result.Fail("运动控制卡未连接");
+
+
+        var result = await motionCard.WriteRxPDOAsync(_config.SlaveAddress, OdPushForce, OdSubIndex, OdBitLen16, 34400);
+        if (!result.IsSuccess)
+            return Result.Fail($"夹爪  开启推理推力模式失败: {result.Message}");
+
+        logger.Information("夹爪 推理推力模式已开启");
+        return Result.Success();
+    }
     public async Task<Result> EnableAsync()
     {
         if (!motionCard.IsConnected)
