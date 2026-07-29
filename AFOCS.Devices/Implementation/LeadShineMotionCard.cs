@@ -111,12 +111,19 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
             if (nmcErr != 0)
                 return Result.Fail($"总线错误: 0x{nmcErr:X4}");
 
-            ret = LTDMC.nmc_set_axis_enable(_cardNo, 255); // 使能所有轴
-            if (ret != 0)
-                return Result.Fail($"调用API失败:{nameof(LTDMC.nmc_set_axis_enable)}, error code: {ret}");
-
-            logger.Information("雷赛板卡初始化成功");
             IsConnected = true;
+            logger.Information("雷赛板卡初始化成功");
+            uint totalAxesNum = 0;
+            ret = LTDMC.nmc_get_total_axes(_cardNo, ref totalAxesNum);
+            if (ret != 0)
+                return Result.Fail($"调用API失败:{nameof(LTDMC.nmc_get_total_axes)}, error code: {ret}");
+            for (int i = 0; i < totalAxesNum; i++)
+            {
+                ret = LTDMC.nmc_set_axis_enable(_cardNo, 255); // 使能所有轴
+                if (ret != 0)
+                    logger.Warning($"调用API失败:{nameof(LTDMC.nmc_set_axis_enable)}, error code: {ret}");
+            }
+            
             return Result.Success();
         }
         catch (Exception ex)

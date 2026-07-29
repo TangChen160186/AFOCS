@@ -361,7 +361,8 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
         int timeoutMs = 30000)
     {
         var axis = (ushort)busAxisId;
-        var cfg = GetAxisConfig(busAxisId).Home;
+        var axisConfig = GetAxisConfig(busAxisId);
+        var cfg = axisConfig.Home;
         var finalHomeMode = homeMode ?? cfg.HomeMode;
         var finalLowVel = lowVel ?? cfg.LowVel;
         var finalHighVel = highVel ?? cfg.HighVel;
@@ -410,7 +411,7 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
             //    logger.Warning("轴 {Axis} 负限位已触发，回零将向正方向寻原点", axis);
 
             // 设置脉冲当量
-            var equivResult = await motionCard.SetEquivAsync(axis, cfg.Equiv);
+            var equivResult = await motionCard.SetEquivAsync(axis, axisConfig.Motion.Equiv);
             if (!equivResult.IsSuccess) return Result.Fail($"设置脉冲当量失败: {equivResult.Message}");
 
             // 设置回零参数

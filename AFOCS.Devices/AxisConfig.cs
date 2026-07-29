@@ -58,13 +58,14 @@ namespace AFOCS.Devices
         [Description("回零模式")]
         public ushort HomeMode { get; set; } = 33;
 
+
         /// <summary>回零低速（unit/s），精找原点</summary>
         [Description("回零低速 (unit/s)")]
-        public double LowVel { get; set; } = 10;
+        public double LowVel { get; set; } = 200;
 
         /// <summary>回零高速（unit/s），快速接近原点</summary>
         [Description("回零高速 (unit/s)")]
-        public double HighVel { get; set; } = 100;
+        public double HighVel { get; set; } = 500;
 
         /// <summary>回零加速时间（s）</summary>
         [Description("回零加速时间 (s)")]
@@ -83,9 +84,7 @@ namespace AFOCS.Devices
             HomeMode = HomeMode, LowVel = LowVel, HighVel = HighVel,
             Tacc = Tacc, Tdec = Tdec, OffsetPos = OffsetPos,
         };
-        /// <summary>脉冲当量（pulse/unit），如 1000 表示 1000 脉冲 = 1mm</summary>
-        [Description("脉冲当量 (pulse/unit)")]
-        public double Equiv { get; set; } = 1000;
+
         object ICloneable.Clone() => Clone();
     }
 
