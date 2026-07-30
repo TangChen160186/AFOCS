@@ -210,26 +210,7 @@ namespace AFOCS.App.ViewModels.Settings
             RefreshStatus();
         }
 
-        public async Task ZeroXAsync()
-        {
-            StatusMessage = "X 通道清零中...";
-            await sensor.ZeroXAsync();
-            StatusMessage = "X 通道清零完成";
-        }
-
-        public async Task ZeroYAsync()
-        {
-            StatusMessage = "Y 通道清零中...";
-            await sensor.ZeroYAsync();
-            StatusMessage = "Y 通道清零完成";
-        }
-
-        public async Task ZeroZAsync()
-        {
-            StatusMessage = "Z 通道清零中...";
-            await sensor.ZeroZAsync();
-            StatusMessage = "Z 通道清零完成";
-        }
+     
 
         public async Task ZeroAllAsync()
         {

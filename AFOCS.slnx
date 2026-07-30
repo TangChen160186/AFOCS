@@ -13,6 +13,10 @@
       <Build Solution="Release|x64" Project="false" />
     </Project>
   </Folder>
+  <Folder Name="/Test/" />
+  <Folder Name="/Test/Camera/">
+    <Project Path="CameraTest/CameraTest.csproj" Id="9a273c8e-1043-457f-8fa8-9375beacdb8d" />
+  </Folder>
   <Project Path="AFOCS.App/AFOCS.App.csproj">
     <Platform Project="x64" />
   </Project>
@@ -28,15 +32,15 @@
     <Platform Project="x64" />
     <Build Solution="Release|x64" Project="false" />
   </Project>
+  <Project Path="AFOCS.FlowNodeEditor/AFOCS.FlowNodeEditor.csproj">
+    <Platform Project="x64" />
+    <Build Solution="Release|x64" Project="false" />
+  </Project>
   <Project Path="AFOCS.Infrastructure/AFOCS.Infrastructure.csproj" Id="dbdfe530-1c5f-4896-8c7b-c45c7e9fdba3">
     <Platform Project="x64" />
     <Build Solution="Release|x64" Project="false" />
   </Project>
   <Project Path="AFOCS.Shared/AFOCS.Shared.csproj" Id="f7ac908a-52b8-4921-8bf7-347ede2a9771">
-    <Platform Project="x64" />
-    <Build Solution="Release|x64" Project="false" />
-  </Project>
-  <Project Path="AFOCS.FlowNodeEditor/AFOCS.FlowNodeEditor.csproj">
     <Platform Project="x64" />
     <Build Solution="Release|x64" Project="false" />
   </Project>

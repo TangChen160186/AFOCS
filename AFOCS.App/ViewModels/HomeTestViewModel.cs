@@ -74,11 +74,13 @@ public class HomeAxisItem : PropertyChangedBase, IDisposable
 public class HomeTestViewModel(
     IToastService toastService,
     IBusAxisDevice busAxisDevice,
-    [ImportMany] IEnumerable<IAkribisMotion> akribisMotions) : Tool, IHomeTest
+    [ImportMany] IEnumerable<IAkribisMotion> akribisMotions,
+    [ImportMany] IEnumerable<ISmcGripper> grippers) : Tool, IHomeTest
 {
     private readonly IToastService _toastService = toastService;
     private readonly IBusAxisDevice _busAxisDevice = busAxisDevice;
     private readonly Dictionary<string, IAkribisMotion> _akribisInstances = [];
+    private readonly Dictionary<string, ISmcGripper> _grippers = [];
 
     public override PaneLocation PreferredLocation => PaneLocation.Right;
     public override double PreferredWidth => 400;
@@ -102,12 +104,15 @@ public class HomeTestViewModel(
         }
     }
 
-    // ========== 轴列表（总线 + 雅克贝斯） ==========
+    // ========== 轴列表（总线 + 雅克贝斯 + 夹爪） ==========
 
     public ObservableCollection<HomeAxisItem> BusAxes { get; } = [];
     public ObservableCollection<HomeAxisItem> AkAxes { get; } = [];
+    public ObservableCollection<HomeAxisItem> GripperAxes { get; } = [];
 
-    public bool HasSelection => BusAxes.Any(a => a.IsSelected) || AkAxes.Any(a => a.IsSelected);
+    public bool HasSelection => BusAxes.Any(a => a.IsSelected)
+        || AkAxes.Any(a => a.IsSelected)
+        || GripperAxes.Any(a => a.IsSelected);
 
     // ========== 状态 ==========
 
@@ -129,8 +134,11 @@ public class HomeTestViewModel(
     {
         foreach (var motion in akribisMotions)
             _akribisInstances[motion.GetType().Name] = motion;
+        foreach (var gripper in grippers)
+            _grippers[gripper.GetType().Name] = gripper;
         BuildBusAxes();
         BuildAkAxes();
+        BuildGripperAxes();
         return base.OnInitializedAsync(cancellationToken);
     }
 
@@ -187,6 +195,27 @@ public class HomeTestViewModel(
         }
     }
 
+    private void BuildGripperAxes()
+    {
+        GripperAxes.Clear();
+
+        var gripperLabels = new[]
+        {
+            ("左耦合左夹爪", nameof(LeftCouplingLGripper)),
+            ("左耦合右夹爪", nameof(LeftCouplingRGripper)),
+            ("右耦合左夹爪", nameof(RightCouplingLGripper)),
+            ("右耦合右夹爪", nameof(RightCouplingRGripper)),
+        };
+
+        foreach (var (label, instanceName) in gripperLabels)
+        {
+            if (!_grippers.TryGetValue(instanceName, out var gripper)) continue;
+
+            GripperAxes.Add(new HomeAxisItem(label, () =>
+                gripper.HomeAsync(timeoutMs: 15000)));
+        }
+    }
+
     private void UpdateStatus(string text)
     {
         StatusText = text;
@@ -206,16 +235,17 @@ public class HomeTestViewModel(
     {
         var selected = BusAxes.Where(a => a.IsSelected)
             .Concat(AkAxes.Where(a => a.IsSelected))
+            .Concat(GripperAxes.Where(a => a.IsSelected))
             .ToList();
 
         if (selected.Count == 0)
         {
-            _toastService.ShowWarning("请先勾选需要回零的轴");
+            _toastService.ShowWarning("请先勾选需要回零的项目");
             return;
         }
 
         var result = MessageBox.Show(
-            $"确定要回零 {selected.Count} 个轴吗？",
+            $"确定要回零 {selected.Count} 个项目吗？",
             "回零确认",
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
@@ -224,7 +254,7 @@ public class HomeTestViewModel(
 
         IsHoming = true;
         NotifyOfPropertyChange(nameof(IsHoming));
-        UpdateStatus($"正在回零 {selected.Count} 个轴...");
+        UpdateStatus($"正在回零 {selected.Count} 个项目...");
 
         var tasks = selected.Select(a => a.Home()).ToArray();
         await Task.WhenAll(tasks);

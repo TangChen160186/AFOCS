@@ -144,43 +144,10 @@
             </Border>
 
             <!-- ========== 清零校准 ========== -->
-            <Border Background="{StaticResource SectionBg}" CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
-                <StackPanel>
+            <Border  Background="{StaticResource SectionBg}" CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
+                <StackPanel HorizontalAlignment="Left">
                     <TextBlock Text="清零校准" FontWeight="Bold" Margin="0,0,0,6" />
-                    <StackPanel Orientation="Horizontal">
-                        <Button cal:Message.Attach="ZeroXAsync" Content="X 清零" Width="65" Padding="6,3" Margin="0,0,6,0">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsConnected}" Value="False">
-                                            <Setter Property="IsEnabled" Value="False" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                        <Button cal:Message.Attach="ZeroYAsync" Content="Y 清零" Width="65" Padding="6,3" Margin="0,0,6,0">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsConnected}" Value="False">
-                                            <Setter Property="IsEnabled" Value="False" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                        <Button cal:Message.Attach="ZeroZAsync" Content="Z 清零" Width="65" Padding="6,3" Margin="0,0,6,0">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsConnected}" Value="False">
-                                            <Setter Property="IsEnabled" Value="False" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
+                   
                         <Button cal:Message.Attach="ZeroAllAsync" Content="全部清零" Width="75" Padding="6,3">
                             <Button.Style>
                                 <Style TargetType="Button">
@@ -192,7 +159,6 @@
                                 </Style>
                             </Button.Style>
                         </Button>
-                    </StackPanel>
                 </StackPanel>
             </Border>
 

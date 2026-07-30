@@ -166,10 +166,10 @@ namespace AFOCS.App.ViewModels
 
                 _cameraLight,
 
-                _cameraLeftUp,
-                _cameraLeftDown,
-                _cameraRightUp,
-                _cameraRightDown,
+                //_cameraLeftUp,
+                //_cameraLeftDown,
+                //_cameraRightUp,
+                //_cameraRightDown,
 
 
             ];

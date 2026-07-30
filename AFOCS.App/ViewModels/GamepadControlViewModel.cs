@@ -61,11 +61,17 @@ public class GamepadControlViewModel(
 
     // ========== 步长 ==========
 
-    public int BusJogStep
+    public int CameraJogStep
     {
         get;
         set => Set(ref field, value);
     } = 1000;
+
+    public double RotationJogStep
+    {
+        get;
+        set => Set(ref field, value);
+    } = 0.5;
 
     public int AkribisJogStep
     {
@@ -316,7 +322,9 @@ public class GamepadControlViewModel(
     {
         if (!Enum.TryParse<EAxis>(axisName, out var axis)) return;
 
-        var distance = BusJogStep * direction;
+        // 根据轴类型选择步长：相机轴用 CameraJogStep，角度轴用 RotationJogStep
+        var step = axis.IsCameraAxis() ? CameraJogStep : RotationJogStep;
+        var distance = step * direction;
         var busId = axis.ToBusAxisId(SelectedStation);
 
         IsBusy = true;

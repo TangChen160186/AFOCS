@@ -1,5 +1,6 @@
 using AFOCS.Infrastructure;
 using Serilog;
+using System.Threading.Channels;
 
 namespace AFOCS.Devices.Implementation;
 
@@ -25,7 +26,7 @@ public abstract class PressureSensor(IMotionControlCard motionCard, IConfigServi
     // OD 地址常量
     private const ushort OdReadPressure = 0x6000;
     private const ushort OdZeroControl = 0x7000;
-    private const ushort OdSubIndex = 0x00;
+    private const ushort OdSubIndex = 0x01;
     private const ushort OdBitLen32 = 32;
 
     // ---- 子类需覆写 ----
@@ -227,19 +228,9 @@ public abstract class PressureSensor(IMotionControlCard motionCard, IConfigServi
     // 清零校准
     // ====================================================================
 
-    public Task<Result> ZeroXAsync() => ZeroChannelAsync(PressureChannel.X);
-    public Task<Result> ZeroYAsync() => ZeroChannelAsync(PressureChannel.Y);
-    public Task<Result> ZeroZAsync() => ZeroChannelAsync(PressureChannel.Z);
+
 
     public async Task<Result> ZeroAllAsync()
-    {
-        var results = await Task.WhenAll(ZeroXAsync(), ZeroYAsync(), ZeroZAsync());
-        return results.All(r => r.IsSuccess)
-            ? Result.Success("全部通道清零完成")
-            : Result.Fail("部分通道清零失败");
-    }
-
-    private async Task<Result> ZeroChannelAsync(PressureChannel channel)
     {
         if (!motionCard.IsConnected)
             return Result.Fail("运动控制卡未连接");
@@ -247,26 +238,22 @@ public abstract class PressureSensor(IMotionControlCard motionCard, IConfigServi
         if (_config.SlaveAddress == 0)
             return Result.Fail("从站地址未配置");
 
-        var zeroValue = channel switch
-        {
-            PressureChannel.X => 0x5AA501,
-            PressureChannel.Y => 0x5AA502,
-            PressureChannel.Z => 0x5AA503,
-            _ => throw new ArgumentOutOfRangeException(nameof(channel)),
-        };
-
-        Logger.Information("[{Type}] 通道 {Channel} 开始清零...", ConfigType.Name, channel);
 
         var result = await motionCard.WriteRxPDOAsync(
-            _config.SlaveAddress, OdZeroControl, OdSubIndex, OdBitLen32, zeroValue);
-
+            _config.SlaveAddress, OdZeroControl, OdSubIndex, OdBitLen32, 0);
         if (!result.IsSuccess)
-            return Result.Fail($"清零失败: {result.Message}");
+            return Result.Fail($"清零写入 0x00 失败: {result.Message}");
 
-        Logger.Information("[{Type}] 通道 {Channel} 清零完成", ConfigType.Name, channel);
+        result = await motionCard.WriteRxPDOAsync(
+            _config.SlaveAddress, OdZeroControl, OdSubIndex, OdBitLen32, 0x5AA500);
+        if (!result.IsSuccess)
+            return Result.Fail($"清零写入 0x{0x5AA501:X} 失败: {result.Message}");
+
+        Logger.Information("[所有通道清零完成");
         return Result.Success();
     }
 
+   
     // ====================================================================
     // 配置读写
     // ====================================================================

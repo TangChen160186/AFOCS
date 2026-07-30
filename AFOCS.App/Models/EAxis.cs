@@ -1,4 +1,4 @@
-﻿using AFOCS.Devices;
+using AFOCS.Devices;
 using AFOCS.Devices.Implementation;
 using AFOCS.Infrastructure;
 using System.ComponentModel;
@@ -36,6 +36,9 @@ public static class EAxisExtensions
 {
     /// <summary>是否为 EtherCAT 总线轴（值 0–9）</summary>
     public static bool IsBusAxis(this EAxis axis) => (byte)axis <= 9;
+
+    /// <summary>是否为相机轴（值 0–3）</summary>
+    public static bool IsCameraAxis(this EAxis axis) => (byte)axis <= 3;
 
     /// <summary>是否为雅克贝斯直连轴（值 10–15）</summary>
     public static bool IsAkribisAxis(this EAxis axis) => (byte)axis >= 10;

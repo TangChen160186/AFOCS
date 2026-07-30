@@ -149,15 +149,6 @@ public interface IPressureSensor : IDevice
 
     // ========== 清零校准 ==========
 
-    /// <summary>X 通道清零</summary>
-    Task<Result> ZeroXAsync();
-
-    /// <summary>Y 通道清零</summary>
-    Task<Result> ZeroYAsync();
-
-    /// <summary>Z 通道清零</summary>
-    Task<Result> ZeroZAsync();
-
     /// <summary>全部三通道清零</summary>
     Task<Result> ZeroAllAsync();
 
