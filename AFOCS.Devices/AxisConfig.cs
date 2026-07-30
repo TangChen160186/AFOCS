@@ -61,11 +61,11 @@ namespace AFOCS.Devices
 
         /// <summary>回零低速（unit/s），精找原点</summary>
         [Description("回零低速 (unit/s)")]
-        public double LowVel { get; set; } = 200;
+        public double LowVel { get; set; } = 2000;
 
         /// <summary>回零高速（unit/s），快速接近原点</summary>
         [Description("回零高速 (unit/s)")]
-        public double HighVel { get; set; } = 500;
+        public double HighVel { get; set; } = 5000;
 
         /// <summary>回零加速时间（s）</summary>
         [Description("回零加速时间 (s)")]

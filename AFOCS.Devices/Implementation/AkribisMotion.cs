@@ -147,10 +147,10 @@ public abstract class AkribisMotion : IAkribisMotion
         if (!EnsureAxisReady(ar)) return Result.Fail(ResultCode.Fail, "换相或使能失败");
 
         var p = GetAxisParams(axis);
-        var s = (speed ?? p.Speed) * DefaultEquip;
-        var a = (accel ?? p.Accel) * DefaultEquip;
-        var d = (decel ?? p.Decel) * DefaultEquip;
-        distance *= DefaultEquip; 
+        var s = (speed ?? p.Speed) /** DefaultEquip*/;
+        var a = (accel ?? p.Accel) /** DefaultEquip*/;
+        var d = (decel ?? p.Decel) /** DefaultEquip*/;
+        //distance *= DefaultEquip; 
         if (!AAMotionAPI.MoveRel(_controller, a, s, d, [_controller.GetAxis(ar)], [distance]))
             return Result.Fail(ResultCode.Fail, "相对运动指令发送失败");
 
@@ -167,10 +167,10 @@ public abstract class AkribisMotion : IAkribisMotion
         if (!EnsureAxisReady(ar)) return Result.Fail(ResultCode.Fail, "换相或使能失败");
 
         var p = GetAxisParams(axis);
-        var s = (speed ?? p.Speed) * DefaultEquip;
-        var a = (accel ?? p.Accel) * DefaultEquip;
-        var d = (decel ?? p.Decel) * DefaultEquip;
-        position *= DefaultEquip;
+        var s = (speed ?? p.Speed)/* * DefaultEquip*/;
+        var a = (accel ?? p.Accel)/* * DefaultEquip*/;
+        var d = (decel ?? p.Decel)/* * DefaultEquip*/;
+        //position *= DefaultEquip;
         AAMotionAPI.MoveAbs(_controller, ar, position, s, a, d);
 
         return await WaitForMotionDone(ar, axis, timeoutMs);
@@ -192,12 +192,12 @@ public abstract class AkribisMotion : IAkribisMotion
         }
 
         var p = GetAxisParams(axiss[0]);
-        var s = (speed ?? p.Speed) * DefaultEquip;
-        var a = (accel ?? p.Accel) * DefaultEquip;
-        var d = (decel ?? p.Decel) * DefaultEquip;
+        var s = (speed ?? p.Speed) /** DefaultEquip*/;
+        var a = (accel ?? p.Accel) /** DefaultEquip*/;
+        var d = (decel ?? p.Decel) /** DefaultEquip*/;
 
         if (!AAMotionAPI.MoveRel(_controller, a, s, d,
-                ars.Select(e => _controller.GetAxis(e)).ToArray(), distances.Select(e=>e * DefaultEquip).ToArray()))
+                ars.Select(e => _controller.GetAxis(e)).ToArray(), distances.Select(e=>e /** DefaultEquip*/).ToArray()))
             return Result.Fail(ResultCode.Fail, "直线插补指令发送失败");
 
         int elapsed = 0, interval = 20;
@@ -260,9 +260,9 @@ public abstract class AkribisMotion : IAkribisMotion
                 var axisB = _controller.GetAxis(AxisRef.B);
                 var axisC = _controller.GetAxis(AxisRef.C);
 
-                int newX = (int)axisA.Pos / DefaultEquip;
-                int newY = (int)axisB.Pos / DefaultEquip;
-                int newZ = (int)axisC.Pos / DefaultEquip;
+                int newX = (int)axisA.Pos /*/ DefaultEquip*/;
+                int newY = (int)axisB.Pos /*/ DefaultEquip*/;
+                int newZ = (int)axisC.Pos /*/ DefaultEquip*/;
 
                 bool changed;
                 lock (_posLock)

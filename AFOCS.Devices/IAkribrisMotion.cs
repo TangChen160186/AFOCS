@@ -6,9 +6,9 @@ namespace AFOCS.Devices;
 
 public class AkribisAxisParams : ICloneable
 {
-    public int Speed { get; set; } = 1000;
-    public int Accel { get; set; } = 400;
-    public int Decel { get; set; } = 400;
+    public int Speed { get; set; } = 2048_000;
+    public int Accel { get; set; } = 5000_000;
+    public int Decel { get; set; } = 5000_000;
 
     public AkribisAxisParams Clone() => new()
     {

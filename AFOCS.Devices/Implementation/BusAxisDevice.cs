@@ -116,27 +116,27 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
         {
             case BusAxisId.LeftCamUpX:
             case BusAxisId.RightCamUpX:
-                config.Motion.Equiv = 8388608 / (5.0 * 100); // 10um
-                config.Motion.MinVel = 200;
-                config.Motion.MaxVel = 500;
+                config.Motion.Equiv = 8388608 / (5.0 * 1000); // 1um
+                config.Motion.MinVel = 2000;
+                config.Motion.MaxVel = 5000;
                 break;
             case BusAxisId.LeftCamUpY:
             case BusAxisId.RightCamUpY:
-                config.Motion.Equiv = 8388608 / (10.0 * 100); // 10um
-                config.Motion.MinVel = 200;
-                config.Motion.MaxVel = 500;
+                config.Motion.Equiv = 8388608 / (10.0 * 1000); // 1um
+                config.Motion.MinVel = 2000;
+                config.Motion.MaxVel = 5000;
                 break;
             case BusAxisId.LeftCamUpZ:
             case BusAxisId.RightCamUpZ:
-                config.Motion.Equiv = 8388608 / (1.0 * 100);// 10um
-                config.Motion.MinVel = 200;
-                config.Motion.MinVel = 500;
+                config.Motion.Equiv = 8388608 / (1.0 * 1000);// 1um
+                config.Motion.MinVel = 2000;
+                config.Motion.MinVel = 5000;
                 break;
             case BusAxisId.LeftCamSideY:
             case BusAxisId.RightCamSideY:
-                config.Motion.Equiv = 8388608 / (1.0 * 100);// 10um
-                config.Motion.MinVel = 200;
-                config.Motion.MinVel = 500;
+                config.Motion.Equiv = 8388608 / (1.0 * 1000);// 1um
+                config.Motion.MinVel = 2000;
+                config.Motion.MinVel = 5000;
                 break;
 
             case BusAxisId.LeftCouplingLThetaX:
@@ -144,7 +144,7 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
             case BusAxisId.LeftCouplingRThetaX:
             case BusAxisId.RightCouplingRThetaX:
                 config.Motion.Equiv = 50000 / 1.0324;
-                config.Motion.MinVel = 0.5;
+                config.Motion.MinVel = 0.1;
                 config.Motion.MinVel = 1;
                 break;
 
@@ -153,16 +153,16 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
             case BusAxisId.RightCouplingLThetaY:
             case BusAxisId.RightCouplingRThetaY:
                 config.Motion.Equiv = 50000 / 1.0324;
-                config.Motion.MinVel = 0.5;
-                config.Motion.MinVel = 5;
+                config.Motion.MinVel = 0.1;
+                config.Motion.MinVel = 1;
                 break;
             case BusAxisId.LeftCouplingRThetaZ:
             case BusAxisId.LeftCouplingLThetaZ:
             case BusAxisId.RightCouplingLThetaZ:
             case BusAxisId.RightCouplingRThetaZ:
                 config.Motion.Equiv = 50000 / 1.8789;
-                config.Motion.MinVel = 0.5;
-                config.Motion.MinVel = 5;
+                config.Motion.MinVel = 0.1;
+                config.Motion.MinVel = 1;
                 break;
         }
 

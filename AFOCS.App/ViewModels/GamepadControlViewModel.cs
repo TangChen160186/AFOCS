@@ -77,7 +77,7 @@ public class GamepadControlViewModel(
     {
         get;
         set => Set(ref field, value);
-    } = 100;
+    } = 100000;
 
 
     // ========== Akribis 实例信息 ==========
