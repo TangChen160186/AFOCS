@@ -8,4 +8,24 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Content Include="..\..\..\Users\Administrator\Desktop\InputImg.jpeg" Link="Images\InputImg.jpeg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\Users\Administrator\Desktop\Model.jpeg" Link="Images\Model.jpeg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Emgu.CV" />
+    <PackageReference Include="Emgu.CV.Bitmap" />
+    <PackageReference Include="Emgu.CV.runtime.windows" />
+    <PackageReference Include="Emgu.CV.Wpf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Images\" />
+  </ItemGroup>
+
 </Project>

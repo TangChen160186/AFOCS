@@ -10,6 +10,10 @@
     <PackageVersion Include="Caliburn.Micro" Version="5.0.258" />
     <PackageVersion Include="Dirkster.AvalonDock.Themes.VS2013" Version="4.74.1" />
     <PackageVersion Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.129" />
+    <PackageVersion Include="Emgu.CV" Version="4.13.0.5924" />
+    <PackageVersion Include="Emgu.CV.Bitmap" Version="4.13.0.5924" />
+    <PackageVersion Include="Emgu.CV.runtime.windows" Version="4.13.0.5924" />
+    <PackageVersion Include="Emgu.CV.Wpf" Version="4.13.0.5924" />
     <PackageVersion Include="gong-wpf-dragdrop" Version="4.0.0" />
     <PackageVersion Include="MahApps.Metro" Version="3.0.0-rc0529" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />

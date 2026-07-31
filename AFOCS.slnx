@@ -16,6 +16,7 @@
   <Folder Name="/Test/" />
   <Folder Name="/Test/Camera/">
     <Project Path="CameraTest/CameraTest.csproj" Id="9a273c8e-1043-457f-8fa8-9375beacdb8d" />
+    <Project Path="VisualTest/VisualTest.csproj" Id="2f1d05e0-38c2-409d-8b3a-37067941371b" />
   </Folder>
   <Project Path="AFOCS.App/AFOCS.App.csproj">
     <Platform Project="x64" />
