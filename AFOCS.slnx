@@ -3,6 +3,9 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Folder Name="/Core/">
+    <Project Path="VisionToolkit/VisionToolkit.csproj" />
+  </Folder>
   <Folder Name="/FrameWork/">
     <Project Path="AFOCS.Framework.Test/AFOCS.Framework.Test.csproj" Id="93f01b83-267d-4e8b-a587-ace81ec908c0">
       <Platform Project="x64" />

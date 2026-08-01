@@ -3,7 +3,6 @@ using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using System.Windows;
-using System.Windows.Media.Imaging;
 
 namespace CameraTest
 {

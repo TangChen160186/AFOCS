@@ -13,12 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\..\..\Users\Administrator\Desktop\InputImg.jpeg" Link="Images\InputImg.jpeg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\..\Users\Administrator\Desktop\Model.jpeg" Link="Images\Model.jpeg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Images\model1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -31,5 +25,9 @@
         <PackageReference Include="Emgu.CV" />
         <PackageReference Include="Emgu.CV.Bitmap" />
         <PackageReference Include="Emgu.CV.runtime.windows" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\VisionToolkit\VisionToolkit.csproj" />
     </ItemGroup>
 </Project>

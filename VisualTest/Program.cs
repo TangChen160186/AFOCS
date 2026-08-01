@@ -1,12 +1,13 @@
-﻿using Emgu.CV;
+﻿using System.Drawing;
+using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
-using EmguCVMatching;
-using System.Drawing;
-using VisualTest;
+using VisionToolkit.TemplateMatcher;
 
-class Program
+namespace VisualTest;
+
+internal class Program
 {
     // 显示用的最大窗口尺寸
     private static readonly Size MaxDisplaySize = new Size(1600, 900);
@@ -35,9 +36,9 @@ class Program
         {
             MatcherType = MatcherType.Pattern,
             MaxCount = 1,
-            ScoreThreshold = 0.95,
+            ScoreThreshold = 0.65,
             IouThreshold = 0.0,
-            Angle = 90,             // ±10° 搜索范围
+            Angle =180,             // ±10° 搜索范围
             MinArea = 256
         };
 
