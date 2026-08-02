@@ -16,7 +16,9 @@
       <Build Solution="Release|x64" Project="false" />
     </Project>
   </Folder>
-  <Folder Name="/Test/" />
+  <Folder Name="/Test/">
+    <Project Path="VisionToolkit.Test/VisionToolkit.Test.csproj" Id="d1c9ca9f-4528-4c38-b1c6-01c63d2619f5" />
+  </Folder>
   <Folder Name="/Test/Camera/">
     <Project Path="CameraTest/CameraTest.csproj" Id="9a273c8e-1043-457f-8fa8-9375beacdb8d" />
     <Project Path="VisualTest/VisualTest.csproj" Id="2f1d05e0-38c2-409d-8b3a-37067941371b" />
@@ -37,6 +39,10 @@
     <Build Solution="Release|x64" Project="false" />
   </Project>
   <Project Path="AFOCS.FlowNodeEditor/AFOCS.FlowNodeEditor.csproj">
+    <Platform Project="x64" />
+    <Build Solution="Release|x64" Project="false" />
+  </Project>
+  <Project Path="AFOCS.VisionEditor/AFOCS.VisionEditor.csproj">
     <Platform Project="x64" />
     <Build Solution="Release|x64" Project="false" />
   </Project>

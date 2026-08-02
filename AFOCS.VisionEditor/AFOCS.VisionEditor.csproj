@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <Platforms>x64</Platforms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Nodify" />
+    <PackageReference Include="Caliburn.Micro" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VisionToolkit\VisionToolkit.csproj" />
+    <ProjectReference Include="..\AFOCS.FlowNodeEditor\AFOCS.FlowNodeEditor.csproj" />
+    <ProjectReference Include="..\AFOCS.Framework\AFOCS.Framework.csproj" />
+    <ProjectReference Include="..\AFOCS.Infrastructure\AFOCS.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

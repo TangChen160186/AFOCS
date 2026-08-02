@@ -499,7 +499,7 @@ namespace AFOCS.FlowNodeEditor.ViewModels
         }
 
         // ========== 流程执行 ==========
-        public async Task ExecuteFlowAsync()
+        public virtual async Task ExecuteFlowAsync()
         {
             if (Nodes.Count == 0)
             {
@@ -530,7 +530,7 @@ namespace AFOCS.FlowNodeEditor.ViewModels
             }
         }
 
-        public async Task ExecuteFromSelectedNodeAsync()
+        public virtual async Task ExecuteFromSelectedNodeAsync()
         {
             if (SelectedNode == null)
             {
@@ -561,7 +561,7 @@ namespace AFOCS.FlowNodeEditor.ViewModels
             }
         }
 
-        public async Task ExecuteSingleNodeAsync()
+        public virtual async Task ExecuteSingleNodeAsync()
         {
             if (SelectedNode == null)
             {

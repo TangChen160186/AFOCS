@@ -21,7 +21,6 @@ class Program
         using Mat roiColor = CvInvoke.Imread(Path.Combine(imagePath, roiFile), ImreadModes.ColorRgb);
         using Mat roiGray = new();
         CvInvoke.CvtColor(roiColor, roiGray, ColorConversion.Bgr2Gray);
-
         Console.WriteLine($"ROI image size: {roiGray.Rows},{roiGray.Cols}");
         Console.WriteLine();
 
