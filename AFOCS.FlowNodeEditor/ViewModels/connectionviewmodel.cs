@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Caliburn.Micro;
 
 namespace AFOCS.FlowNodeEditor.ViewModels
 {
@@ -7,11 +8,21 @@ namespace AFOCS.FlowNodeEditor.ViewModels
     /// 连接 ViewModel —— NodifyEditor.Connections 中的每一项
     /// Output = 源连接器（输出端口）, Input = 目标连接器（输入端口）
     /// </summary>
-    public class ConnectionViewModel : INotifyPropertyChanged
+    public class ConnectionViewModel : PropertyChangedBase
     {
-        private ConnectorViewModel _output;
-        private ConnectorViewModel _input;
+        private readonly ConnectorViewModel _output;
+        private readonly ConnectorViewModel _input;
+        public ConnectorViewModel Output
+        {
+            get => _output;
+            set => Set(ref field, value);
+        }
 
+        public ConnectorViewModel Input
+        {
+            get => _input;
+            set => Set(ref field, value);
+        }
         public ConnectionViewModel(ConnectorViewModel output, ConnectorViewModel input)
         {
             _output = output;
@@ -20,21 +31,6 @@ namespace AFOCS.FlowNodeEditor.ViewModels
             input.IsConnected = true;
         }
 
-        public ConnectorViewModel Output
-        {
-            get => _output;
-            set { _output = value; Notify(); }
-        }
-
-        public ConnectorViewModel Input
-        {
-            get => _input;
-            set { _input = value; Notify(); }
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        private void Notify([CallerMemberName] string? name = null) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+      
     }
 }

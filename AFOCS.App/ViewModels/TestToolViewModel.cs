@@ -1,7 +1,8 @@
-using System.ComponentModel.Composition;
 using AFOCS.Devices;
+using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Framework.Framework;
 using AFOCS.Framework.Framework.Services;
+using System.ComponentModel.Composition;
 
 namespace AFOCS.App.ViewModels;
 
@@ -12,7 +13,7 @@ public interface ITestTool : ITool;
 [PartCreationPolicy(CreationPolicy.Shared)]
 [method: ImportingConstructor]
 public class TestToolViewModel(
-    IBusAxisDevice busAxisDevice) : Tool, ITestTool
+    IBusAxisDevice busAxisDevice, IFlowExecutionService flowExecutionService) : Tool, ITestTool
 {
     private readonly IBusAxisDevice _busAxisDevice = busAxisDevice;
 
@@ -24,6 +25,9 @@ public class TestToolViewModel(
 
     public async void Test()
     {
+        await flowExecutionService.ExecuteFlowAsync(@"C:\Users\16018\OneDrive\Desktop\Untitled 1.nflow");
         await _busAxisDevice.MovePmoveAsync(BusAxisId.LeftCamUpX, -37672, 1);
     }
+
+    
 }

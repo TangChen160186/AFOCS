@@ -1,28 +1,18 @@
 using AFOCS.FlowNodeEditor.Models;
 
-namespace AFOCS.FlowNodeEditor.ViewModels
+namespace AFOCS.FlowNodeEditor.ViewModels;
+
+public class ToolboxItemViewModel(INodeDefinition template)
 {
-    public class ToolboxItemViewModel
+    public string Category { get; } = NodeDefinitionHelper.GetCategory(template);
+    public string DisplayName { get; } = NodeDefinitionHelper.GetDisplayName(template);
+    public Uri? IconSource { get; } = NodeDefinitionHelper.GetIconSource(template);
+    public string TypeId { get; } = NodeDefinitionHelper.GetTypeId(template);
+    public INodeDefinition Template { get; } = template;
+
+    public NodeViewModel CreateNodeViewModel()
     {
-        public string Category { get; }
-        public string DisplayName { get; }
-        public Uri? IconSource { get; }
-        public string TypeId { get; }
-        public INodeDefinition Template { get; }
-
-        public ToolboxItemViewModel(INodeDefinition template)
-        {
-            Template = template;
-            Category = NodeDefinitionHelper.GetCategory(template);
-            DisplayName = NodeDefinitionHelper.GetDisplayName(template);
-            TypeId = NodeDefinitionHelper.GetTypeId(template);
-            IconSource = NodeDefinitionHelper.GetIconSource(template);
-        }
-
-        public NodeViewModel CreateNodeViewModel()
-        {
-            var clonedDefinition = NodeDefinitionHelper.Clone(Template);
-            return new NodeViewModel(clonedDefinition);
-        }
+        var clonedDefinition = NodeDefinitionHelper.Clone(Template);
+        return new NodeViewModel(clonedDefinition);
     }
 }

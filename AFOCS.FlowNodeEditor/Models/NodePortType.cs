@@ -1,14 +1,13 @@
-namespace AFOCS.FlowNodeEditor.Models
+namespace AFOCS.FlowNodeEditor.Models;
+
+public enum NodePortType
 {
-    public enum NodePortType
-    {
-        Any,
-        Bool,
-        Int,
-        Double,
-        String,
-        Execution,
-        Image,
-        Object,
-    }
+    Any,
+    Bool,
+    Int,
+    Double,
+    String,
+    Execution,
+    Image,
+    Object,
 }

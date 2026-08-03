@@ -1,39 +1,24 @@
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
+using Caliburn.Micro;
 
-namespace AFOCS.FlowNodeEditor.Models
+namespace AFOCS.FlowNodeEditor.Models;
+
+public class NodeDefinitionBase : PropertyChangedBase,INodeDefinition
 {
-    public class NodeDefinitionBase : INodeDefinition
+    [DisplayName("描述")]
+    public string Description
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
+        get;
+        set => Set(ref field, value);
+    } = string.Empty;
 
-        private string _description = string.Empty;
-        [DisplayName("描述")]
-        public string Description
-        {
-            get => _description;
-            set => SetProperty(ref _description, value);
-        }
+    [DisplayName("启用")]
+    public bool Enabled
+    {
+        get;
+        set => Set(ref field, value);
+    } = true;
 
-        private bool _enabled = true;
-        [DisplayName("启用")]
-        public bool Enabled
-        {
-            get => _enabled;
-            set => SetProperty(ref _enabled, value);
-        }
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
-        {
-            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-            field = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
-    }
+    [Browsable(false)]
+    public override bool IsNotifying { get; set; }
 }

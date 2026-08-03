@@ -21,27 +21,27 @@ namespace AFOCS.VisionEditor.Nodes
 
         private string _imagePath = "";
         [DisplayName("图像路径")]
-        public string ImagePath { get => _imagePath; set => SetProperty(ref _imagePath, value); }
+        public string ImagePath { get => _imagePath; set => Set(ref _imagePath, value); }
 
         private double _edgeAngleDeg = 90;
         [DisplayName("边缘角度(°)")]
-        public double EdgeAngleDeg { get => _edgeAngleDeg; set => SetProperty(ref _edgeAngleDeg, value); }
+        public double EdgeAngleDeg { get => _edgeAngleDeg; set => Set(ref _edgeAngleDeg, value); }
 
         private int _caliperCount = 20;
         [DisplayName("卡尺数量")]
-        public int CaliperCount { get => _caliperCount; set => SetProperty(ref _caliperCount, value); }
+        public int CaliperCount { get => _caliperCount; set => Set(ref _caliperCount, value); }
 
         private double _caliperWidth = 5;
         [DisplayName("卡尺宽度(px)")]
-        public double CaliperWidth { get => _caliperWidth; set => SetProperty(ref _caliperWidth, value); }
+        public double CaliperWidth { get => _caliperWidth; set => Set(ref _caliperWidth, value); }
 
         private double _searchHalf = 40;
         [DisplayName("搜索半长(px)")]
-        public double SearchHalf { get => _searchHalf; set => SetProperty(ref _searchHalf, value); }
+        public double SearchHalf { get => _searchHalf; set => Set(ref _searchHalf, value); }
 
         private double _inlierThreshold = 0.8;
         [DisplayName("内点阈值")]
-        public double InlierThreshold { get => _inlierThreshold; set => SetProperty(ref _inlierThreshold, value); }
+        public double InlierThreshold { get => _inlierThreshold; set => Set(ref _inlierThreshold, value); }
 
         // ===== 输入端口 =====
 
@@ -49,7 +49,7 @@ namespace AFOCS.VisionEditor.Nodes
         [Browsable(false)]
         [NodePort("Image", "图像", NodePortType.Image, true)]
         [JsonIgnore]
-        public Mat? Image { get => _image; set => SetProperty(ref _image, value); }
+        public Mat? Image { get => _image; set => Set(ref _image, value); }
 
         // ===== 输出端口 =====
 
@@ -57,37 +57,37 @@ namespace AFOCS.VisionEditor.Nodes
         [Browsable(false)]
         [NodePort("Edge", "边", NodePortType.Object, false)]
         [JsonIgnore]
-        public CaliperEdgeFinder.Result? Edge { get => _edge; set => SetProperty(ref _edge, value); }
+        public CaliperEdgeFinder.Result? Edge { get => _edge; set => Set(ref _edge, value); }
 
         private double _angleDeg;
         [DisplayName("角度(°)")]
         [NodePort("AngleDeg", "角度(°)", NodePortType.Double, false)]
-        public double AngleDeg { get => _angleDeg; set => SetProperty(ref _angleDeg, value); }
+        public double AngleDeg { get => _angleDeg; set => Set(ref _angleDeg, value); }
 
         private double _length;
         [DisplayName("长度(px)")]
         [NodePort("Length", "长度(px)", NodePortType.Double, false)]
-        public double Length { get => _length; set => SetProperty(ref _length, value); }
+        public double Length { get => _length; set => Set(ref _length, value); }
 
         private double _startX;
         [DisplayName("起点X")]
         [NodePort("StartX", "起点X", NodePortType.Double, false)]
-        public double StartX { get => _startX; set => SetProperty(ref _startX, value); }
+        public double StartX { get => _startX; set => Set(ref _startX, value); }
 
         private double _startY;
         [DisplayName("起点Y")]
         [NodePort("StartY", "起点Y", NodePortType.Double, false)]
-        public double StartY { get => _startY; set => SetProperty(ref _startY, value); }
+        public double StartY { get => _startY; set => Set(ref _startY, value); }
 
         private double _endX;
         [DisplayName("终点X")]
         [NodePort("EndX", "终点X", NodePortType.Double, false)]
-        public double EndX { get => _endX; set => SetProperty(ref _endX, value); }
+        public double EndX { get => _endX; set => Set(ref _endX, value); }
 
         private double _endY;
         [DisplayName("终点Y")]
         [NodePort("EndY", "终点Y", NodePortType.Double, false)]
-        public double EndY { get => _endY; set => SetProperty(ref _endY, value); }
+        public double EndY { get => _endY; set => Set(ref _endY, value); }
 
         public Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
         {

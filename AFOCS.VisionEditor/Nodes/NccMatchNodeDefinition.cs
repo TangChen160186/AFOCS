@@ -23,35 +23,35 @@ namespace AFOCS.VisionEditor.Nodes
 
         private string _templatePath = "";
         [DisplayName("模板图片路径")]
-        public string TemplatePath { get => _templatePath; set => SetProperty(ref _templatePath, value); }
+        public string TemplatePath { get => _templatePath; set => Set(ref _templatePath, value); }
 
         private string _imagePath = "";
         [DisplayName("图像路径")]
-        public string ImagePath { get => _imagePath; set => SetProperty(ref _imagePath, value); }
+        public string ImagePath { get => _imagePath; set => Set(ref _imagePath, value); }
 
         private double _scoreThreshold = 0.5;
         [DisplayName("分数阈值")]
-        public double ScoreThreshold { get => _scoreThreshold; set => SetProperty(ref _scoreThreshold, value); }
+        public double ScoreThreshold { get => _scoreThreshold; set => Set(ref _scoreThreshold, value); }
 
         private double _angle = 0;
         [DisplayName("角度搜索范围(°)")]
-        public double Angle { get => _angle; set => SetProperty(ref _angle, value); }
+        public double Angle { get => _angle; set => Set(ref _angle, value); }
 
         private int _maxCount = 200;
         [DisplayName("最大匹配数")]
-        public int MaxCount { get => _maxCount; set => SetProperty(ref _maxCount, value); }
+        public int MaxCount { get => _maxCount; set => Set(ref _maxCount, value); }
 
         private double _iouThreshold = 0;
         [DisplayName("IoU阈值")]
-        public double IouThreshold { get => _iouThreshold; set => SetProperty(ref _iouThreshold, value); }
+        public double IouThreshold { get => _iouThreshold; set => Set(ref _iouThreshold, value); }
 
         private double _minArea = 256;
         [DisplayName("模板最小面积")]
-        public double MinArea { get => _minArea; set => SetProperty(ref _minArea, value); }
+        public double MinArea { get => _minArea; set => Set(ref _minArea, value); }
 
         private bool _subPixel = true;
         [DisplayName("亚像素")]
-        public bool SubPixel { get => _subPixel; set => SetProperty(ref _subPixel, value); }
+        public bool SubPixel { get => _subPixel; set => Set(ref _subPixel, value); }
 
         // ===== 输入端口 =====
 
@@ -59,7 +59,7 @@ namespace AFOCS.VisionEditor.Nodes
         [Browsable(false)]
         [NodePort("Image", "图像", NodePortType.Image, true)]
         [JsonIgnore]
-        public Mat? Image { get => _image; set => SetProperty(ref _image, value); }
+        public Mat? Image { get => _image; set => Set(ref _image, value); }
 
         // ===== 输出端口（执行后填充） =====
 
@@ -67,32 +67,32 @@ namespace AFOCS.VisionEditor.Nodes
         [Browsable(false)]
         [NodePort("Matches", "匹配结果", NodePortType.Object, false)]
         [JsonIgnore]
-        public List<MatchResult>? Matches { get => _matches; set => SetProperty(ref _matches, value); }
+        public List<MatchResult>? Matches { get => _matches; set => Set(ref _matches, value); }
 
         private int _count;
         [DisplayName("匹配数量")]
         [NodePort("Count", "匹配数量", NodePortType.Int, false)]
-        public int Count { get => _count; set => SetProperty(ref _count, value); }
+        public int Count { get => _count; set => Set(ref _count, value); }
 
         private double _centerX;
         [DisplayName("中心X")]
         [NodePort("CenterX", "中心X", NodePortType.Double, false)]
-        public double CenterX { get => _centerX; set => SetProperty(ref _centerX, value); }
+        public double CenterX { get => _centerX; set => Set(ref _centerX, value); }
 
         private double _centerY;
         [DisplayName("中心Y")]
         [NodePort("CenterY", "中心Y", NodePortType.Double, false)]
-        public double CenterY { get => _centerY; set => SetProperty(ref _centerY, value); }
+        public double CenterY { get => _centerY; set => Set(ref _centerY, value); }
 
         private double _matchAngle;
         [DisplayName("匹配角度(°)")]
         [NodePort("MatchAngle", "匹配角度", NodePortType.Double, false)]
-        public double MatchAngle { get => _matchAngle; set => SetProperty(ref _matchAngle, value); }
+        public double MatchAngle { get => _matchAngle; set => Set(ref _matchAngle, value); }
 
         private double _score;
         [DisplayName("最佳分数")]
         [NodePort("Score", "最佳分数", NodePortType.Double, false)]
-        public double Score { get => _score; set => SetProperty(ref _score, value); }
+        public double Score { get => _score; set => Set(ref _score, value); }
 
         public Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
         {
