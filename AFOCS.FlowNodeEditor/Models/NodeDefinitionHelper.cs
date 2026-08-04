@@ -1,5 +1,6 @@
 using System.Reflection;
 using AFOCS.FlowNodeEditor.Services;
+using Caliburn.Micro;
 
 namespace AFOCS.FlowNodeEditor.Models;
 
@@ -122,22 +123,23 @@ public static class NodeDefinitionHelper
     public static INodeDefinition Clone(INodeDefinition source)
     {
         var type = source.GetType();
-        var clone = (INodeDefinition)Activator.CreateInstance(type)!;
 
-        var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
-        foreach (var field in fields)
-        {
-            field.SetValue(clone, field.GetValue(source));
-        }
+        var clone = IoC.GetInstance(type, null);
 
-        var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-        foreach (var prop in props)
-        {
-            if (!prop.CanRead || !prop.CanWrite || prop.GetIndexParameters().Length > 0) continue;
-            prop.SetValue(clone, prop.GetValue(source));
-        }
+        //var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+        //foreach (var field in fields)
+        //{
+        //    field.SetValue(clone, field.GetValue(source));
+        //}
 
-        return clone;
+        //var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        //foreach (var prop in props)
+        //{
+        //    if (!prop.CanRead || !prop.CanWrite || prop.GetIndexParameters().Length > 0) continue;
+        //    prop.SetValue(clone, prop.GetValue(source));
+        //}
+
+        return (INodeDefinition)clone;
     }
 
     private record RuntimePortDefinition(string Name, string DisplayName, NodePortType PortType) : INodePortDefinition;

@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.ComponentModel.Composition;
 using System.IO;
 using System.Reflection;
 using System.Text.Json;
@@ -12,6 +14,9 @@ namespace AFOCS.FlowNodeEditor.ViewModels;
 /// <summary>
 /// 节点编辑器 Document ViewModel —— 流程编辑器的主 ViewModel
 /// </summary>
+
+[Export]
+[PartCreationPolicy(CreationPolicy.NonShared)]
 public class NodeEditorDocumentViewModel : PersistedDocument
 {
     private readonly INodeRegistry _nodeRegistry;
@@ -109,6 +114,7 @@ public class NodeEditorDocumentViewModel : PersistedDocument
         set => Set(ref field, value);
     } = 1.0f;
 
+    
     public System.Windows.Point ViewportLocation
     {
         get;
@@ -120,7 +126,7 @@ public class NodeEditorDocumentViewModel : PersistedDocument
         set => Set(ref field, value);
     }
 
-    public override string DisplayName { get; set; } = "FlowGraph";
+
 
     // ========== 命令 ==========
     public ICommand DeleteSelectedNodeCommand { get; }
@@ -135,6 +141,7 @@ public class NodeEditorDocumentViewModel : PersistedDocument
 
     // ========== 执行状态 ==========
 
+    [ImportingConstructor]
     public NodeEditorDocumentViewModel(INodeRegistry nodeRegistry)
     {
         _nodeRegistry = nodeRegistry;
@@ -463,7 +470,7 @@ public class NodeEditorDocumentViewModel : PersistedDocument
         {
             return jsonElement.ValueKind switch
             {
-                JsonValueKind.String => jsonElement.GetString(),
+                JsonValueKind.String => ConvertJsonString(jsonElement.GetString(), targetType),
                 JsonValueKind.Number => ConvertNumber(jsonElement, targetType),
                 JsonValueKind.True => true,
                 JsonValueKind.False => false,
@@ -498,6 +505,28 @@ public class NodeEditorDocumentViewModel : PersistedDocument
         if (targetType == typeof(decimal) || targetType == typeof(decimal?))
             return element.GetDecimal();
         return element.GetDouble();
+    }
+
+    /// <summary>将 JSON 字符串转换为目标类型（Guid、枚举等通过 TypeConverter 转换）</summary>
+    private static object? ConvertJsonString(string? str, Type targetType)
+    {
+        if (targetType == typeof(string))
+            return str;
+
+        if (str == null)
+            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+
+        try
+        {
+            var converter = TypeDescriptor.GetConverter(targetType);
+            if (converter.CanConvertFrom(typeof(string)))
+                return converter.ConvertFromInvariantString(str);
+            return Convert.ChangeType(str, targetType);
+        }
+        catch
+        {
+            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+        }
     }
 
     // ========== 流程执行 ==========
@@ -593,4 +622,5 @@ public class NodeEditorDocumentViewModel : PersistedDocument
             ExecutionStatus = $"执行失败: {ex.Message}";
         }
     }
+
 }

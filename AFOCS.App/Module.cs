@@ -53,10 +53,7 @@ namespace AFOCS.App
         {
             get
             {
-                yield return new TeachingPointsDocumentViewModel(
-                    IoC.Get<IConfigService>(),
-                    IoC.Get<IBusAxisDevice>(),
-                    IoC.GetAll<IAkribisMotion>());
+                yield return IoC.Get<TeachingPointsDocumentViewModel>();
             }
         }
     }

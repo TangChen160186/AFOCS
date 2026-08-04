@@ -5,7 +5,7 @@ using AFOCS.FlowNodeEditor.Services;
 
 namespace AFOCS.FlowNodeEditor.Nodes;
 
-[NodeDefinition("Builtin.Delay", "延时", "基础",HasExecutionInput = false, HasExecutionOutput = true)]
+[NodeDefinition("Builtin.Delay", "延时", "基础",HasExecutionInput = true, HasExecutionOutput = true)]
 [Export(typeof(INodeDefinition))]
 public class DelayNodeDefinition : NodeDefinitionBase, IExecutableNode
 {

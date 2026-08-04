@@ -16,6 +16,7 @@
       <Build Solution="Release|x64" Project="false" />
     </Project>
   </Folder>
+  <Folder Name="/Nodes/" />
   <Folder Name="/Test/">
     <Project Path="VisionToolkit.Test/VisionToolkit.Test.csproj" Id="d1c9ca9f-4528-4c38-b1c6-01c63d2619f5" />
   </Folder>
@@ -38,15 +39,15 @@
     <Platform Project="x64" />
     <Build Solution="Release|x64" Project="false" />
   </Project>
-  <Project Path="AFOCS.VisionEditor/AFOCS.VisionEditor.csproj">
-    <Platform Project="x64" />
-    <Build Solution="Release|x64" Project="false" />
-  </Project>
   <Project Path="AFOCS.Infrastructure/AFOCS.Infrastructure.csproj" Id="dbdfe530-1c5f-4896-8c7b-c45c7e9fdba3">
     <Platform Project="x64" />
     <Build Solution="Release|x64" Project="false" />
   </Project>
   <Project Path="AFOCS.Shared/AFOCS.Shared.csproj" Id="f7ac908a-52b8-4921-8bf7-347ede2a9771">
+    <Platform Project="x64" />
+    <Build Solution="Release|x64" Project="false" />
+  </Project>
+  <Project Path="AFOCS.VisionEditor/AFOCS.VisionEditor.csproj">
     <Platform Project="x64" />
     <Build Solution="Release|x64" Project="false" />
   </Project>

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.Composition.Hosting;
+using System.ComponentModel.Composition.Hosting;
 
 namespace AFOCS.FlowNodeEditor
 {
@@ -19,6 +19,13 @@ namespace AFOCS.FlowNodeEditor
             if (_container == null)
                 throw new InvalidOperationException("Container not initialized");
             return _container.GetExportedValue<T>() ?? throw new InvalidOperationException($"Service of type {typeof(T).FullName} not registered.");
+        }
+
+        public static IEnumerable<T> GetAllInstances<T>() where T : class
+        {
+            if (_container == null)
+                throw new InvalidOperationException("Container not initialized");
+            return _container.GetExportedValues<T>();
         }
     }
 }

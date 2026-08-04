@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Reflection;
@@ -276,7 +277,7 @@ public class FlowExecutionService : IFlowExecutionService
         {
             return element.ValueKind switch
             {
-                JsonValueKind.String => element.GetString(),
+                JsonValueKind.String => ConvertJsonString(element.GetString(), targetType),
                 JsonValueKind.Number => Convert.ChangeType(element.GetDouble(), targetType),
                 JsonValueKind.True => true,
                 JsonValueKind.False => false,
@@ -286,5 +287,27 @@ public class FlowExecutionService : IFlowExecutionService
         }
 
         return Convert.ChangeType(value, targetType);
+    }
+
+    /// <summary>将 JSON 字符串转换为目标类型（Guid、枚举等通过 TypeConverter 转换）</summary>
+    private static object? ConvertJsonString(string? str, Type targetType)
+    {
+        if (targetType == typeof(string))
+            return str;
+
+        if (str == null)
+            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+
+        try
+        {
+            var converter = TypeDescriptor.GetConverter(targetType);
+            if (converter.CanConvertFrom(typeof(string)))
+                return converter.ConvertFromInvariantString(str);
+            return Convert.ChangeType(str, targetType);
+        }
+        catch
+        {
+            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+        }
     }
 }
