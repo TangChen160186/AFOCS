@@ -3,10 +3,8 @@ using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Framework.Framework;
 using Caliburn.Micro;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.IO;
-using System.Reflection;
 using System.Text.Json;
 using System.Windows.Input;
 
@@ -381,25 +379,10 @@ public class NodeEditorDocumentViewModel : PersistedDocument
             {
                 Location = new System.Windows.Point(nd.X, nd.Y)
             };
-            foreach (var (key, val) in nd.Properties)
-            {
-                var type = def.GetType();
-                var prop = type.GetProperty(key, BindingFlags.Public | BindingFlags.Instance);
-                if (prop != null && prop.CanWrite)
-                {
-                    var convertedValue = ConvertJsonValue(val, prop.PropertyType);
-                    prop.SetValue(def, convertedValue);
-                }
-                else
-                {
-                    var field = type.GetField(key, BindingFlags.Public | BindingFlags.Instance);
-                    if (field != null)
-                    {
-                        var convertedValue = ConvertJsonValue(val, field.FieldType);
-                        field.SetValue(def, convertedValue);
-                    }
-                }
-            }
+
+            // 按属性声明类型还原（类型转换由 System.Text.Json 处理）
+            NodeDefinitionHelper.ApplySerialized(def, nd.Serialized);
+
             Nodes.Add(vm);
             nodeMap[nd.InstanceId] = vm;
         }
@@ -424,26 +407,13 @@ public class NodeEditorDocumentViewModel : PersistedDocument
 
         foreach (var node in Nodes)
         {
-            var properties = new Dictionary<string, object?>();
-            var type = node.Definition.GetType();
-            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
-            foreach (var field in fields)
-            {
-                properties[field.Name] = field.GetValue(node.Definition);
-            }
-            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            foreach (var prop in props)
-            {
-                if (!prop.CanRead || prop.GetIndexParameters().Length > 0) continue;
-                properties[prop.Name] = prop.GetValue(node.Definition);
-            }
             graph.Nodes.Add(new FlowNodeData
             {
                 InstanceId = node.InstanceId,
                 TypeId = NodeDefinitionHelper.GetTypeId(node.Definition),
                 X = node.Location.X,
                 Y = node.Location.Y,
-                Properties = properties
+                Serialized = JsonSerializer.Serialize(node.Definition, node.Definition.GetType())
             });
         }
 
@@ -460,74 +430,6 @@ public class NodeEditorDocumentViewModel : PersistedDocument
 
         var json = JsonSerializer.Serialize(graph, new JsonSerializerOptions { WriteIndented = true });
         await File.WriteAllTextAsync(filePath, json);
-    }
-
-    private static object? ConvertJsonValue(object? value, Type targetType)
-    {
-        if (value == null)
-            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
-
-        if (value is JsonElement jsonElement)
-        {
-            return jsonElement.ValueKind switch
-            {
-                JsonValueKind.String => ConvertJsonString(jsonElement.GetString(), targetType),
-                JsonValueKind.Number => ConvertNumber(jsonElement, targetType),
-                JsonValueKind.True => true,
-                JsonValueKind.False => false,
-                JsonValueKind.Null => targetType.IsValueType ? Activator.CreateInstance(targetType) : null,
-                _ => jsonElement.ToString()
-            };
-        }
-
-        if (targetType.IsAssignableFrom(value.GetType()))
-            return value;
-
-        try
-        {
-            return Convert.ChangeType(value, targetType);
-        }
-        catch
-        {
-            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
-        }
-    }
-
-    private static object? ConvertNumber(JsonElement element, Type targetType)
-    {
-        if (targetType == typeof(int) || targetType == typeof(int?))
-            return element.GetInt32();
-        if (targetType == typeof(long) || targetType == typeof(long?))
-            return element.GetInt64();
-        if (targetType == typeof(double) || targetType == typeof(double?))
-            return element.GetDouble();
-        if (targetType == typeof(float) || targetType == typeof(float?))
-            return element.GetSingle();
-        if (targetType == typeof(decimal) || targetType == typeof(decimal?))
-            return element.GetDecimal();
-        return element.GetDouble();
-    }
-
-    /// <summary>将 JSON 字符串转换为目标类型（Guid、枚举等通过 TypeConverter 转换）</summary>
-    private static object? ConvertJsonString(string? str, Type targetType)
-    {
-        if (targetType == typeof(string))
-            return str;
-
-        if (str == null)
-            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
-
-        try
-        {
-            var converter = TypeDescriptor.GetConverter(targetType);
-            if (converter.CanConvertFrom(typeof(string)))
-                return converter.ConvertFromInvariantString(str);
-            return Convert.ChangeType(str, targetType);
-        }
-        catch
-        {
-            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
-        }
     }
 
     // ========== 流程执行 ==========

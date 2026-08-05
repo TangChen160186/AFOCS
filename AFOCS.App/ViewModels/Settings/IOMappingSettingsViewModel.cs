@@ -9,6 +9,7 @@ using System.Windows.Media;
 using AFOCS.Devices;
 using AFOCS.Framework.Modules.Settings;
 using AFOCS.Infrastructure;
+using AFOCS.Infrastructure.Extensions;
 using Gemini.Modules.Settings;
 
 namespace AFOCS.App.ViewModels.Settings
@@ -166,23 +167,23 @@ namespace AFOCS.App.ViewModels.Settings
 
             var config = _io.GetConfig();
 
-            foreach (var kv in SignalNames.Module1)
-                InputItems.Add(MakeInput(kv, config, "左工位-通用(M1)"));
-            foreach (var kv in SignalNames.Module2)
-                InputItems.Add(MakeInput(kv, config, "左工位-真空(M2)"));
-            foreach (var kv in SignalNames.Module3)
-                InputItems.Add(MakeInput(kv, config, "右工位-通用(M3)"));
-            foreach (var kv in SignalNames.Module4)
-                InputItems.Add(MakeInput(kv, config, "右工位-真空(M4)"));
+            foreach (var signal in Enum.GetValues<AllInputs>().Where(s => (int)s <= 39))
+                InputItems.Add(MakeInput(signal, config, "左工位-通用(M1)"));
+            foreach (var signal in Enum.GetValues<AllInputs>().Where(s => (int)s is >= 40 and <= 71))
+                InputItems.Add(MakeInput(signal, config, "左工位-真空(M2)"));
+            foreach (var signal in Enum.GetValues<AllInputs>().Where(s => (int)s is >= 72 and <= 103))
+                InputItems.Add(MakeInput(signal, config, "右工位-通用(M3)"));
+            foreach (var signal in Enum.GetValues<AllInputs>().Where(s => (int)s >= 104))
+                InputItems.Add(MakeInput(signal, config, "右工位-真空(M4)"));
 
-            foreach (var kv in SignalNames.Module5)
-                OutputItems.Add(MakeOutput(kv, config, "左工位-通用(M5)"));
-            foreach (var kv in SignalNames.Module6)
-                OutputItems.Add(MakeOutput(kv, config, "左工位-真空(M6)"));
-            foreach (var kv in SignalNames.Module7)
-                OutputItems.Add(MakeOutput(kv, config, "右工位-通用(M7)"));
-            foreach (var kv in SignalNames.Module8)
-                OutputItems.Add(MakeOutput(kv, config, "右工位-真空(M8)"));
+            foreach (var signal in Enum.GetValues<AllOutputs>().Where(s => (int)s <= 39))
+                OutputItems.Add(MakeOutput(signal, config, "左工位-通用(M5)"));
+            foreach (var signal in Enum.GetValues<AllOutputs>().Where(s => (int)s is >= 40 and <= 71))
+                OutputItems.Add(MakeOutput(signal, config, "左工位-真空(M6)"));
+            foreach (var signal in Enum.GetValues<AllOutputs>().Where(s => (int)s is >= 72 and <= 103))
+                OutputItems.Add(MakeOutput(signal, config, "右工位-通用(M7)"));
+            foreach (var signal in Enum.GetValues<AllOutputs>().Where(s => (int)s >= 104))
+                OutputItems.Add(MakeOutput(signal, config, "右工位-真空(M8)"));
 
             // 监听 ActiveHigh 变化，即时刷新状态指示
             foreach (var item in InputItems)
@@ -207,25 +208,25 @@ namespace AFOCS.App.ViewModels.Settings
             {
                 if (!Enum.TryParse<AllOutputs>(item.SignalName, out var signal)) continue;
                 var logical = await _io.ReadOutputAsync(signal);
-                if (logical.HasValue)
-                    item.IsHigh = logical.Value;
+                if (logical.IsSuccess)
+                    item.IsHigh = logical.Data;
             }
         }
 
-        private static IOEditItem MakeInput(KeyValuePair<AllInputs, string> kv, IOMappingConfig config, string module)
+        private static IOEditItem MakeInput(AllInputs signal, IOMappingConfig config, string module)
         {
-            var signalName = kv.Key.ToString();
-            var bitNo = config.Inputs.TryGetValue(signalName, out var b) ? b : (int)kv.Key;
+            var signalName = signal.ToString();
+            var bitNo = config.Inputs.TryGetValue(signalName, out var b) ? b : (int)signal;
             var activeHigh = config.InputActives.TryGetValue(signalName, out var a) ? a : true;
-            return new IOEditItem(kv.Value, signalName, bitNo, module, activeHigh: activeHigh);
+            return new IOEditItem(signal.GetDescription(), signalName, bitNo, module, activeHigh: activeHigh);
         }
 
-        private static IOEditItem MakeOutput(KeyValuePair<AllOutputs, string> kv, IOMappingConfig config, string module)
+        private static IOEditItem MakeOutput(AllOutputs signal, IOMappingConfig config, string module)
         {
-            var signalName = kv.Key.ToString();
-            var bitNo = config.Outputs.TryGetValue(signalName, out var b) ? b : (int)kv.Key;
+            var signalName = signal.ToString();
+            var bitNo = config.Outputs.TryGetValue(signalName, out var b) ? b : (int)signal;
             var activeHigh = config.OutputActives.TryGetValue(signalName, out var a) ? a : true;
-            return new IOEditItem(kv.Value, signalName, bitNo, module, isOutput: true, activeHigh: activeHigh);
+            return new IOEditItem(signal.GetDescription(), signalName, bitNo, module, isOutput: true, activeHigh: activeHigh);
         }
 
         private void OnInputChanged(object? sender, IOStateChangedEventArgs e)
@@ -257,8 +258,8 @@ namespace AFOCS.App.ViewModels.Settings
             _io.SetOutputActiveHigh(signal, item.ActiveHigh);
 
             var logical = await _io.ReadOutputAsync(signal);
-            if (logical.HasValue)
-                item.IsHigh = logical.Value;
+            if (logical.IsSuccess)
+                item.IsHigh = logical.Data;
         }
 
         private async void ToggleOutput(string? signalName)

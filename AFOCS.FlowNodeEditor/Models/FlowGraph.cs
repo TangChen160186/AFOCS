@@ -1,4 +1,4 @@
-﻿namespace AFOCS.FlowNodeEditor.Models;
+namespace AFOCS.FlowNodeEditor.Models;
 
 /// <summary>
 /// 流程图的序列化模型，用于保存/加载
@@ -23,8 +23,8 @@ public class FlowNodeData
     /// <summary>Y 坐标</summary>
     public double Y { get; set; }
 
-    /// <summary>节点属性值（属性名 -> 值）</summary>
-    public Dictionary<string, object?> Properties { get; set; } = [];
+    /// <summary>节点定义对象的序列化 JSON（类型感知，加载时按属性类型还原）</summary>
+    public string? Serialized { get; set; }
 }
 
 public class FlowConnectionData

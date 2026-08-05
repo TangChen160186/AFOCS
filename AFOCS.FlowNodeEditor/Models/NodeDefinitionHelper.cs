@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json;
 using AFOCS.FlowNodeEditor.Services;
 using Caliburn.Micro;
 
@@ -118,6 +119,26 @@ public static class NodeDefinitionHelper
         if (prop == null) return true;
         var portAttr = prop.GetCustomAttribute<NodePortAttribute>();
         return portAttr == null || portAttr.AllowPropertyEdit;
+    }
+
+    /// <summary>
+    /// 将节点定义的序列化 JSON 按属性声明类型还原到已有实例（实例由容器创建，保留依赖注入）。
+    /// 类型转换完全交给 System.Text.Json，新增任意可序列化类型无需修改框架。
+    /// </summary>
+    public static void ApplySerialized(INodeDefinition definition, string? json)
+    {
+        if (string.IsNullOrEmpty(json)) return;
+
+        using var doc = JsonDocument.Parse(json);
+        foreach (var prop in doc.RootElement.EnumerateObject())
+        {
+            var propInfo = definition.GetType()
+                .GetProperty(prop.Name, BindingFlags.Public | BindingFlags.Instance);
+            if (propInfo is not { CanWrite: true }) continue;
+
+            var value = JsonSerializer.Deserialize(prop.Value.GetRawText(), propInfo.PropertyType);
+            propInfo.SetValue(definition, value);
+        }
     }
 
     public static INodeDefinition Clone(INodeDefinition source)

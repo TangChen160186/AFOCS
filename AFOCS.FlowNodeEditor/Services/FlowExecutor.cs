@@ -18,6 +18,15 @@ public enum NodeExecutionState
 [method: ImportingConstructor]
 public class FlowExecutor(ILogger logger)
 {
+    /// <summary>分支结果在 ExecuteAsync 返回值中的约定 Key（bool 值，true=真分支，false=假分支）</summary>
+    public const string BranchResultKey = "_branch";
+
+    /// <summary>真分支执行输出端口名（与 IfNodeDefinition 的端口名一致）</summary>
+    public const string TrueBranchPortName = "True";
+
+    /// <summary>假分支执行输出端口名（与 IfNodeDefinition 的端口名一致）</summary>
+    public const string FalseBranchPortName = "False";
+
     private readonly HashSet<Guid> _executed = [];
 
     
@@ -221,9 +230,47 @@ public class FlowExecutor(ILogger logger)
         Dictionary<Guid, Dictionary<string, object?>> results,
         Dictionary<string, object?> context)
     {
-        var execOutput = fromNode.Outputs.FirstOrDefault(o => o.PortType == NodePortType.Execution);
-        if (execOutput == null) return;
+        var execOutputs = fromNode.Outputs.Where(o => o.PortType == NodePortType.Execution).ToList();
+        if (execOutputs.Count == 0) return;
 
+        // 多执行输出端口（条件分支节点）：根据执行结果 _branch 选择要跟随的分支
+        if (execOutputs.Count > 1)
+        {
+            var branch = results.TryGetValue(fromNode.InstanceId, out var outputs)
+                         && outputs.TryGetValue(BranchResultKey, out var b)
+                ? b as bool?
+                : null;
+
+            if (branch is bool taken)
+            {
+                var branchOutput = execOutputs.FirstOrDefault(o =>
+                    o.Name == (taken ? TrueBranchPortName : FalseBranchPortName));
+
+                if (branchOutput != null)
+                {
+                    await FollowExecutionOutput(branchOutput, nodes, connections, results, context);
+                    return;
+                }
+
+                logger.Information(
+                    $"[FlowExecutor] 节点 '{fromNode.Title}' 分支结果 {taken}，但未找到对应输出端口");
+                return;
+            }
+
+            logger.Warning(
+                $"[FlowExecutor] 节点 '{fromNode.Title}' 有多个执行输出但缺少分支结果，按第一个端口执行");
+        }
+
+        await FollowExecutionOutput(execOutputs[0], nodes, connections, results, context);
+    }
+
+    private async Task FollowExecutionOutput(
+        ConnectorViewModel execOutput,
+        IReadOnlyList<NodeViewModel> nodes,
+        IReadOnlyList<ConnectionViewModel> connections,
+        Dictionary<Guid, Dictionary<string, object?>> results,
+        Dictionary<string, object?> context)
+    {
         var nextConns = connections.Where(c => c.Output == execOutput).ToList();
         foreach (var conn in nextConns)
         {

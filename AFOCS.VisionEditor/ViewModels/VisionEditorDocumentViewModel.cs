@@ -27,7 +27,7 @@ namespace AFOCS.VisionEditor.ViewModels
             DisplayName = "视觉模板";
         }
 
-        // ========== 保存：跳过不可序列化的成员（Mat、算法结果等） ==========
+        // ========== 保存：节点定义对象直接序列化（[JsonIgnore] 排除 Mat、算法结果等） ==========
 
         protected override async Task DoSave(string filePath)
         {
@@ -35,31 +35,13 @@ namespace AFOCS.VisionEditor.ViewModels
 
             foreach (var node in Nodes)
             {
-                var properties = new Dictionary<string, object?>();
-                var type = node.Definition.GetType();
-
-                var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
-                foreach (var field in fields)
-                {
-                    if (field.GetCustomAttribute<JsonIgnoreAttribute>() != null) continue;
-                    properties[field.Name] = field.GetValue(node.Definition);
-                }
-
-                var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-                foreach (var prop in props)
-                {
-                    if (!prop.CanRead || prop.GetIndexParameters().Length > 0) continue;
-                    if (prop.GetCustomAttribute<JsonIgnoreAttribute>() != null) continue;
-                    properties[prop.Name] = prop.GetValue(node.Definition);
-                }
-
                 graph.Nodes.Add(new FlowNodeData
                 {
                     InstanceId = node.InstanceId,
                     TypeId = NodeDefinitionHelper.GetTypeId(node.Definition),
                     X = node.Location.X,
                     Y = node.Location.Y,
-                    Properties = properties
+                    Serialized = JsonSerializer.Serialize(node.Definition, node.Definition.GetType())
                 });
             }
 

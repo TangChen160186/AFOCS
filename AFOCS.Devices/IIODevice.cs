@@ -38,9 +38,9 @@ namespace AFOCS.Devices
         bool GetRawState(AllInputs signal);
 
         // -- 输出读写 --
-        Task WriteOutputAsync(AllOutputs signal, bool on);
-        Task<bool?> ReadOutputAsync(AllOutputs signal);
-        Task<bool?> ReadOutputRawAsync(AllOutputs signal);
+        Task<Result> WriteOutputAsync(AllOutputs signal, bool on);
+        Task<Result<bool>> ReadOutputAsync(AllOutputs signal);
+        Task<Result<bool>> ReadOutputRawAsync(AllOutputs signal);
 
         // -- 位号映射 --
         int GetInputBitNo(AllInputs signal);

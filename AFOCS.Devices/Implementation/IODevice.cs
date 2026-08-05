@@ -103,40 +103,51 @@ namespace AFOCS.Devices.Implementation
 
         // ---- 输出读写 ----
 
-        public async Task WriteOutputAsync(AllOutputs signal, bool on)
+        public async Task<Result> WriteOutputAsync(AllOutputs signal, bool on)
         {
             if (!motionCard.IsConnected)
             {
                 logger.Warning("IO 输出失败: 雷赛控制卡未连接");
-                return;
+                return Result.Fail("IO 输出失败: 雷赛控制卡未连接");
             }
             var bitNo = GetOutputBitNo(signal);
             var rawValue = IsOutputActiveHigh(signal) ? on : !on;
             var result = await motionCard.WriteOutbitAsync((ushort)bitNo, rawValue);
             if (result.IsSuccess)
+            {
                 logger.Information("IO 输出: {Signal}(bit{No}) = {Value}(逻辑) raw={Raw}", signal, bitNo, on, rawValue);
-            else
-                logger.Warning("IO 输出失败: {Signal} bit{No}, {Error}", signal, bitNo, result.Message);
+                return Result.Success();
+            }
+
+            var msg = $"IO 输出失败: {signal} bit{bitNo}, {result.Message}";
+            logger.Warning(msg);
+            return Result.Fail(msg);
         }
 
-        public async Task<bool?> ReadOutputAsync(AllOutputs signal)
+        public async Task<Result<bool>> ReadOutputAsync(AllOutputs signal)
         {
-            if (!motionCard.IsConnected) return null;
+            if (!motionCard.IsConnected)
+                return Result<bool>.Fail("IO 设备未连接: 雷赛控制卡未连接");
 
             var bitNo = GetOutputBitNo(signal);
             var result = await motionCard.ReadOutbitAsync((ushort)bitNo);
-            if (!result.IsSuccess) return null;
+            if (!result.IsSuccess)
+                return Result<bool>.Fail($"读取输出 {signal} 失败: {result.Message}");
 
-            return IsOutputActiveHigh(signal) ? result.Data : !result.Data;
+            return Result<bool>.Success(IsOutputActiveHigh(signal) ? result.Data : !result.Data);
         }
 
-        public async Task<bool?> ReadOutputRawAsync(AllOutputs signal)
+        public async Task<Result<bool>> ReadOutputRawAsync(AllOutputs signal)
         {
-            if (!motionCard.IsConnected) return null;
+            if (!motionCard.IsConnected)
+                return Result<bool>.Fail("IO 设备未连接: 雷赛控制卡未连接");
 
             var bitNo = GetOutputBitNo(signal);
             var result = await motionCard.ReadOutbitAsync((ushort)bitNo);
-            return result.IsSuccess ? result.Data : null;
+            if (!result.IsSuccess)
+                return Result<bool>.Fail($"读取输出 {signal} 失败: {result.Message}");
+
+            return Result<bool>.Success(result.Data);
         }
 
         // ---- 输入监控 ----

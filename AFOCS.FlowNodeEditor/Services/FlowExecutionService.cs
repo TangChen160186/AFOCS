@@ -1,7 +1,5 @@
-using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.IO;
-using System.Reflection;
 using System.Text.Json;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.ViewModels;
@@ -227,25 +225,8 @@ public class FlowExecutionService : IFlowExecutionService
             var vm = new NodeViewModel(def, nd.InstanceId);
             vm.Location = new System.Windows.Point(nd.X, nd.Y);
 
-            foreach (var (key, val) in nd.Properties)
-            {
-                var type = def.GetType();
-                var prop = type.GetProperty(key, BindingFlags.Public | BindingFlags.Instance);
-                if (prop != null && prop.CanWrite)
-                {
-                    var convertedValue = ConvertJsonValue(val, prop.PropertyType);
-                    prop.SetValue(def, convertedValue);
-                }
-                else
-                {
-                    var field = type.GetField(key, BindingFlags.Public | BindingFlags.Instance);
-                    if (field != null)
-                    {
-                        var convertedValue = ConvertJsonValue(val, field.FieldType);
-                        field.SetValue(def, convertedValue);
-                    }
-                }
-            }
+            // 按属性声明类型还原（类型转换由 System.Text.Json 处理）
+            NodeDefinitionHelper.ApplySerialized(def, nd.Serialized);
 
             nodes.Add(vm);
             nodeMap[nd.InstanceId] = vm;
@@ -266,48 +247,5 @@ public class FlowExecutionService : IFlowExecutionService
         }
 
         return (nodes, connections);
-    }
-
-    private static object? ConvertJsonValue(object? value, Type targetType)
-    {
-        if (value == null)
-            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
-
-        if (value is JsonElement element)
-        {
-            return element.ValueKind switch
-            {
-                JsonValueKind.String => ConvertJsonString(element.GetString(), targetType),
-                JsonValueKind.Number => Convert.ChangeType(element.GetDouble(), targetType),
-                JsonValueKind.True => true,
-                JsonValueKind.False => false,
-                JsonValueKind.Null => null,
-                _ => value
-            };
-        }
-
-        return Convert.ChangeType(value, targetType);
-    }
-
-    /// <summary>将 JSON 字符串转换为目标类型（Guid、枚举等通过 TypeConverter 转换）</summary>
-    private static object? ConvertJsonString(string? str, Type targetType)
-    {
-        if (targetType == typeof(string))
-            return str;
-
-        if (str == null)
-            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
-
-        try
-        {
-            var converter = TypeDescriptor.GetConverter(targetType);
-            if (converter.CanConvertFrom(typeof(string)))
-                return converter.ConvertFromInvariantString(str);
-            return Convert.ChangeType(str, targetType);
-        }
-        catch
-        {
-            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
-        }
     }
 }

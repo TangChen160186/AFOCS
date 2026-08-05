@@ -1,8 +1,10 @@
-using System.ComponentModel;
-using System.ComponentModel.Composition;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Infrastructure;
+using AFOCS.Infrastructure.Extensions;
+using System.ComponentModel;
+using System.ComponentModel.Composition;
+using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace AFOCS.FlowNodeEditor.Nodes;
 
@@ -20,6 +22,7 @@ public class EntryNodeDefinition : NodeDefinitionBase, IExecutableNode
         set => Set(ref field, value);
     }
     [DisplayName("工位")]
+    [ItemsSource(typeof(WorkPosItemsSource))]
     public WorkPos Workpos
     {
         get;
@@ -34,4 +37,17 @@ public class EntryNodeDefinition : NodeDefinitionBase, IExecutableNode
         };
         return Task.FromResult(result);
     }
+
+
+    public class WorkPosItemsSource : IItemsSource
+    {
+        public ItemCollection GetValues()
+        {
+            var items = new ItemCollection();
+            foreach (var pos in Enum.GetValues<WorkPos>())
+                items.Add(pos, pos.GetDescription());
+            return items;
+        }
+    }
+
 }
