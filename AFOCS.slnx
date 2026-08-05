@@ -4,6 +4,7 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/Core/">
+    <Project Path="VisionEditControl/VisionEditControl.csproj" Id="18c8ed94-3812-4460-81b4-d4f6c636eb91" />
     <Project Path="VisionToolkit/VisionToolkit.csproj" />
   </Folder>
   <Folder Name="/FrameWork/">

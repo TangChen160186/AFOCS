@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Emgu.CV.Wpf" />
     <PackageReference Include="Nodify" />
     <PackageReference Include="Caliburn.Micro" />
     <PackageReference Include="Serilog" />
@@ -22,6 +23,7 @@
     <ProjectReference Include="..\AFOCS.FlowNodeEditor\AFOCS.FlowNodeEditor.csproj" />
     <ProjectReference Include="..\AFOCS.Framework\AFOCS.Framework.csproj" />
     <ProjectReference Include="..\AFOCS.Infrastructure\AFOCS.Infrastructure.csproj" />
+    <ProjectReference Include="..\VisionEditControl\VisionEditControl.csproj" />
   </ItemGroup>
 
 </Project>

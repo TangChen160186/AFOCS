@@ -99,8 +99,8 @@ public class FlowExecutionService : IFlowExecutionService
         catch (Exception ex)
         {
             result.Success = false;
-            result.ErrorMessage = ex.Message;
-            result.ExecutionLog.Add($"执行失败: {ex.Message}");
+            result.ErrorMessage = GetErrorMessage(ex);
+            result.ExecutionLog.Add($"执行失败: {GetErrorMessage(ex)}");
         }
 
         return result;
@@ -157,7 +157,7 @@ public class FlowExecutionService : IFlowExecutionService
         catch (Exception ex)
         {
             result.Success = false;
-            result.ErrorMessage = ex.Message;
+            result.ErrorMessage = GetErrorMessage(ex);
         }
 
         return result;
@@ -205,7 +205,7 @@ public class FlowExecutionService : IFlowExecutionService
         catch (Exception ex)
         {
             result.Success = false;
-            result.ErrorMessage = ex.Message;
+            result.ErrorMessage = GetErrorMessage(ex);
         }
 
         return result;
@@ -247,5 +247,14 @@ public class FlowExecutionService : IFlowExecutionService
         }
 
         return (nodes, connections);
+    }
+
+    /// <summary>展开聚合异常，取最内层真实错误消息</summary>
+    private static string GetErrorMessage(Exception ex)
+    {
+        var current = ex;
+        while (current is AggregateException agg && agg.InnerExceptions.Count == 1)
+            current = agg.InnerException!;
+        return current.Message;
     }
 }

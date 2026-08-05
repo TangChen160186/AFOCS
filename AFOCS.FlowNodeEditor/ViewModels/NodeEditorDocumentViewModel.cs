@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Text.Json;
+using System.Windows;
 using System.Windows.Input;
 
 namespace AFOCS.FlowNodeEditor.ViewModels;
@@ -19,7 +20,6 @@ namespace AFOCS.FlowNodeEditor.ViewModels;
 public class NodeEditorDocumentViewModel : PersistedDocument
 {
     private readonly INodeRegistry _nodeRegistry;
-    private readonly ReactiveFlowExecutor _reactiveExecutor;
 
     // ========== 工具箱（左侧） ==========
     public ObservableCollection<ToolboxItemViewModel> ToolboxItems { get; } = [];
@@ -125,6 +125,20 @@ public class NodeEditorDocumentViewModel : PersistedDocument
         set => Set(ref field, value);
     }
 
+    /// <summary>当前执行是否出错（状态栏红色提示）</summary>
+    public bool HasExecutionError
+    {
+        get;
+        set => Set(ref field, value);
+    }
+
+    /// <summary>设置状态栏文字并同步错误标志</summary>
+    protected void SetExecutionStatus(string message, bool isError = false)
+    {
+        ExecutionStatus = message;
+        HasExecutionError = isError;
+    }
+
 
 
     // ========== 命令 ==========
@@ -144,9 +158,6 @@ public class NodeEditorDocumentViewModel : PersistedDocument
     public NodeEditorDocumentViewModel(INodeRegistry nodeRegistry)
     {
         _nodeRegistry = nodeRegistry;
-        _reactiveExecutor = new ReactiveFlowExecutor(nodeRegistry);
-
-        _reactiveExecutor.StartListening(Nodes, Connections);
 
         DeleteSelectedNodeCommand = new RelayCommand(_ =>
         {
@@ -205,12 +216,6 @@ public class NodeEditorDocumentViewModel : PersistedDocument
         {
             if (param is ConnectorViewModel connector)
             {
-                var related = Connections.Where(c =>
-                    c.Output == connector || c.Input == connector).ToList();
-                foreach (var conn in related)
-                {
-                    _reactiveExecutor.OnConnectionRemoved(conn, Nodes, Connections);
-                }
                 DisconnectConnector(connector);
             }
         });
@@ -220,7 +225,6 @@ public class NodeEditorDocumentViewModel : PersistedDocument
         {
             if (param is ConnectionViewModel conn)
             {
-                _reactiveExecutor.OnConnectionRemoved(conn, Nodes, Connections);
                 conn.Output.IsConnected = false;
                 conn.Input.IsConnected = false;
                 Connections.Remove(conn);
@@ -326,15 +330,11 @@ public class NodeEditorDocumentViewModel : PersistedDocument
         var existingConn = Connections.FirstOrDefault(c => c.Input == target);
         if (existingConn != null)
         {
-            _reactiveExecutor.OnConnectionRemoved(existingConn, Nodes, Connections);
             Connections.Remove(existingConn);
         }
 
         var conn = new ConnectionViewModel(source, target);
         Connections.Add(conn);
-
-        // 触发响应式执行
-        _reactiveExecutor.OnConnectionAdded(conn, Nodes, Connections);
         IsDirty = true;
     }
 
@@ -437,14 +437,14 @@ public class NodeEditorDocumentViewModel : PersistedDocument
     {
         if (Nodes.Count == 0)
         {
-            ExecutionStatus = "没有可执行的节点";
+            SetExecutionStatus("没有可执行的节点");
             return;
         }
 
         foreach (var n in Nodes)
             n.ResetExecutionState();
 
-        ExecutionStatus = "正在执行...";
+        SetExecutionStatus("正在执行...");
         try
         {
             var executor = IoC.Get<FlowExecutor>();
@@ -456,11 +456,11 @@ public class NodeEditorDocumentViewModel : PersistedDocument
             };
 
             var results = await executor.ExecuteAsync(Nodes.ToList(), Connections.ToList());
-            ExecutionStatus = $"执行完成，共 {results.Count} 个节点";
+            SetExecutionStatus($"执行完成，共 {results.Count} 个节点");
         }
         catch (Exception ex)
         {
-            ExecutionStatus = $"执行失败: {ex.Message}";
+            SetExecutionStatus($"执行失败: {GetExecutionError(ex)}", isError: true);
         }
     }
 
@@ -468,14 +468,14 @@ public class NodeEditorDocumentViewModel : PersistedDocument
     {
         if (SelectedNode == null)
         {
-            ExecutionStatus = "请先选中一个节点";
+            SetExecutionStatus("请先选中一个节点");
             return;
         }
 
         foreach (var n in Nodes)
             n.ResetExecutionState();
 
-        ExecutionStatus = $"从节点 '{SelectedNode.Title}' 开始执行...";
+        SetExecutionStatus($"从节点 '{SelectedNode.Title}' 开始执行...");
         try
         {
             var executor = IoC.Get<FlowExecutor>();
@@ -487,11 +487,11 @@ public class NodeEditorDocumentViewModel : PersistedDocument
             };
 
             var results = await executor.ExecuteFromNodeAsync(SelectedNode, Nodes.ToList(), Connections.ToList());
-            ExecutionStatus = $"执行完成，共 {results.Count} 个节点";
+            SetExecutionStatus($"执行完成，共 {results.Count} 个节点");
         }
         catch (Exception ex)
         {
-            ExecutionStatus = $"执行失败: {ex.Message}";
+            SetExecutionStatus($"执行失败: {GetExecutionError(ex)}", isError: true);
         }
     }
 
@@ -499,14 +499,14 @@ public class NodeEditorDocumentViewModel : PersistedDocument
     {
         if (SelectedNode == null)
         {
-            ExecutionStatus = "请先选中一个节点";
+            SetExecutionStatus("请先选中一个节点");
             return;
         }
 
         foreach (var n in Nodes)
             n.ResetExecutionState();
 
-        ExecutionStatus = $"执行节点 '{SelectedNode.Title}'...";
+        SetExecutionStatus($"执行节点 '{SelectedNode.Title}'...");
         try
         {
             var executor = IoC.Get<FlowExecutor>();
@@ -518,12 +518,21 @@ public class NodeEditorDocumentViewModel : PersistedDocument
             };
 
             var results = await executor.ExecuteSingleNodeAsync(SelectedNode, Nodes.ToList(), Connections.ToList());
-            ExecutionStatus = results.Count > 0 ? "执行完成" : "节点未执行";
+            SetExecutionStatus(results.Count > 0 ? "执行完成" : "节点未执行");
         }
         catch (Exception ex)
         {
-            ExecutionStatus = $"执行失败: {ex.Message}";
+            SetExecutionStatus($"执行失败: {GetExecutionError(ex)}", isError: true);
         }
+    }
+
+    /// <summary>展开聚合异常，取最内层真实错误消息</summary>
+    private static string GetExecutionError(Exception ex)
+    {
+        var current = ex;
+        while (current is AggregateException agg && agg.InnerExceptions.Count == 1)
+            current = agg.InnerException!;
+        return current.Message;
     }
 
 }

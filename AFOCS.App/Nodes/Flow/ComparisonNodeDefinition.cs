@@ -40,6 +40,7 @@ public enum ComparisonOperator
 [method: ImportingConstructor]
 public class ComparisonNodeDefinition(ILogger logger) : NodeDefinitionBase, IExecutableNode
 {
+    [Browsable(false)]
     [NodePort("Value", "输入值", NodePortType.Double, true)]
     public double Value
     {
@@ -54,7 +55,7 @@ public class ComparisonNodeDefinition(ILogger logger) : NodeDefinitionBase, IExe
         get;
         set => Set(ref field, value);
     } = ComparisonOperator.GreaterThan;
-
+    [Browsable(false)]
     [NodePort("TargetValue", "目标值", NodePortType.Double, true)]
     public double TargetValue
     {

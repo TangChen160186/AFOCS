@@ -366,6 +366,9 @@ public class FlowExecutor(ILogger logger)
             node.IsExecuting = false;
             node.HasError = true;
             NodeStateChanged?.Invoke(node.InstanceId, NodeExecutionState.Error);
+
+            // 出错立即终止流程，不再执行任何下游节点
+            throw;
         }
     }
 
