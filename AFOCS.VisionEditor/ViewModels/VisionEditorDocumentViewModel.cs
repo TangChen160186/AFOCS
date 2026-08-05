@@ -1,12 +1,13 @@
+using AFOCS.FlowNodeEditor.Models;
+using AFOCS.FlowNodeEditor.Services;
+using AFOCS.FlowNodeEditor.ViewModels;
+using AFOCS.VisionEditor.Services;
+using Caliburn.Micro;
 using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using AFOCS.FlowNodeEditor.Models;
-using AFOCS.FlowNodeEditor.Services;
-using AFOCS.FlowNodeEditor.ViewModels;
-using AFOCS.VisionEditor.Services;
 using VisionToolkit.TemplateMatcher;
 
 namespace AFOCS.VisionEditor.ViewModels
@@ -93,7 +94,7 @@ namespace AFOCS.VisionEditor.ViewModels
             ExecutionStatus = "正在执行...";
             try
             {
-                var executor = new FlowExecutor(_visionRegistry);
+                var executor = IoC.Get<FlowExecutor>();
                 var ordered = GetTopologicalOrder(Nodes, Connections);
 
                 foreach (var node in ordered)

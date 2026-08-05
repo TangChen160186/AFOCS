@@ -2,7 +2,6 @@ using System.ComponentModel;
 using System.ComponentModel.Composition;
 using AFOCS.App.Models;
 using AFOCS.Devices;
-using AFOCS.FlowNodeEditor;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Infrastructure;
@@ -23,7 +22,8 @@ namespace AFOCS.App.Nodes.Motion;
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.MoveToTeachingPoint", "运动到示教点", "运动")]
 [method: ImportingConstructor]
-public class MoveToTeachingPointNodeDefinition(IConfigService configService, IBusAxisDevice busAxisDevice,ILogger logger)
+public class MoveToTeachingPointNodeDefinition(IConfigService configService, IBusAxisDevice busAxisDevice,ILogger logger, [ImportMany]
+    IEnumerable<IAkribisMotion> akdAkribisMotion)
     : NodeDefinitionBase, IExecutableNode
 {
     [DisplayName("示教点")]
@@ -36,8 +36,7 @@ public class MoveToTeachingPointNodeDefinition(IConfigService configService, IBu
 
     public async Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
     {
-        var akribisInstances = AppBootstrapper.GetAllInstances<IAkribisMotion>()
-            .ToDictionary(m => m.GetType().Name);
+        var akribisInstances = akdAkribisMotion.ToDictionary(m => m.GetType().Name);
             
         var config = await configService.LoadAsync<TeachingPointsConfig>();
         var point = config?.Points.FirstOrDefault(p => p.Id == PointId);

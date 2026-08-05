@@ -10,6 +10,4 @@ public class Module : ModuleBase
     [Export]
     public static readonly MenuItemGroupDefinition NodeEditorMenuGroup = new MenuItemGroupDefinition(
         AFOCS.Framework.Modules.MainMenu.MenuDefinitions.ViewMenu, 5);
-
-  
 }

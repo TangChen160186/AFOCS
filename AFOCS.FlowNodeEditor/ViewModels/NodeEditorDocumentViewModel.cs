@@ -1,3 +1,7 @@
+using AFOCS.FlowNodeEditor.Models;
+using AFOCS.FlowNodeEditor.Services;
+using AFOCS.Framework.Framework;
+using Caliburn.Micro;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
@@ -5,9 +9,6 @@ using System.IO;
 using System.Reflection;
 using System.Text.Json;
 using System.Windows.Input;
-using AFOCS.FlowNodeEditor.Models;
-using AFOCS.FlowNodeEditor.Services;
-using AFOCS.Framework.Framework;
 
 namespace AFOCS.FlowNodeEditor.ViewModels;
 
@@ -544,7 +545,7 @@ public class NodeEditorDocumentViewModel : PersistedDocument
         ExecutionStatus = "正在执行...";
         try
         {
-            var executor = new FlowExecutor(_nodeRegistry);
+            var executor = IoC.Get<FlowExecutor>();
 
             executor.NodeStateChanged += async (id, state) =>
             {
@@ -575,7 +576,7 @@ public class NodeEditorDocumentViewModel : PersistedDocument
         ExecutionStatus = $"从节点 '{SelectedNode.Title}' 开始执行...";
         try
         {
-            var executor = new FlowExecutor(_nodeRegistry);
+            var executor = IoC.Get<FlowExecutor>();
 
             executor.NodeStateChanged += async (id, state) =>
             {
@@ -606,7 +607,7 @@ public class NodeEditorDocumentViewModel : PersistedDocument
         ExecutionStatus = $"执行节点 '{SelectedNode.Title}'...";
         try
         {
-            var executor = new FlowExecutor(_nodeRegistry);
+            var executor = IoC.Get<FlowExecutor>();
 
             executor.NodeStateChanged += async (id, state) =>
             {

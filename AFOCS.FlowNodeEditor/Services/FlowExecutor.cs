@@ -1,6 +1,8 @@
-using System.Reflection;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.ViewModels;
+using Serilog;
+using System.ComponentModel.Composition;
+using System.Reflection;
 
 namespace AFOCS.FlowNodeEditor.Services;
 
@@ -11,19 +13,17 @@ public enum NodeExecutionState
     Completed,
     Error
 }
-
-public class FlowExecutor
+[Export]
+[PartCreationPolicy(CreationPolicy.NonShared)]
+[method: ImportingConstructor]
+public class FlowExecutor(ILogger logger)
 {
-    private readonly INodeRegistry _registry;
     private readonly HashSet<Guid> _executed = [];
+
+    
 
     /// <summary>节点状态变化回调（节点实例Id, 状态）</summary>
     public event Action<Guid, NodeExecutionState>? NodeStateChanged;
-
-    public FlowExecutor(INodeRegistry registry)
-    {
-        _registry = registry;
-    }
 
     public async Task<Dictionary<Guid, Dictionary<string, object?>>> ExecuteAsync(
         IReadOnlyList<NodeViewModel> nodes,
@@ -35,7 +35,7 @@ public class FlowExecutor
 
         if (entryNodes.Count == 0)
         {
-            System.Diagnostics.Debug.WriteLine("[FlowExecutor] 未找到 Entry 节点，无法执行");
+            logger.Information("[FlowExecutor] 未找到 Entry 节点，无法执行");
             return new Dictionary<Guid, Dictionary<string, object?>>();
         }
 
@@ -63,11 +63,11 @@ public class FlowExecutor
             .OrderBy(g => g.Key)
             .ToList();
 
-        System.Diagnostics.Debug.WriteLine($"[FlowExecutor] 找到 {entryNodes.Count} 个入口，按优先级分组: {string.Join(", ", grouped.Select(g => $"优先级{g.Key}({g.Count()}个)"))}");
+        logger.Information($"[FlowExecutor] 找到 {entryNodes.Count} 个入口，按优先级分组: {string.Join(", ", grouped.Select(g => $"优先级{g.Key}({g.Count()}个)"))}");
 
         foreach (var group in grouped)
         {
-            System.Diagnostics.Debug.WriteLine($"[FlowExecutor] 执行优先级 {group.Key} 的 {group.Count()} 个入口(并行)");
+            logger.Information($"[FlowExecutor] 执行优先级 {group.Key} 的 {group.Count()} 个入口(并行)");
 
             var tasks = group.Select(async entryNode =>
             {
@@ -95,7 +95,7 @@ public class FlowExecutor
             await Task.WhenAll(tasks);
         }
 
-        System.Diagnostics.Debug.WriteLine(
+        logger.Information(
             $"[FlowExecutor] 执行完成，共 {results.Count}/{nodes.Count} 个节点");
         return results;
     }
@@ -109,12 +109,12 @@ public class FlowExecutor
         var context = new Dictionary<string, object?>();
         _executed.Clear();
 
-        System.Diagnostics.Debug.WriteLine($"[FlowExecutor] 从节点 '{startNode.Title}' 开始执行");
+        logger.Information($"[FlowExecutor] 从节点 '{startNode.Title}' 开始执行");
 
         await ExecuteNodeWithDeps(startNode, nodes, connections, results, context);
         await FollowExecutionChain(startNode, nodes, connections, results, context);
 
-        System.Diagnostics.Debug.WriteLine(
+        logger.Information(
             $"[FlowExecutor] 执行完成，共 {_executed.Count}/{nodes.Count} 个节点");
         return results;
     }
@@ -128,7 +128,7 @@ public class FlowExecutor
         var context = new Dictionary<string, object?>();
         _executed.Clear();
 
-        System.Diagnostics.Debug.WriteLine($"[FlowExecutor] 只执行节点 '{node.Title}'");
+        logger.Information($"[FlowExecutor] 只执行节点 '{node.Title}'");
 
         foreach (var input in node.Inputs)
         {
@@ -156,7 +156,7 @@ public class FlowExecutor
 
         if (!isEnabled)
         {
-            System.Diagnostics.Debug.WriteLine(
+            logger.Information(
                 $"[FlowExecutor] 节点 '{node.Title}' 已禁用，跳过执行");
             return results;
         }
@@ -179,7 +179,7 @@ public class FlowExecutor
                         prop.SetValue(node.Definition, kv.Value);
                 }
 
-                System.Diagnostics.Debug.WriteLine(
+                logger.Information(
                     $"[FlowExecutor] 节点 '{node.Title}' 执行成功，输出 {outputs.Count} 项");
 
                 node.IsExecuting = false;
@@ -195,7 +195,7 @@ public class FlowExecutor
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine(
+            logger.Information(
                 $"[FlowExecutor] 节点 '{node.Title}' 执行失败: {ex.Message}");
             results[node.InstanceId] = new Dictionary<string, object?> { ["_error"] = ex.Message };
 
@@ -274,7 +274,7 @@ public class FlowExecutor
 
         if (!isEnabled)
         {
-            System.Diagnostics.Debug.WriteLine(
+            logger.Information(
                 $"[FlowExecutor] 节点 '{node.Title}' 已禁用，跳过执行");
             _executed.Add(node.InstanceId);
             return;
@@ -295,7 +295,7 @@ public class FlowExecutor
                 foreach (var kv in outputs)
                     context[kv.Key] = kv.Value;
 
-                System.Diagnostics.Debug.WriteLine(
+                logger.Information(
                     $"[FlowExecutor] 节点 '{node.Title}' 执行成功，输出 {outputs.Count} 项");
 
                 node.IsExecuting = false;
@@ -304,14 +304,14 @@ public class FlowExecutor
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine(
+                logger.Information(
                     $"[FlowExecutor] 节点 '{node.Title}' 未实现 IExecutableNode，跳过");
                 node.IsExecuting = false;
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine(
+            logger.Information(
                 $"[FlowExecutor] 节点 '{node.Title}' 执行失败: {ex.Message}");
             results[node.InstanceId] = new Dictionary<string, object?> { ["_error"] = ex.Message };
             _executed.Add(node.InstanceId);

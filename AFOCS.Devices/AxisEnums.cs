@@ -30,26 +30,4 @@ namespace AFOCS.Devices
         RightCouplingRThetaY = 18,
         RightCouplingRThetaZ = 19,
     }
-
-    /// <summary>
-    /// 直线轴枚举定义（API 直连控制，精度 0.1μ，10000pul/r）
-    /// </summary>
-    public enum LinearAxisId
-    {
-        LeftCouplingLX = 0,
-        LeftCouplingLY = 1,
-        LeftCouplingLZ = 2,
-
-        LeftCouplingRX = 3,
-        LeftCouplingRY = 4,
-        LeftCouplingRZ = 5,
-
-        RightCouplingLX = 6,
-        RightCouplingLY = 7,
-        RightCouplingLZ = 8,
-
-        RightCouplingRX = 9,
-        RightCouplingRY = 10,
-        RightCouplingRZ = 11,
-    }
 }

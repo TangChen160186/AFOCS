@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text.Json;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.ViewModels;
+using Caliburn.Micro;
 
 namespace AFOCS.FlowNodeEditor.Services;
 
@@ -80,7 +81,7 @@ public class FlowExecutionService : IFlowExecutionService
             var (nodes, connections) = await LoadFlowGraph(graph);
             result.ExecutionLog.Add($"加载流程: {nodes.Count} 个节点, {connections.Count} 条连线");
 
-            var executor = new FlowExecutor(_nodeRegistry);
+            var executor = IoC.Get<FlowExecutor>();
             executor.NodeStateChanged += (nodeId, state) =>
             {
                 var node = nodes.FirstOrDefault(n => n.InstanceId == nodeId);
@@ -138,7 +139,7 @@ public class FlowExecutionService : IFlowExecutionService
 
             result.ExecutionLog.Add($"从节点 '{startNode.Title}' 开始执行");
 
-            var executor = new FlowExecutor(_nodeRegistry);
+            var executor = IoC.Get<FlowExecutor>();
             executor.NodeStateChanged += (nodeId, state) =>
             {
                 var node = nodes.FirstOrDefault(n => n.InstanceId == nodeId);
@@ -195,8 +196,7 @@ public class FlowExecutionService : IFlowExecutionService
 
             result.ExecutionLog.Add($"只执行节点 '{targetNode.Title}'");
 
-            var executor = new FlowExecutor(_nodeRegistry);
-
+            var executor = IoC.Get<FlowExecutor>();
             var outputs = await executor.ExecuteSingleNodeAsync(targetNode, nodes.ToList(), connections.ToList());
 
             result.Success = true;
