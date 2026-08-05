@@ -7,6 +7,8 @@ namespace AFOCS.FlowNodeEditor.Nodes;
 
 [NodeDefinition("Builtin.Delay", "延时", "基础",HasExecutionInput = true, HasExecutionOutput = true)]
 [Export(typeof(INodeDefinition))]
+[Export]
+[PartCreationPolicy(CreationPolicy.NonShared)]
 public class DelayNodeDefinition : NodeDefinitionBase, IExecutableNode
 {
     [DisplayName("延时(ms)")]

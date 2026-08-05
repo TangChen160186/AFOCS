@@ -7,6 +7,8 @@ namespace AFOCS.FlowNodeEditor.Nodes;
 
 [NodeDefinition("Builtin.Divide", "除法", "运算", HasExecutionInput = false, HasExecutionOutput = false)]
 [Export(typeof(INodeDefinition))]
+[Export]
+[PartCreationPolicy(CreationPolicy.NonShared)]
 public class DivideNodeDefinition : NodeDefinitionBase, IExecutableNode
 {
 
