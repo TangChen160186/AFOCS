@@ -8,11 +8,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using AFOCS.VisionEditor.Models;
 using AFOCS.VisionEditor.Services;
+using AFOCS.VisionEditor.Views;
 using AFOCS.Framework.Framework;
 using Caliburn.Micro;
-using Emgu.CV;
-using Emgu.CV.CvEnum;
-using Emgu.CV.Structure;
 using Microsoft.Win32;
 using Action = System.Action;
 
@@ -172,12 +170,6 @@ public class VisionEditorDocumentViewModel : PersistedDocument
         set => Set(ref _displayImage, value);
     }
 
-    private ImageSource? _resultImageSource;
-    public ImageSource? ResultImageSource
-    {
-        get => _resultImageSource;
-        set => Set(ref _resultImageSource, value);
-    }
 
     // ========== RoiImageEditor 绑定 ==========
 
@@ -239,7 +231,8 @@ public class VisionEditorDocumentViewModel : PersistedDocument
     // ========== 命令 ==========
 
     public ICommand ExecuteCommand { get; }
-    public ICommand SelectImageCommand { get; }
+        public ICommand SelectImageCommand { get; }
+        public ICommand VerifyCommand { get; }
 
     [ImportingConstructor]
     public VisionEditorDocumentViewModel()
@@ -274,6 +267,7 @@ public class VisionEditorDocumentViewModel : PersistedDocument
 
         ExecuteCommand = new RelayCommand(_ => ExecuteAsync());
         SelectImageCommand = new RelayCommand(_ => SelectImage());
+        VerifyCommand = new RelayCommand(_ => Verify());
     }
 
     // ========== 持久化 ==========
@@ -386,87 +380,6 @@ public class VisionEditorDocumentViewModel : PersistedDocument
         SyncSelectedConfigObject();
     }
 
-    // ========== 结果绘图 ==========
-
-    private void DrawResultsOnImage()
-    {
-        if (string.IsNullOrEmpty(ImagePath) || !File.Exists(ImagePath))
-        {
-            ResultImageSource = null;
-            return;
-        }
-
-        try
-        {
-            using var image = CvInvoke.Imread(ImagePath, ImreadModes.ColorRgb);
-            if (image == null || image.IsEmpty)
-            {
-                ResultImageSource = null;
-                return;
-            }
-
-            // NCC：画绿色矩形框 + 中心十字
-            if (Ncc.IsEnabled && Ncc.ResultScore > 0)
-            {
-                var tw = Ncc.TemplateRoi.Width;
-                var th = Ncc.TemplateRoi.Height;
-                var cx = Ncc.ResultX;
-                var cy = Ncc.ResultY;
-                var angle = Ncc.ResultAngle;
-
-                // 匹配框（绿色）
-                var rect = new RotatedRect(
-                    new System.Drawing.PointF((float)cx, (float)cy),
-                    new System.Drawing.SizeF((float)tw, (float)th),
-                    (float)angle);
-                var pts = rect.GetVertices();
-                for (int i = 0; i < 4; i++)
-                    CvInvoke.Line(image, new((int)pts[i].X, (int)pts[i].Y), new((int)pts[(i + 1) % 4].X, (int)pts[(i + 1) % 4].Y), new Bgr(0, 255, 0).MCvScalar, 2);
-
-                // 中心十字
-                DrawCross(image, cx, cy, 15, new Bgr(0, 255, 0).MCvScalar);
-            }
-
-            // 找边1：画蓝色线段
-            if (EdgeFind1.IsEnabled && (EdgeFind1.ResultStartX != 0 || EdgeFind1.ResultStartY != 0))
-            {
-                var p1 = new System.Drawing.Point((int)EdgeFind1.ResultStartX, (int)EdgeFind1.ResultStartY);
-                var p2 = new System.Drawing.Point((int)EdgeFind1.ResultEndX, (int)EdgeFind1.ResultEndY);
-                CvInvoke.Line(image, p1, p2, new Bgr(255, 0, 0).MCvScalar, 2);
-            }
-
-            // 找边2：画蓝色线段
-            if (EdgeFind2.IsEnabled && (EdgeFind2.ResultStartX != 0 || EdgeFind2.ResultStartY != 0))
-            {
-                var p1 = new System.Drawing.Point((int)EdgeFind2.ResultStartX, (int)EdgeFind2.ResultStartY);
-                var p2 = new System.Drawing.Point((int)EdgeFind2.ResultEndX, (int)EdgeFind2.ResultEndY);
-                CvInvoke.Line(image, p1, p2, new Bgr(255, 0, 0).MCvScalar, 2);
-            }
-
-            // 找点：画红色圆点 + 十字
-            if (PointFind.IsEnabled && (PointFind.ResultX != 0 || PointFind.ResultY != 0))
-            {
-                var pt = new System.Drawing.Point((int)PointFind.ResultX, (int)PointFind.ResultY);
-                CvInvoke.Circle(image, pt, 6, new Bgr(0, 0, 255).MCvScalar, -1);
-                DrawCross(image, PointFind.ResultX, PointFind.ResultY, 12, new Bgr(0, 0, 255).MCvScalar);
-            }
-
-            ResultImageSource = image.ToBitmapSource();
-        }
-        catch
-        {
-            ResultImageSource = null;
-        }
-    }
-
-    private static void DrawCross(Mat image, double cx, double cy, int size, Emgu.CV.Structure.MCvScalar color)
-    {
-        var x = (int)cx;
-        var y = (int)cy;
-        CvInvoke.Line(image, new(x - size, y), new(x + size, y), color, 2);
-        CvInvoke.Line(image, new(x, y - size), new(x, y + size), color, 2);
-    }
-
     // ========== 执行 ==========
 
     public async Task ExecuteAsync()
@@ -484,10 +397,12 @@ public class VisionEditorDocumentViewModel : PersistedDocument
 
         try
         {
+            BitmapSource? resultImage = null;
+
             await Task.Run(() =>
             {
                 var service = new VisionExecutionService();
-                service.Execute(ImagePath, Template, (msg, success) =>
+                resultImage = service.Execute(ImagePath, Template, (msg, success) =>
                 {
                     Application.Current?.Dispatcher.Invoke(() =>
                     {
@@ -496,9 +411,10 @@ public class VisionEditorDocumentViewModel : PersistedDocument
                     });
                 });
             });
-
+            
+            Application.Current.Dispatcher.Invoke(() => DisplayImage = resultImage,
+                System.Windows.Threading.DispatcherPriority.Loaded);
             RefreshPropertyGrid();
-            DrawResultsOnImage();
             NotifyOfPropertyChange(nameof(Template));
             IsDirty = true;
         }
@@ -511,5 +427,14 @@ public class VisionEditorDocumentViewModel : PersistedDocument
         {
             IsBusy = false;
         }
+    }
+
+    // ========== 验证 ==========
+
+    private void Verify()
+    {
+        var vm = new VerifyDialogViewModel(Template);
+        var dialog = new VerifyDialog(vm);
+        dialog.ShowDialog();
     }
 }

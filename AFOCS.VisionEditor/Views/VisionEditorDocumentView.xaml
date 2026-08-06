@@ -89,10 +89,17 @@
                                TextTrimming="CharacterEllipsis" />
                 </StackPanel>
 
-                <Button Grid.Column="2" Content="▶ 执行" Command="{Binding ExecuteCommand}"
-                        Padding="16,6" FontSize="14" FontWeight="Bold"
-                        Background="#1976D2" Foreground="White" BorderThickness="0"
-                        IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBoolConverter}}" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Content="验证" Command="{Binding VerifyCommand}"
+                            Padding="12,6" Margin="0,0,8,0"
+                            Background="#FFFFFF" Foreground="#333" BorderBrush="#CCC"
+                            BorderThickness="1"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBoolConverter}}" />
+                    <Button Content="▶ 执行" Command="{Binding ExecuteCommand}"
+                            Padding="16,6" FontSize="14" FontWeight="Bold"
+                            Background="#1976D2" Foreground="White" BorderThickness="0"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBoolConverter}}" />
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -177,18 +184,10 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="2*" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="1*" />
+                        <RowDefinition Height="*" />
+                    
                     </Grid.RowDefinitions>
 
-                    <!-- 标题 -->
-                    <Border Grid.Row="0" Background="{StaticResource ToolbarBg}" Padding="12,8"
-                            BorderBrush="{StaticResource PanelBorder}" BorderThickness="0,0,0,1">
-                        <TextBlock Text="参数"
-                                   Foreground="{StaticResource TextPrimary}"
-                                   FontSize="14" FontWeight="Bold" />
-                    </Border>
 
                     <!-- 未选中提示 / PropertyGrid -->
                     <TextBlock Grid.Row="1" Text="选择左侧流程以编辑参数"
@@ -205,20 +204,8 @@
                                        BorderThickness="0"
                                        Visibility="{Binding IsProcessSelected, Converter={StaticResource BoolToVisibilityConverter}}" />
 
-                    <!-- 结果预览分隔 -->
-                    <Border Grid.Row="2" Background="{StaticResource ToolbarBg}" Padding="12,6"
-                            BorderBrush="{StaticResource PanelBorder}" BorderThickness="0,1,0,1">
-                        <TextBlock Text="执行结果"
-                                   Foreground="{StaticResource TextSecondary}"
-                                   FontSize="12" FontWeight="Bold" />
-                    </Border>
+                
 
-                    <!-- 结果预览图 -->
-                    <Border Grid.Row="3" Background="#F5F5F5">
-                        <Image Source="{Binding ResultImageSource}"
-                               Stretch="Uniform"
-                               Margin="4" />
-                    </Border>
                 </Grid>
             </Border>
         </Grid>

@@ -360,6 +360,19 @@ namespace AFOCS.Devices.Implementation
             return Result<string>.Success(filePath);
         }
 
+        public Task<Result<(byte[] Data, int Width, int Height, bool IsMono)>> GrabFrameAsync()
+        {
+            lock (_lastFrameLock)
+            {
+                if (_lastFrameData == null)
+                    return Task.FromResult(Result<(byte[], int, int, bool)>.Fail("暂无图像帧"));
+
+                var copy = new byte[_lastFrameData.Length];
+                Array.Copy(_lastFrameData, copy, _lastFrameData.Length);
+                return Task.FromResult(Result<(byte[], int, int, bool)>.Success((copy, _lastFrameW, _lastFrameH, _lastFrameIsMono)));
+            }
+        }
+
         /// <summary>
         /// 短暂 pin 住 byte[]，拿到 IntPtr 用于 BMP 写入。
         /// </summary>

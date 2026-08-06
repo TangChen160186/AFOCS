@@ -9,5 +9,6 @@ public enum NodePortType
     String,
     Execution,
     Image,
+    Mat,
     Object,
 }

@@ -36,6 +36,7 @@ public class MoveAxisRelativeNodeDefinition(
     } = EAxis.CouplingLThetaX;
 
     [DisplayName("距离")]
+    [NodePort("Distance", "距离", NodePortType.Double, true)]
     public double Distance
     {
         get;

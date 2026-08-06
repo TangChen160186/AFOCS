@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using Caliburn.Micro;
+using VisionToolkit.TemplateMatcher;
 
 namespace AFOCS.VisionEditor.Models;
 
@@ -37,7 +38,6 @@ public class NccConfig : PropertyChangedBase
 {
     [Browsable(false)]
     public override bool IsNotifying { get; set; }
-
     [Browsable(false)]
     public bool IsEnabled { get; set; } = true;
 
@@ -144,6 +144,7 @@ public class NccConfig : PropertyChangedBase
     [DisplayName("最大匹配数")]
     [Description("最多返回多少个匹配结果")]
     [Category("匹配参数")]
+    [ReadOnly(true)]
     public int MaxCount { get; set; } = 1;
 
     [DisplayName("最小面积")]
@@ -154,6 +155,7 @@ public class NccConfig : PropertyChangedBase
     [DisplayName("IoU 阈值")]
     [Description("NMS 去重重叠阈值，0=不启用")]
     [Category("匹配参数")]
+    [ReadOnly(true)]
     public double IouThreshold { get; set; } = 0.0;
 
     // ---- 执行结果 ----
@@ -182,6 +184,10 @@ public class NccConfig : PropertyChangedBase
     [ReadOnly(true)]
     public double ResultScore { get; set; }
 
+    [JsonIgnore]
+    [Browsable(false)]
+    public MatchResult? Result { get; set; }
+
     private static bool SetValue(double current, double newValue, Action<double> apply)
     {
         if (Math.Abs(current - newValue) < 0.001) return false;
@@ -195,6 +201,8 @@ public class NccConfig : PropertyChangedBase
 [DisplayName("找边")]
 public class EdgeFindConfig : PropertyChangedBase
 {
+    [Browsable(false)]
+    public override bool IsNotifying { get; set; }
     [Browsable(false)]
     public bool IsEnabled { get; set; } = true;
 
@@ -315,6 +323,8 @@ public class EdgeFindConfig : PropertyChangedBase
 [DisplayName("找点")]
 public class PointFindConfig : PropertyChangedBase
 {
+    [Browsable(false)]
+    public override bool IsNotifying { get; set; }
     [Browsable(false)]
     public bool IsEnabled { get; set; } = true;
 
