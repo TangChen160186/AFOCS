@@ -140,22 +140,22 @@ namespace AFOCS.App.ViewModels
                 _busAxisDevice,
                 _ioDevice,
 
-                _leftCouplingLGripper,
-                _leftCouplingRGripper,
-                _rightCouplingLGripper,
-                _rightCouplingRGripper,
+                //_leftCouplingLGripper,
+                //_leftCouplingRGripper,
+                //_rightCouplingLGripper,
+                //_rightCouplingRGripper,
 
-                _leftCouplingLPressure,
-                _leftCouplingRPressure,
-                _leftDispensePressure,
-                _rightCouplingLPressure,
-                _rightCouplingRPressure,
-                _rightDispensePressure,
+                //_leftCouplingLPressure,
+                //_leftCouplingRPressure,
+                //_leftDispensePressure,
+                //_rightCouplingLPressure,
+                //_rightCouplingRPressure,
+                //_rightDispensePressure,
 
-                _arAkribisLeftCouplingL,
-                _akribisLeftCouplingR,
-                _akribisRightCouplingL,
-                _akribisRightCouplingR,
+                //_arAkribisLeftCouplingL,
+                //_akribisLeftCouplingR,
+                //_akribisRightCouplingL,
+                //_akribisRightCouplingR,
 
                 _programmablePowerSupply,
 
@@ -163,7 +163,7 @@ namespace AFOCS.App.ViewModels
                 //_heightGauge,
                 //_opticalPowerMeterLeft,
                 //_opticalPowerMeterRight,
-
+                _boardDevice,
                 _cameraLight,
 
                 //_cameraLeftUp,

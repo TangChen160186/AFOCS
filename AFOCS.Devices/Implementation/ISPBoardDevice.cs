@@ -46,8 +46,7 @@ namespace AFOCS.Devices.Implementation
             var config = await configService.LoadAsync<ISPBoardConfig>();
             config ??= new ISPBoardConfig();
             await configService.SaveAsync(config);
-
-            var r = await InitializeAsync(config.ProductCfgFilePath, token);
+            var r = await InitializeAsync(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), config.ProductCfgFilePath), token);
 
             return r.IsSuccess
                 ? Result.Success(r.Message)
