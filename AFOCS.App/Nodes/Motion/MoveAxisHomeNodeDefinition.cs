@@ -57,7 +57,7 @@ public class MoveAxisHomeNodeDefinition(
             }
             else
             {
-                var result = await motion.HomeAsync(akAxis);
+                var result = await motion.HomeAsync(akAxis,30000);
                 error = result.IsSuccess ? null : result.Message;
             }
         }

@@ -23,7 +23,7 @@ namespace AFOCS.App.ViewModels.Settings
         private bool _isModify;
         private WriteableBitmap? _previewBitmap;
 
-        private readonly string[] _modifyProperties = [nameof(SerialNumber)];
+        private readonly string[] _modifyProperties = [nameof(SerialNumber), nameof(Precision)];
 
         protected CameraSettingsViewModel(string name, ICamera camera, IToastService toastService)
         {
@@ -33,6 +33,7 @@ namespace AFOCS.App.ViewModels.Settings
 
             var config = _camera.GetConfig();
             _config.ChSerialNumber = config.ChSerialNumber;
+            _config.Precision = config.Precision;
         }
 
         public string Name { get; }
@@ -105,6 +106,17 @@ namespace AFOCS.App.ViewModels.Settings
             {
                 if (_config.ChSerialNumber == value) return;
                 _config.ChSerialNumber = value;
+                NotifyOfPropertyChange();
+            }
+        }
+
+        public double Precision
+        {
+            get => _config.Precision;
+            set
+            {
+                if (Math.Abs(_config.Precision - value) < 1e-10) return;
+                _config.Precision = value;
                 NotifyOfPropertyChange();
             }
         }

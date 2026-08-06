@@ -10,9 +10,13 @@ namespace AFOCS.Devices.Implementation
     {
         public string ChSerialNumber { get; set; } = "ChSerialNumber";
 
+        /// <summary>相机精度 (mm/pixel)，上相机 0.0023，侧相机 0.0018</summary>
+        public virtual double Precision { get; set; } = 0;
+
         public HkCameraConfig Clone() => new()
         {
             ChSerialNumber = ChSerialNumber,
+            Precision = Precision,
         };
 
         object ICloneable.Clone() => Clone();
@@ -42,7 +46,7 @@ namespace AFOCS.Devices.Implementation
 
         public async Task SaveConfigAsync(HkCameraConfig config)
         {
-            var newConfig = new T { ChSerialNumber = config.ChSerialNumber };
+            var newConfig = new T { ChSerialNumber = config.ChSerialNumber ,Precision = config.Precision};
             _config = newConfig;
             await configService.SaveAsync(newConfig);
         }

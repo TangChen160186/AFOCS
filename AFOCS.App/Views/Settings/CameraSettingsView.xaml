@@ -85,6 +85,11 @@
                 <TextBox Width="280" Text="{Binding SerialNumber, UpdateSourceTrigger=PropertyChanged}" />
             </StackPanel>
 
+            <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                <Label Width="90" Content="精度(mm/px):" VerticalAlignment="Center" />
+                <TextBox Width="120" Text="{Binding Precision, UpdateSourceTrigger=PropertyChanged}" />
+            </StackPanel>
+
             <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                 <Label Width="90" VerticalAlignment="Center" />
                 <Button Content="扫描可用相机" cal:Message.Attach="ScanAvailableCameras"
@@ -123,8 +128,8 @@
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding Sn}" FontWeight="Bold" Margin="0,0,8,0" />
-                            <TextBlock Text="{Binding Ip}" Foreground="Gray" FontSize="11" />
+                            <TextBlock Text="{Binding Item1}" FontWeight="Bold" Margin="0,0,8,0" />
+                            <TextBlock Text="{Binding Item2}" Foreground="Gray" FontSize="11" />
                         </StackPanel>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>

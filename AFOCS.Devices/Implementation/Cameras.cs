@@ -4,7 +4,10 @@ using Serilog;
 
 namespace AFOCS.Devices.Implementation
 {
-    public class CameraConfigLeftUp : HkCameraConfig;
+    public class CameraConfigLeftUp : HkCameraConfig
+    {
+        public override double Precision { get; set; } = 0.0023;
+    }
     [Export]
     [Export(typeof(ICamera))]
     [method: ImportingConstructor]
@@ -12,21 +15,30 @@ namespace AFOCS.Devices.Implementation
         : Camera<CameraConfigLeftUp>(configService, logger);
 
 
-    public class CameraConfigLeftDown : HkCameraConfig;
+    public class CameraConfigLeftDown : HkCameraConfig
+    {
+        public override double Precision { get; set; } = 0.0018;
+    }
     [Export]
     [Export(typeof(ICamera))]
     [method: ImportingConstructor]
     public class CameraLeftDown(IConfigService configService, ILogger logger)
         : Camera<CameraConfigLeftDown>(configService, logger);
 
-    public class CameraConfigRightDown : HkCameraConfig;
+    public class CameraConfigRightDown : HkCameraConfig
+    {
+        public override double Precision { get; set; } = 0.0018;
+    }
     [Export]
     [Export(typeof(ICamera))]
     [method: ImportingConstructor]
     public class CameraRightDown(IConfigService configService, ILogger logger)
         : Camera<CameraConfigRightDown>(configService, logger);
 
-    public class CameraConfigRightUp : HkCameraConfig;
+    public class CameraConfigRightUp : HkCameraConfig
+    {
+        public override double Precision { get; set; } = 0.0023;
+    }
     [Export]
     [Export(typeof(ICamera))]
     [method: ImportingConstructor]
