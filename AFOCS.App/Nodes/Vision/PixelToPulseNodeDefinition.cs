@@ -69,7 +69,7 @@ public class PixelToPulseNodeDefinition(
         public ItemCollection GetValues()
         {
             var items = new ItemCollection();
-            foreach (var name in new[] { "CameraLeftUp", "CameraLeftDown", "CameraRightUp", "CameraRightDown" })
+            foreach (var name in new[] { "左上相机", "左下相机", "右上相机", "右下相机" })
                 items.Add(name, name);
             return items;
         }

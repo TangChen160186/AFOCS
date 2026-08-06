@@ -86,7 +86,7 @@ public class CameraCaptureNodeDefinition(
         {
             var items = new ItemCollection();
             // 四个相机名固定，与 Cameras.cs 中注册一致
-            foreach (var name in new[] { "CameraLeftUp", "CameraLeftDown", "CameraRightUp", "CameraRightDown" })
+            foreach (var name in new[] { "左上相机", "左下相机", "右上相机", "右下相机" })
                 items.Add(name, name);
             return items;
         }

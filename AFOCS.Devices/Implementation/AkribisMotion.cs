@@ -64,7 +64,8 @@ public abstract class AkribisMotion : IAkribisMotion
             await _configService.SaveAsync(ConfigType, _config); ;
         }
 
-        var success = AAMotionAPI.Connect(_controller, _config.Ip, _config.Ark, _config.AutoReconnect);
+        var connectTask = Task.Run(() => AAMotionAPI.Connect(_controller, _config.Ip, _config.Ark, _config.AutoReconnect), token);
+        var success = await connectTask.ConfigureAwait(false);
         if (!success)
             return Result.Fail(ResultCode.Fail, $"链接失败, IP: {_config.Ip}");
 
