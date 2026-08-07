@@ -230,6 +230,13 @@ public class FlowExecutor(ILogger logger)
         Dictionary<Guid, Dictionary<string, object?>> results,
         Dictionary<string, object?> context)
     {
+        // 如果当前节点没有产生执行结果（被禁用/跳过），终止链路传播
+        if (!results.ContainsKey(fromNode.InstanceId))
+        {
+            logger.Information($"[FlowExecutor] 节点 '{fromNode.Title}' 未执行（已禁用），停止向下游传播");
+            return;
+        }
+
         var execOutputs = fromNode.Outputs.Where(o => o.PortType == NodePortType.Execution).ToList();
         if (execOutputs.Count == 0) return;
 
