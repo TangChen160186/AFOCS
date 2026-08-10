@@ -1,12 +1,8 @@
 using System.ComponentModel.Composition;
 using AFOCS.App.Commands;
-using AFOCS.App.ViewModels;
-using AFOCS.Devices;
 using AFOCS.Framework.Framework;
 using AFOCS.Framework.Framework.Menus;
 using AFOCS.Framework.Modules.MainMenu;
-using AFOCS.Infrastructure;
-using Caliburn.Micro;
 
 namespace AFOCS.App
 {
@@ -46,15 +42,5 @@ namespace AFOCS.App
         [Export]
         public static readonly MenuItemDefinition ViewGamepadControlMenuItem = new CommandMenuItemDefinition<ViewGamepadControlCommandDefinition>(
             MenuDefinitions.ViewToolsMenuGroup, 10);
-
-
-
-        public override IEnumerable<IDocument> DefaultDocuments
-        {
-            get
-            {
-                yield return IoC.Get<TeachingPointsDocumentViewModel>();
-            }
-        }
     }
 }
