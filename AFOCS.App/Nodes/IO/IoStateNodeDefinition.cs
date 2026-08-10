@@ -1,9 +1,9 @@
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using AFOCS.Devices;
+using AFOCS.Devices.Enums;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
-using AFOCS.Infrastructure;
 using AFOCS.Infrastructure.Extensions;
 using Serilog;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;

@@ -60,7 +60,7 @@ public abstract class AkribisMotion : IAkribisMotion
         }
         else
         {
-            _config = new AkribisCouplingConfig();
+            _config = (AkribisCouplingConfig)Activator.CreateInstance(ConfigType)!;
             await _configService.SaveAsync(ConfigType, _config); ;
         }
 

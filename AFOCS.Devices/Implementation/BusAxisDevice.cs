@@ -1,4 +1,5 @@
 using System.ComponentModel.Composition;
+using AFOCS.Devices.Enums;
 using AFOCS.Infrastructure;
 using Serilog;
 

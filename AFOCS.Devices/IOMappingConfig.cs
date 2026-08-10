@@ -1,3 +1,5 @@
+using AFOCS.Devices.Enums;
+
 namespace AFOCS.Devices
 {
     /// <summary>
@@ -23,13 +25,13 @@ namespace AFOCS.Devices
         {
             var config = new IOMappingConfig();
 
-            foreach (var signal in Enum.GetValues<Infrastructure.AllInputs>())
+            foreach (var signal in Enum.GetValues<AllInputs>())
             {
                 config.Inputs[signal.ToString()] = (int)signal;
                 config.InputActives[signal.ToString()] = true;
             }
 
-            foreach (var signal in Enum.GetValues<Infrastructure.AllOutputs>())
+            foreach (var signal in Enum.GetValues<AllOutputs>())
             {
                 config.Outputs[signal.ToString()] = (int)signal;
                 config.OutputActives[signal.ToString()] = true;

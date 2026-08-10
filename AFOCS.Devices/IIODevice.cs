@@ -1,4 +1,6 @@
 using AFOCS.Infrastructure;
+using AllInputs = AFOCS.Devices.Enums.AllInputs;
+using AllOutputs = AFOCS.Devices.Enums.AllOutputs;
 
 namespace AFOCS.Devices
 {
