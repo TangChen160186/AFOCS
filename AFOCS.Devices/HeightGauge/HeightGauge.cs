@@ -15,6 +15,7 @@ public class HeightGauge(ITcpClient tcpClient, IConfigService configService, ILo
 {
     private HeightGaugeConfig _config = new();
     public bool IsConnected => tcpClient.IsConnected;
+    public WorkPos WorkPos { get; }
 
     public HeightGaugeConfig GetConfig() => _config.Clone();
 

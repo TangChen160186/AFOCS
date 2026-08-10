@@ -9,6 +9,7 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
     private readonly ILogger _logger;
     private readonly IConfigService _configService;
     private readonly MotionController _controller;
+
     private AkribisCouplingConfig _config = new();
     public bool IsConnected => _controller.IsConnected;
     public abstract WorkPos WorkPos { get; }
@@ -22,31 +23,6 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
         _controller = AAMotionAPI.Initialize(ControllerType.AGD301);
     }
 
-    // ========== 配置 ==========
-
-    public AkribisCouplingConfig GetConfig() => _config.Clone();
-
-    AkribisAxisParams IAkribisMotion.GetAxisParams(AkribisAxisId axis) => axis switch
-    {
-        AkribisAxisId.X => _config.XAxis,
-        AkribisAxisId.Y => _config.YAxis,
-        AkribisAxisId.Z => _config.ZAxis,
-        _ => throw new ArgumentOutOfRangeException(nameof(axis))
-    };
-
-    protected AkribisAxisParams GetAxisParams(AkribisAxisId axis) => axis switch
-    {
-        AkribisAxisId.X => _config.XAxis,
-        AkribisAxisId.Y => _config.YAxis,
-        AkribisAxisId.Z => _config.ZAxis,
-        _ => throw new ArgumentOutOfRangeException(nameof(axis))
-    };
-
-    public async Task SaveConfigAsync(AkribisCouplingConfig config)
-    {
-        _config = config.Clone();
-        await _configService.SaveAsync(typeof(TConfig), _config);
-    }
 
     public async Task<Result> InitializeAsync(CancellationToken token = default)
     {
@@ -72,7 +48,7 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
         var readyB = EnsureAxisReady(AxisRef.B);
         var readyC = EnsureAxisReady(AxisRef.C);
         if (!readyA || !readyB || !readyC)
-            return Result.Fail(ResultCode.Fail, "使能或者换向失败");
+            return Result.Fail(ResultCode.Fail, $"使能或者换向失败,A:{readyA},B:{readyB},C:{readyC}");
 
         _logger.Information("[{Type}] 初始化成功, IP={Ip}", GetType().Name, _config.Ip);
 
@@ -80,7 +56,7 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
         return Result.Success();
     }
 
-    // ========== 使能 ==========
+    #region 使能
 
     public async Task<Result> EnableAsync(AkribisAxisId axis)
     {
@@ -101,6 +77,9 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
             ? Result.Success("断电成功")
             : Result.Fail("断电失败");
     }
+
+
+    #endregion
 
     // ========== 回零 ==========
 
@@ -347,11 +326,35 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
             : Result.Fail(ResultCode.Fail, "重连失败");
     }
 
+
+    #region 配置
+    public AkribisCouplingConfig GetConfig() => _config.Clone();
+
+    protected AkribisAxisParams GetAxisParams(AkribisAxisId axis) => axis switch
+    {
+        AkribisAxisId.X => _config.XAxis,
+        AkribisAxisId.Y => _config.YAxis,
+        AkribisAxisId.Z => _config.ZAxis,
+        _ => throw new ArgumentOutOfRangeException(nameof(axis))
+    };
+
+    public async Task SaveConfigAsync(AkribisCouplingConfig config)
+    {
+        _config = config.Clone();
+        await _configService.SaveAsync(typeof(TConfig), _config);
+    }
+
+
+    #endregion
+
+
     public void Dispose()
     {
         StopMonitoring();
         _controller.Dispose();
     }
+
+
 
     // ========== 内部辅助 ==========
 
@@ -378,6 +381,7 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
         {
             _logger.Information("[{Type}] 换向未完成，正在执行 AutoPhase...", GetType().Name);
             AAMotionAPI.AutoPhase(_controller, axis, 5000);
+            Thread.Sleep(100);
             if (!_controller.GetAxis(axis).IsCommutated()) return false;
         }
         if (_controller.GetAxis(axis).MotorOn == 0)

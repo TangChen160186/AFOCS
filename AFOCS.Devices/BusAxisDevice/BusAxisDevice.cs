@@ -12,11 +12,10 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
 {
     private readonly Dictionary<BusAxisId, AxisConfig> _axisConfigs = [];
     private CancellationTokenSource? _monitorCts;
-    private bool _isAxisMonitoring;
-
-    // ========== IDevice ==========
+    private bool _isMonitoring;
 
     public bool IsConnected => motionCard.IsConnected;
+    public WorkPos WorkPos => WorkPos.None;
 
     public async Task<Result> InitializeAsync(CancellationToken token = default)
     {
@@ -176,27 +175,27 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
 
 
     public event EventHandler<BusAxisStateChangedEventArgs>? AxisStateChanged;
-    public bool IsAxisMonitoring => _isAxisMonitoring;
+    public bool IsMonitoring => _isMonitoring;
 
-    public Task StartAxisMonitorAsync(int pollIntervalMs = 200)
+    private Task StartAxisMonitorAsync(int pollIntervalMs = 200)
     {
-        if (_isAxisMonitoring) return Task.CompletedTask;
+        if (_isMonitoring) return Task.CompletedTask;
 
         _monitorCts = new CancellationTokenSource();
-        _isAxisMonitoring = true;
+        _isMonitoring = true;
         logger.Information("轴状态监控已启动，轮询间隔 {Interval}ms", pollIntervalMs);
 
         _ = Task.Run(() => PollLoopAsync(pollIntervalMs, _monitorCts.Token), _monitorCts.Token);
         return Task.CompletedTask;
     }
 
-    public void StopAxisMonitor()
+    private void StopAxisMonitor()
     {
-        if (!_isAxisMonitoring) return;
+        if (!_isMonitoring) return;
         _monitorCts?.Cancel();
         _monitorCts?.Dispose();
         _monitorCts = null;
-        _isAxisMonitoring = false;
+        _isMonitoring = false;
         logger.Information("轴状态监控已停止");
     }
 
@@ -715,59 +714,46 @@ public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configS
 }
 
 /// <summary>轴状态变化事件参数</summary>
-public class BusAxisStateChangedEventArgs : EventArgs
+public class BusAxisStateChangedEventArgs(
+    BusAxisId busAxisId,
+    string name,
+    double position,
+    double speed,
+    uint ioStatusRaw,
+    ushort stateMachine)
+    : EventArgs
 {
-    public BusAxisId BusAxisId { get; }
-    public string Name { get; }
-    public double Position { get; }
-    public double Speed { get; }
+    public BusAxisId BusAxisId { get; } = busAxisId;
+    public string Name { get; } = name;
+    public double Position { get; } = position;
+    public double Speed { get; } = speed;
     public DateTime Timestamp { get; } = DateTime.Now;
 
     // ========== IO 状态 ==========
 
     /// <summary>原始 IO 状态值（位掩码）</summary>
-    public uint IoStatusRaw { get; }
+    public uint IoStatusRaw { get; } = ioStatusRaw;
 
     /// <summary>报警信号（ALM）</summary>
-    public bool IsAlarm { get; }
+    public bool IsAlarm { get; } = (ioStatusRaw & 0x01) != 0;
 
     /// <summary>正方向硬限位（PEL）</summary>
-    public bool IsPositiveLimit { get; }
+    public bool IsPositiveLimit { get; } = (ioStatusRaw & 0x02) != 0;
 
     /// <summary>负方向硬限位（NEL）</summary>
-    public bool IsNegativeLimit { get; }
+    public bool IsNegativeLimit { get; } = (ioStatusRaw & 0x04) != 0;
 
     /// <summary>急停信号（EMG）</summary>
-    public bool IsEmergencyStop { get; }
+    public bool IsEmergencyStop { get; } = (ioStatusRaw & 0x08) != 0;
 
     // ========== 轴状态 ==========
 
     /// <summary>轴状态机值</summary>
-    public ushort StateMachine { get; }
+    public ushort StateMachine { get; } = stateMachine;
 
     /// <summary>轴是否已使能（状态机 == 4 表示 Operation Enabled）</summary>
     public bool IsEnabled => StateMachine == 4;
 
-    public BusAxisStateChangedEventArgs(
-        BusAxisId busAxisId,
-        string name,
-        double position,
-        double speed,
-        uint ioStatusRaw,
-        ushort stateMachine)
-    {
-        BusAxisId = busAxisId;
-        Name = name;
-        Position = position;
-        Speed = speed;
-        IoStatusRaw = ioStatusRaw;
-        StateMachine = stateMachine;
-
-        // 解析 IO 状态位
-        // bit0: ALM (报警), bit1: PEL (正限位), bit2: NEL (负限位), bit3: EMG (急停)
-        IsAlarm = (ioStatusRaw & 0x01) != 0;
-        IsPositiveLimit = (ioStatusRaw & 0x02) != 0;
-        IsNegativeLimit = (ioStatusRaw & 0x04) != 0;
-        IsEmergencyStop = (ioStatusRaw & 0x08) != 0;
-    }
+    // 解析 IO 状态位
+    // bit0: ALM (报警), bit1: PEL (正限位), bit2: NEL (负限位), bit3: EMG (急停)
 }

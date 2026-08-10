@@ -27,6 +27,7 @@ namespace AFOCS.Devices.ProgrammablePowerSupply
     {
         private ProgrammablePowerSupplyConfig _config = new();
         public bool IsConnected { get; private set; }
+        public WorkPos WorkPos => WorkPos.None;
         private MessageBasedSession? _session;
         private ResourceManager? _resourceManager;
         private readonly SemaphoreSlim _lock = new(1, 1);

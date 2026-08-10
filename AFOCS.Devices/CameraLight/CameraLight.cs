@@ -13,6 +13,7 @@ public class CameraLight(ISerialPortClient serialPortClient, IConfigService conf
 {
     private CameraLightConfig _config = new();
     public bool IsConnected => serialPortClient.IsOpen;
+    public WorkPos WorkPos { get; }
 
     public CameraLightConfig GetConfig() => _config.Clone();
 

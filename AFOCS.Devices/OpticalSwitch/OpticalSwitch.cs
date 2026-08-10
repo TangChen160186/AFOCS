@@ -28,6 +28,7 @@ public class OpticalSwitch(ITcpClient tcpClient, IConfigService configService, I
 {
     private OpticalSwitchConfig _config = new();
     public bool IsConnected => tcpClient.IsConnected;
+    public WorkPos WorkPos { get; }
 
     public OpticalSwitchConfig GetConfig() => _config.Clone();
 

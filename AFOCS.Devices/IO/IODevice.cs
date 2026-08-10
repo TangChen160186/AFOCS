@@ -14,6 +14,7 @@ public class IoDevice(IMotionControlCard motionCard, IConfigService configServic
     // ---- 连接状态 ----
 
     public bool IsConnected => motionCard.IsConnected;
+    public WorkPos WorkPos { get; }
 
     // ---- 配置 / 映射 ----
 

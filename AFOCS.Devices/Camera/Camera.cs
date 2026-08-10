@@ -25,6 +25,7 @@ public class Camera<T>(IConfigService configService, ILogger logger) : ICamera
     private bool _lastFrameIsMono;
 
     public bool IsConnected { get; private set; }
+    public WorkPos WorkPos { get; }
 
     public HkCameraConfig GetConfig() => _config.Clone();
 

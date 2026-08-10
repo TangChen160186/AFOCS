@@ -35,6 +35,7 @@ namespace AFOCS.Devices.IspBoard
         private bool _initialized;
 
         public bool IsConnected => _initialized;
+        public WorkPos WorkPos { get; }
 
         // ====================================================================
         // IDevice 接口

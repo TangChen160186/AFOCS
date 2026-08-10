@@ -24,7 +24,7 @@ public sealed class AkribisLeftCouplingL(IConfigService configService, ILogger l
 public sealed class AkribisLeftCouplingR(IConfigService configService, ILogger logger)
     : AkribisMotion<LeftCouplingRConfig>(configService, logger)
 {
-    public override WorkPos WorkPos => WorkPos.Right;
+    public override WorkPos WorkPos => WorkPos.Left;
     public override AkribisMotionType AkribisMotionType => AkribisMotionType.RightCoupling;
 }
 

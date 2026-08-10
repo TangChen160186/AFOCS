@@ -1,4 +1,6 @@
-﻿namespace AFOCS.Devices.AkribrisMotion;
+﻿using System.ComponentModel;
+
+namespace AFOCS.Devices.AkribrisMotion;
 public enum AkribisAxisId
 {
     X,
@@ -8,6 +10,8 @@ public enum AkribisAxisId
 
 public enum AkribisMotionType
 {
+    [Description("左耦合")]
     LeftCoupling,
+    [Description("右耦合")]
     RightCoupling,
 }

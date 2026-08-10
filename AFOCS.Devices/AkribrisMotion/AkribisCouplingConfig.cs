@@ -26,7 +26,7 @@ public class AkribisCouplingConfig : ICloneable
 
 public class AkribisAxisParams : ICloneable
 {
-    public int Speed { get; set; } = 2048_000;
+    public int Speed { get; set; } = 2048_000; // 默认:10mm/s
     public int Accel { get; set; } = 2048_000;
     public int Decel { get; set; } = 2048_000;
 
@@ -54,6 +54,7 @@ public class LeftCouplingLConfig : AkribisCouplingConfig
         ZAxis = ZAxis.Clone(),
     };
 }
+
 [ConfigPath("设备/雅克贝斯/左工位_耦合右")]
 public class LeftCouplingRConfig : AkribisCouplingConfig
 {
@@ -82,6 +83,7 @@ public class RightCouplingLConfig : AkribisCouplingConfig
         ZAxis = ZAxis.Clone(),
     };
 }
+
 [ConfigPath("设备/雅克贝斯/右工位_耦合右")]
 public class RightCouplingRConfig : AkribisCouplingConfig
 {

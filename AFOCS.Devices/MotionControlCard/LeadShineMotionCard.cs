@@ -33,6 +33,8 @@ public class LeadShineMotionCard(IConfigService configService, ILogger logger) :
     private const ushort EtherCatPort = 2;
     private LeadShineMotionCardConfig _config = new();
     public bool IsConnected { get; private set; }
+
+    public WorkPos WorkPos => WorkPos.None;
     // ========== 板卡初始化 ==========
 
     #region 初始化 重连

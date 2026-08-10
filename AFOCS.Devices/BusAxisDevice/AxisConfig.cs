@@ -2,36 +2,29 @@ using System.ComponentModel;
 
 namespace AFOCS.Devices.BusAxisDevice;
 
-/// <summary>
-/// 轴运动参数（速度曲线）
-/// </summary>
 public class AxisMotionParams : ICloneable
 {
-    /// <summary>脉冲当量（pulse/unit），如 1000 表示 1000 脉冲 = 1mm</summary>
     [Description("脉冲当量 (pulse/unit)")]
     public double Equiv { get; set; } = 1000;
 
-    /// <summary>起始速度（unit/s）</summary>
     [Description("起始速度 (unit/s)")]
     public double MinVel { get; set; } = 200;
 
-    /// <summary>最大速度（unit/s）</summary>
     [Description("最大速度 (unit/s)")]
     public double MaxVel { get; set; } = 500;
 
-    /// <summary>加速时间（s）</summary>
+
     [Description("加速时间 (s)")]
     public double Tacc { get; set; } = 0.1;
 
-    /// <summary>减速时间（s）</summary>
+
     [Description("减速时间 (s)")]
     public double Tdec { get; set; } = 0.1;
 
-    /// <summary>停止速度（unit/s）</summary>
+
     [Description("停止速度 (unit/s)")]
     public double StopVel { get; set; } = 0;
 
-    /// <summary>S段曲线时间（s），0 表示梯形曲线</summary>
     [Description("S段时间 (s)")]
     public double SPara { get; set; } = 0.1;
 
@@ -44,9 +37,6 @@ public class AxisMotionParams : ICloneable
     object ICloneable.Clone() => Clone();
 }
 
-/// <summary>
-/// 轴回零参数
-/// </summary>
 public class AxisHomeParams : ICloneable
 {
     /// <summary>
@@ -58,24 +48,18 @@ public class AxisHomeParams : ICloneable
     [Description("回零模式")]
     public ushort HomeMode { get; set; } = 33;
 
-
-    /// <summary>回零低速（unit/s），精找原点</summary>
     [Description("回零低速 (unit/s)")]
     public double LowVel { get; set; } = 2000;
 
-    /// <summary>回零高速（unit/s），快速接近原点</summary>
     [Description("回零高速 (unit/s)")]
     public double HighVel { get; set; } = 5000;
 
-    /// <summary>回零加速时间（s）</summary>
     [Description("回零加速时间 (s)")]
     public double Tacc { get; set; } = 0.1;
 
-    /// <summary>回零减速时间（s）</summary>
     [Description("回零减速时间 (s)")]
     public double Tdec { get; set; } = 0.1;
 
-    /// <summary>回零偏移量（unit），回零完成后偏移的距离</summary>
     [Description("回零偏移量 (unit)")]
     public double OffsetPos { get; set; } = 0;
 
@@ -88,9 +72,6 @@ public class AxisHomeParams : ICloneable
     object ICloneable.Clone() => Clone();
 }
 
-/// <summary>
-/// 单个轴的完整配置
-/// </summary>
 public class AxisConfig : ICloneable
 {
     /// <summary>轴标识</summary>
@@ -132,9 +113,6 @@ public class AxisConfig : ICloneable
     object ICloneable.Clone() => Clone();
 }
 
-/// <summary>
-/// 所有轴配置集合（用于持久化）
-/// </summary>
 public class AxisConfigCollection
 {
     public Dictionary<int, AxisConfig> Axes { get; set; } = [];

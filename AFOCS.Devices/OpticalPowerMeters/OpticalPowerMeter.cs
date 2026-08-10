@@ -11,6 +11,7 @@ namespace AFOCS.Devices.OpticalPowerMeters
     {
         private OpticalPowerMeterConfig _config = new();
         public bool IsConnected => tcpClient.IsConnected;
+        public WorkPos WorkPos { get; }
 
         public OpticalPowerMeterConfig GetConfig() => _config.Clone();
 

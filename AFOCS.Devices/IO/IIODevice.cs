@@ -1,6 +1,4 @@
 using AFOCS.Infrastructure;
-using AllInputs = AFOCS.Devices.IO.AllInputs;
-using AllOutputs = AFOCS.Devices.IO.AllOutputs;
 
 namespace AFOCS.Devices.IO;
 

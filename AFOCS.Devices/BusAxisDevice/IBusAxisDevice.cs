@@ -7,9 +7,7 @@ public interface IBusAxisDevice : IDevice
     // ========== 轴状态监控 ==========
 
     event EventHandler<BusAxisStateChangedEventArgs>? AxisStateChanged;
-    bool IsAxisMonitoring { get; }
-    Task StartAxisMonitorAsync(int pollIntervalMs = 200);
-    void StopAxisMonitor();
+    bool IsMonitoring { get; }
 
     // ========== 轴配置管理 ==========
 
