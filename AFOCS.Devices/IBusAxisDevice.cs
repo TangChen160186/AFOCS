@@ -1,3 +1,4 @@
+using AFOCS.Devices.Enums;
 using AFOCS.Devices.Implementation;
 using AFOCS.Infrastructure;
 

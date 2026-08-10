@@ -29,12 +29,29 @@ namespace AFOCS.Infrastructure
 
         private readonly ConcurrentDictionary<Type, object> _cache = new();
 
+        /// <summary>
+        /// 根据类型的 ConfigPathAttribute 决定配置文件路径。
+        /// 有 [ConfigPath] 时用作相对路径（可含 / 表示子目录），否则用类型名。
+        /// 例如 [ConfigPath("压力传感器/左耦合左")] → Configs/压力传感器/左耦合左.json
+        /// </summary>
+        private static string GetConfigFileName(Type type)
+        {
+            var attr = type.GetCustomAttributes(typeof(ConfigPathAttribute), false)
+                .OfType<ConfigPathAttribute>()
+                .FirstOrDefault();
+
+            if (attr != null)
+                return attr.RelativePath.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar) + ".json";
+
+            return type.Name + ".json";
+        }
+
         public async Task<bool> SaveAsync<T>(T config) where T : class
         {
             try
             {
                 ArgumentException.ThrowIfNullOrEmpty(nameof(config));
-                var path = Path.Combine(ConfigBasePath, config!.GetType().Name + ".json");
+                var path = Path.Combine(ConfigBasePath, GetConfigFileName(config!.GetType()));
                 await JsonHelper.WriteToFileAsync(path, config);
                 _cache[typeof(T)] = config;
                 logger.Debug($"{nameof(SaveAsync)} {typeof(T)} success!! path:{path}");
@@ -57,7 +74,7 @@ namespace AFOCS.Infrastructure
 
             try
             {
-                var path = Path.Combine(ConfigBasePath, typeof(T).Name + ".json");
+                var path = Path.Combine(ConfigBasePath, GetConfigFileName(typeof(T)));
                 var res = await JsonHelper.ReadFromFileAsync<T>(path);
                 if (res != null)
                     _cache[typeof(T)] = res;
@@ -76,7 +93,7 @@ namespace AFOCS.Infrastructure
             try
             {
                 ArgumentNullException.ThrowIfNull(config);
-                var path = Path.Combine(ConfigBasePath, type.Name + ".json");
+                var path = Path.Combine(ConfigBasePath, GetConfigFileName(type));
                 await JsonHelper.WriteToFileAsync(path, config);
                 _cache[type] = config;
                 logger.Debug($"{nameof(SaveAsync)} {type} success!! path:{path}");
@@ -99,7 +116,7 @@ namespace AFOCS.Infrastructure
 
             try
             {
-                var path = Path.Combine(ConfigBasePath, type.Name + ".json");
+                var path = Path.Combine(ConfigBasePath, GetConfigFileName(type));
                 var json = await File.ReadAllTextAsync(path);
                 var res = JsonHelper.Deserialize(json, type);
                 if (res != null)

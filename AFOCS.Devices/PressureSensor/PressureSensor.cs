@@ -1,26 +1,16 @@
 using AFOCS.Infrastructure;
 using Serilog;
-using System.Threading.Channels;
 
-namespace AFOCS.Devices.Implementation;
+namespace AFOCS.Devices.PressureSensor;
 
-/// <summary>
-/// 压力传感器基类 —— 每个实例代表一个物理传感器
-/// TConfig 用于隔离每个传感器的配置文件
-/// </summary>
 public abstract class PressureSensor(IMotionControlCard motionCard, IConfigService configService, ILogger logger)
     : IPressureSensor
 {
-    protected readonly ILogger Logger = logger;
-
     private PressureSensorConfig _config = new();
     private CancellationTokenSource? _cts;
     private readonly Lock _lock = new();
-
-    // 缓存最新值
     private int _x, _y, _z;
 
-    // 报警状态（用于边沿检测）
     private bool _alarmX, _alarmY, _alarmZ;
 
     // OD 地址常量
@@ -29,42 +19,27 @@ public abstract class PressureSensor(IMotionControlCard motionCard, IConfigServi
     private const ushort OdSubIndex = 0x01;
     private const ushort OdBitLen32 = 32;
 
-    // ---- 子类需覆写 ----
-
-    /// <summary>传感器显示名称</summary>
-    public abstract string DisplayName { get; }
-
-    /// <summary>默认从站地址（配置不存在时使用）</summary>
-    protected abstract ushort DefaultSlaveAddress { get; }
-
-    /// <summary>配置文件类型（用于 ConfigService 存取隔离）</summary>
-    protected abstract Type ConfigType { get; }
-
     public bool IsConnected => motionCard.IsConnected;
     public bool IsMonitoring { get; private set; }
+    public abstract PressureSensorType SensorType { get; }
     public event EventHandler<PressureDataChangedEventArgs>? DataChanged;
     public event EventHandler<PressureAlarmEventArgs>? AlarmTriggered;
 
-    // ====================================================================
-    // IDevice
-    // ====================================================================
-
     public async Task<Result> InitializeAsync(CancellationToken token = default)
     {
-        var loaded = await configService.LoadAsync(ConfigType);
+        var loaded = await configService.LoadAsync(GetType());
         if (loaded is PressureSensorConfig config)
             _config = config;
         else
         {
-            _config = new PressureSensorConfig { SlaveAddress = DefaultSlaveAddress };
-            await configService.SaveAsync(ConfigType, _config);
+            _config = (PressureSensorConfig)Activator.CreateInstance(GetType())!;
+            await configService.SaveAsync(GetType(), _config);
         }
 
         if (!motionCard.IsConnected)
             return Result.Fail("运动控制卡未连接，压力传感器无法初始化");
-
-        Logger.Information("[{Type}] 初始化完成，从站地址={Addr}, 通道映射 X→{X} Y→{Y} Z→{Z}",
-            ConfigType.Name, _config.SlaveAddress,
+        logger.Information("[{Type}] 初始化完成，从站地址={Addr}, 通道映射 X→{X} Y→{Y} Z→{Z}",
+            GetType().Name, _config.SlaveAddress,
             _config.GetSubIndex(PressureChannel.X),
             _config.GetSubIndex(PressureChannel.Y),
             _config.GetSubIndex(PressureChannel.Z));
@@ -73,25 +48,17 @@ public abstract class PressureSensor(IMotionControlCard motionCard, IConfigServi
         return Result.Success();
     }
 
-    public Task<Result> StopAsync(CancellationToken token = default)
-    {
-        StopMonitoring();
-        return Task.FromResult(Result.Success());
-    }
 
     public Task<Result> ReConnectAsync(CancellationToken token = default)
         => InitializeAsync(token);
 
-    // ====================================================================
-    // 后台监控
-    // ====================================================================
 
     public async Task StartMonitoring(int intervalMs = 100)
     {
         if (IsMonitoring) return;
         _cts = new CancellationTokenSource();
         IsMonitoring = true;
-        Logger.Information("[{Type}] 后台轮询已启动，间隔 {Interval}ms", ConfigType.Name, intervalMs);
+        logger.Information("[{Type}] 后台轮询已启动，间隔 {Interval}ms", GetType().Name, intervalMs);
         _ = Task.Run(() => PollLoopAsync(intervalMs, _cts.Token), _cts.Token);
         await Task.CompletedTask;
     }
@@ -103,7 +70,7 @@ public abstract class PressureSensor(IMotionControlCard motionCard, IConfigServi
         _cts?.Dispose();
         _cts = null;
         IsMonitoring = false;
-        Logger.Information("[{Type}] 后台轮询已停止", ConfigType.Name);
+        logger.Information("[{Type}] 后台轮询已停止", GetType().Name);
     }
 
     private async Task PollLoopAsync(int intervalMs, CancellationToken ct)
@@ -117,18 +84,12 @@ public abstract class PressureSensor(IMotionControlCard motionCard, IConfigServi
                 var result = await ReadAllInternalAsync();
                 if (!result.IsSuccess) continue;
 
-                bool dataChanged;
+             
                 lock (_lock)
                 {
-                    var oldX = _x; var oldY = _y; var oldZ = _z;
                     _x = result.Data.X;
                     _y = result.Data.Y;
                     _z = result.Data.Z;
-                    dataChanged = oldX != _x || oldY != _y || oldZ != _z;
-                }
-
-                if (dataChanged)
-                {
                     DataChanged?.Invoke(this, new PressureDataChangedEventArgs(_x, _y, _z));
                 }
 
@@ -140,7 +101,7 @@ public abstract class PressureSensor(IMotionControlCard motionCard, IConfigServi
             catch (OperationCanceledException) { break; }
             catch (Exception ex)
             {
-                Logger.Error(ex, "[{Type}] 轮询异常", ConfigType.Name);
+                logger.Error(ex, "[{Type}] 轮询异常", GetType().Name);
             }
         }
     }
@@ -152,30 +113,25 @@ public abstract class PressureSensor(IMotionControlCard motionCard, IConfigServi
         if (value > threshold && !wasAlarmed)
         {
             wasAlarmed = true;
-            Logger.Warning("[{Type}] 通道 {Channel} 报警触发: 当前值={Value}, 阈值={Threshold}",
-                ConfigType.Name, channel, value, threshold);
+            logger.Warning("[{Type}] 通道 {Channel} 报警触发: 当前值={Value}, 阈值={Threshold}",
+                GetType().Name, channel, value, threshold);
             AlarmTriggered?.Invoke(this, new PressureAlarmEventArgs(channel, value, threshold, true));
         }
         else if (value <= threshold && wasAlarmed)
         {
             wasAlarmed = false;
-            Logger.Information("[{Type}] 通道 {Channel} 报警解除: 当前值={Value}, 阈值={Threshold}",
-                ConfigType.Name, channel, value, threshold);
+            logger.Information("[{Type}] 通道 {Channel} 报警解除: 当前值={Value}, 阈值={Threshold}",
+                GetType().Name, channel, value, threshold);
             AlarmTriggered?.Invoke(this, new PressureAlarmEventArgs(channel, value, threshold, false));
         }
     }
 
-    // ====================================================================
-    // 缓存值访问（非阻塞）
-    // ====================================================================
 
     public int GetX() { lock (_lock) return _x; }
     public int GetY() { lock (_lock) return _y; }
     public int GetZ() { lock (_lock) return _z; }
 
-    // ====================================================================
-    // 按需读取
-    // ====================================================================
+
 
     public Task<Result<int>> ReadXAsync() => ReadChannelAsync(PressureChannel.X);
     public Task<Result<int>> ReadYAsync() => ReadChannelAsync(PressureChannel.Y);
@@ -224,12 +180,6 @@ public abstract class PressureSensor(IMotionControlCard motionCard, IConfigServi
         return Result<int>.Success(result.Data);
     }
 
-    // ====================================================================
-    // 清零校准
-    // ====================================================================
-
-
-
     public async Task<Result> ZeroAllAsync()
     {
         if (!motionCard.IsConnected)
@@ -249,14 +199,11 @@ public abstract class PressureSensor(IMotionControlCard motionCard, IConfigServi
         if (!result.IsSuccess)
             return Result.Fail($"清零写入 0x{0x5AA501:X} 失败: {result.Message}");
 
-        Logger.Information("[所有通道清零完成");
+        logger.Information("所有通道清零完成");
         return Result.Success();
     }
 
-   
-    // ====================================================================
-    // 配置读写
-    // ====================================================================
+    
 
     public PressureSensorConfig GetConfig() => _config.Clone();
 
@@ -267,13 +214,10 @@ public abstract class PressureSensor(IMotionControlCard motionCard, IConfigServi
         {
             _config = cloned;
         }
-        await configService.SaveAsync(ConfigType, _config);
-        Logger.Information("[{Type}] 配置已保存", ConfigType.Name);
+        await configService.SaveAsync(GetType(), _config);
+        logger.Information("[{Type}] 配置已保存", GetType().Name);
     }
 
-    // ====================================================================
-    // IDisposable
-    // ====================================================================
 
     public void Dispose()
     {

@@ -1,4 +1,5 @@
 using AFOCS.Devices;
+using AFOCS.Devices.Enums;
 using AFOCS.Devices.Implementation;
 using AFOCS.Infrastructure;
 using System.ComponentModel;

@@ -2,6 +2,7 @@ using System.ComponentModel.Composition;
 using AFOCS.App.Models;
 using AFOCS.App.Services;
 using AFOCS.Devices;
+using AFOCS.Devices.Enums;
 using AFOCS.Devices.Implementation;
 using AFOCS.Framework.Framework;
 using AFOCS.Framework.Framework.Services;
@@ -58,7 +59,6 @@ public class GamepadControlViewModel(
             }
         }
     }
-
     // ========== 步长 ==========
 
     public int CameraJogStep

@@ -20,7 +20,6 @@
         <SolidColorBrush x:Key="TextPrimary" Color="#1A1A1A" />
         <SolidColorBrush x:Key="TextSecondary" Color="#888888" />
         <SolidColorBrush x:Key="TextMuted" Color="#B0B0B0" />
-
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <converter:EnumToCollectionConverter x:Key="EnumToCollection"/>
 

@@ -24,6 +24,9 @@
         </Reference>
       
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Configs\" />
+    </ItemGroup>
 
     <Target Name="CopyLTDMCDll" BeforeTargets="Build">
         <PropertyGroup>

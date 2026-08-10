@@ -3,6 +3,7 @@ using System.ComponentModel.Composition;
 using System.Windows;
 using AFOCS.Devices;
 using AFOCS.Devices.Implementation;
+using AFOCS.Devices.PressureSensor;
 using AFOCS.Framework.Framework.Services;
 using Caliburn.Micro;
 using Serilog;
@@ -137,8 +138,8 @@ namespace AFOCS.App.ViewModels
             List<IDevice> devices =
             [
                 _leadShineMotionCard,
-                _busAxisDevice,
-                _ioDevice,
+                //_busAxisDevice,
+                //_ioDevice,
 
                 //_leftCouplingLGripper,
                 //_leftCouplingRGripper,

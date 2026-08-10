@@ -1,6 +1,8 @@
 using System.ComponentModel.Composition;
 using AFOCS.Infrastructure;
 using Serilog;
+using AllInputs = AFOCS.Devices.Enums.AllInputs;
+using AllOutputs = AFOCS.Devices.Enums.AllOutputs;
 
 namespace AFOCS.Devices.Implementation
 {

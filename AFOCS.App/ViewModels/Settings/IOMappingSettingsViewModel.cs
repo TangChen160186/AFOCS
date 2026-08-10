@@ -7,6 +7,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using AFOCS.Devices;
+using AFOCS.Devices.Enums;
 using AFOCS.Framework.Modules.Settings;
 using AFOCS.Infrastructure;
 using AFOCS.Infrastructure.Extensions;
