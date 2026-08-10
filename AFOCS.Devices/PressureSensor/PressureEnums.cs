@@ -10,16 +10,10 @@ public enum PressureChannel: byte
 }
 public enum PressureSensorType : byte
 {
-    [Description("左耦合L")]
-    LeftCouplingL,
-    [Description("左耦合R")]
-    LeftCouplingR,
-    [Description("左点胶")]
-    LeftDispense,
-    [Description("右耦合L")]
-    RightCouplingL,
-    [Description("右耦合R")]       
-    RightCouplingR,
-    [Description("右点胶")]
-    RightDispense,
+    [Description("左耦合")]
+    LeftCoupling,
+    [Description("右耦合")]       
+    RightCoupling,
+    [Description("点胶")]
+    Dispense,
 }

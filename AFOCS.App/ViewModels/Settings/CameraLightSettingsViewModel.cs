@@ -3,8 +3,7 @@ using System.ComponentModel.Composition;
 using System.IO.Ports;
 using System.Runtime.CompilerServices;
 using AFOCS.App.Services;
-using AFOCS.Devices;
-using AFOCS.Devices.Implementation;
+using AFOCS.Devices.CameraLight;
 using AFOCS.Framework.Modules.Settings;
 using Caliburn.Micro;
 

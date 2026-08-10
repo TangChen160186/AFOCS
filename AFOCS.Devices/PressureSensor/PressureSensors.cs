@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using System.ComponentModel.Composition;
+using AFOCS.Devices.MotionControlCard;
 using AFOCS.Infrastructure;
 using Serilog;
 
@@ -7,53 +9,65 @@ namespace AFOCS.Devices.PressureSensor;
 [Export]
 [Export(typeof(IPressureSensor))]
 [method: ImportingConstructor]
+[Description("左工位_左耦合_压力传感器")]
 public class LeftCouplingLPressureSensor(IMotionControlCard motionCard, IConfigService configService, ILogger logger)
-    : PressureSensor(motionCard, configService, logger)
+    : PressureSensor<LeftCouplingLPressureSensorConfig>(motionCard, configService, logger)
 {
-    public override PressureSensorType SensorType => PressureSensorType.LeftCouplingL;
+    public override WorkPos WorkPos => WorkPos.Left;
+    public override PressureSensorType SensorType => PressureSensorType.LeftCoupling;
 }
 
 [Export(typeof(IPressureSensor))]
 [Export]
+[Description("左工位_右耦合_压力传感器")]
 [method: ImportingConstructor]
 public class LeftCouplingRPressureSensor(IMotionControlCard motionCard, IConfigService configService, ILogger logger)
-    : PressureSensor(motionCard, configService, logger)
+    : PressureSensor<LeftCouplingRPressureSensorConfig>(motionCard, configService, logger)
 {
-    public override PressureSensorType SensorType => PressureSensorType.LeftCouplingR;
+    public override WorkPos WorkPos => WorkPos.Left;
+    public override PressureSensorType SensorType => PressureSensorType.RightCoupling;
 }
 
 [Export]
 [Export(typeof(IPressureSensor))]
+[Description("左工位_点胶_压力传感器")]
 [method: ImportingConstructor]
 public class LeftDispensePressureSensor(IMotionControlCard motionCard, IConfigService configService, ILogger logger)
-    : PressureSensor(motionCard, configService, logger)
+    : PressureSensor<LeftDispensePressureSensorConfig>(motionCard, configService, logger)
 {
-    public override PressureSensorType SensorType => PressureSensorType.LeftDispense;
+    public override WorkPos WorkPos => WorkPos.Left;
+    public override PressureSensorType SensorType => PressureSensorType.Dispense;
 }
 
 [Export]
 [Export(typeof(IPressureSensor))]
+[Description("右工位_左耦合_压力传感器")]
 [method: ImportingConstructor]
 public class RightCouplingLPressureSensor(IMotionControlCard motionCard, IConfigService configService, ILogger logger)
-    : PressureSensor(motionCard, configService, logger)
+    : PressureSensor<RightCouplingLPressureSensorConfig>(motionCard, configService, logger)
 {
-    public override PressureSensorType SensorType => PressureSensorType.RightCouplingL;
+    public override WorkPos WorkPos => WorkPos.Right;
+    public override PressureSensorType SensorType => PressureSensorType.LeftCoupling;
 }
 
 [Export]
 [Export(typeof(IPressureSensor))]
+[Description("右工位_右耦合_压力传感器")]
 [method: ImportingConstructor]
 public class RightCouplingRPressureSensor(IMotionControlCard motionCard, IConfigService configService, ILogger logger)
-    : PressureSensor(motionCard, configService, logger)
+    : PressureSensor<RightCouplingRPressureSensorConfig>(motionCard, configService, logger)
 {
-    public override PressureSensorType SensorType => PressureSensorType.RightCouplingR;
+    public override WorkPos WorkPos => WorkPos.Right;
+    public override PressureSensorType SensorType => PressureSensorType.RightCoupling;
 }
 
 [Export]
 [Export(typeof(IPressureSensor))]
+[Description("右工位_点胶_压力传感器")]
 [method: ImportingConstructor]
 public class RightDispensePressureSensor(IMotionControlCard motionCard, IConfigService configService, ILogger logger)
-    : PressureSensor(motionCard, configService, logger)
+    : PressureSensor<RightDispensePressureSensorConfig>(motionCard, configService, logger)
 {
-    public override PressureSensorType SensorType => PressureSensorType.RightDispense;
+    public override WorkPos WorkPos => WorkPos.Right;
+    public override PressureSensorType SensorType => PressureSensorType.Dispense;
 }

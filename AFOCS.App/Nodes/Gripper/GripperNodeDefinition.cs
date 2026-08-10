@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.ComponentModel.Composition;
-using AFOCS.Devices;
+using AFOCS.Devices.Gripper;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Infrastructure;
@@ -30,7 +30,7 @@ public enum GripperCoupling
 [method: ImportingConstructor]
 public class GripperNodeDefinition(
     ILogger logger,
-    [ImportMany] IEnumerable<ISmcGripper> grippers) : NodeDefinitionBase, IExecutableNode
+    [ImportMany] IEnumerable<IGripper> grippers) : NodeDefinitionBase, IExecutableNode
 {
     [DisplayName("耦合")]
     [ItemsSource(typeof(GripperCouplingItemsSource))]

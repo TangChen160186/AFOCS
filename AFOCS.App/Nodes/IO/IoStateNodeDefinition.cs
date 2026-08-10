@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.ComponentModel.Composition;
-using AFOCS.Devices;
-using AFOCS.Devices.Enums;
+using AFOCS.Devices.IO;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Infrastructure.Extensions;
@@ -20,7 +19,7 @@ namespace AFOCS.App.Nodes.IO;
 [NodeDefinition("App.IoState", "读取IO状态", "设备", HasExecutionInput = false, HasExecutionOutput = false)]
 [method: ImportingConstructor]
 public class IoStateNodeDefinition(
-    IIODevice ioDevice,
+    IIoDevice ioDevice,
     ILogger logger) : NodeDefinitionBase, IExecutableNode
 {
     [DisplayName("IO输入信号")]

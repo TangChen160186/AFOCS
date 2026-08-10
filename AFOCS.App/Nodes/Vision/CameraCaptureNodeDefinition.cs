@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Runtime.InteropServices;
-using AFOCS.Devices;
+using AFOCS.Devices.Camera;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Infrastructure;

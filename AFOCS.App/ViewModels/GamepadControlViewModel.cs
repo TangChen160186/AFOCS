@@ -1,9 +1,10 @@
 using System.ComponentModel.Composition;
+using AAMotion;
 using AFOCS.App.Models;
 using AFOCS.App.Services;
-using AFOCS.Devices;
-using AFOCS.Devices.Enums;
-using AFOCS.Devices.Implementation;
+using AFOCS.Devices.AkribrisMotion;
+using AFOCS.Devices.BusAxisDevice;
+using AFOCS.Devices.Gripper;
 using AFOCS.Framework.Framework;
 using AFOCS.Framework.Framework.Services;
 using AFOCS.Infrastructure;
@@ -20,12 +21,12 @@ public interface IGamepadControl : ITool;
 public class GamepadControlViewModel(
     IBusAxisDevice busAxisDevice,IToastService toastService,
     [ImportMany] IEnumerable<IAkribisMotion> akribisMotions,
-    [ImportMany] IEnumerable<ISmcGripper> grippers) : Tool, IGamepadControl
+    [ImportMany] IEnumerable<IGripper> grippers) : Tool, IGamepadControl
 {
     private readonly IBusAxisDevice _busAxisDevice = busAxisDevice;
     private readonly IToastService _toastService = toastService;
     private readonly Dictionary<string, IAkribisMotion> _akribisInstances = [];
-    private readonly Dictionary<string, ISmcGripper> _grippers = [];
+    private readonly Dictionary<string, IGripper> _grippers = [];
 
     public override PaneLocation PreferredLocation => PaneLocation.Right;
     public override double PreferredWidth => 390;
@@ -260,7 +261,7 @@ public class GamepadControlViewModel(
 
     private void OnGripperDataChanged(object? sender, GripperDataChangedEventArgs e)
     {
-        if (sender is not ISmcGripper gripper) return;
+        if (sender is not IGripper gripper) return;
         var name = gripper.GetType().Name;
 
         if (name == GripperLName)
@@ -393,7 +394,7 @@ public class GamepadControlViewModel(
         target = Math.Clamp(target, 0, 400);
 
         IsBusy = true;
-        StatusText = $"{gripper.DisplayName} {(direction > 0 ? "打开" : "关闭")} → {target}";
+        StatusText = $"{gripper.GripperType} {(direction > 0 ? "打开" : "关闭")} → {target}";
         NotifyOfPropertyChange(nameof(StatusText));
         NotifyOfPropertyChange(nameof(IsBusy));
 
@@ -403,7 +404,7 @@ public class GamepadControlViewModel(
         if (result.IsSuccess)
             StatusText = "就绪";
         else
-            _toastService.ShowWarning($"{gripper.DisplayName} 运动失败:\n{result.Message}");
+            _toastService.ShowWarning($"{gripper.GripperType} 运动失败:\n{result.Message}");
         NotifyOfPropertyChange(nameof(StatusText));
         NotifyOfPropertyChange(nameof(IsBusy));
     }

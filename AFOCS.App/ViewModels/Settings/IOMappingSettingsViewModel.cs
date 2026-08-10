@@ -6,8 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
-using AFOCS.Devices;
-using AFOCS.Devices.Enums;
+using AFOCS.Devices.IO;
 using AFOCS.Framework.Modules.Settings;
 using AFOCS.Infrastructure;
 using AFOCS.Infrastructure.Extensions;
@@ -98,7 +97,7 @@ namespace AFOCS.App.ViewModels.Settings
     [PartCreationPolicy(CreationPolicy.Shared)]
     public class IOMappingSettingsViewModel : INotifyPropertyChanged, ISettingsEditor, ICancelableSettingsEditor, IDisposable
     {
-        private readonly IIODevice _io;
+        private readonly IIoDevice _io;
 
         public string SettingsPageName => "IO 配置";
         public string SettingsPagePath => "设备配置\\雷赛板卡";
@@ -147,7 +146,7 @@ namespace AFOCS.App.ViewModels.Settings
         }
 
         [ImportingConstructor]
-        public IOMappingSettingsViewModel(IIODevice io)
+        public IOMappingSettingsViewModel(IIoDevice io)
         {
             _io = io;
 
@@ -214,7 +213,7 @@ namespace AFOCS.App.ViewModels.Settings
             }
         }
 
-        private static IOEditItem MakeInput(AllInputs signal, IOMappingConfig config, string module)
+        private static IOEditItem MakeInput(AllInputs signal, IoMappingConfig config, string module)
         {
             var signalName = signal.ToString();
             var bitNo = config.Inputs.TryGetValue(signalName, out var b) ? b : (int)signal;
@@ -222,7 +221,7 @@ namespace AFOCS.App.ViewModels.Settings
             return new IOEditItem(signal.GetDescription(), signalName, bitNo, module, activeHigh: activeHigh);
         }
 
-        private static IOEditItem MakeOutput(AllOutputs signal, IOMappingConfig config, string module)
+        private static IOEditItem MakeOutput(AllOutputs signal, IoMappingConfig config, string module)
         {
             var signalName = signal.ToString();
             var bitNo = config.Outputs.TryGetValue(signalName, out var b) ? b : (int)signal;
@@ -230,7 +229,7 @@ namespace AFOCS.App.ViewModels.Settings
             return new IOEditItem(signal.GetDescription(), signalName, bitNo, module, isOutput: true, activeHigh: activeHigh);
         }
 
-        private void OnInputChanged(object? sender, IOStateChangedEventArgs e)
+        private void OnInputChanged(object? sender, IoStateChangedEventArgs e)
         {
             var item = InputItems.FirstOrDefault(x => x.SignalName == e.Signal.ToString());
             if (item == null) return;

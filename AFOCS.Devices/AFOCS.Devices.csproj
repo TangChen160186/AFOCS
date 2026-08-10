@@ -9,6 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Configs\**" />
+    <EmbeddedResource Remove="Configs\**" />
+    <None Remove="Configs\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\AFOCS.Communication\AFOCS.Communication.csproj" />
     <ProjectReference Include="..\AFOCS.Core\AFOCS.Core.csproj" />
     <ProjectReference Include="..\AFOCS.Infrastructure\AFOCS.Infrastructure.csproj" />
@@ -23,9 +29,6 @@
             <HintPath>..\Vendor\Camera\win64\MvCameraControl.Net.dll</HintPath>
         </Reference>
       
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Configs\" />
     </ItemGroup>
 
     <Target Name="CopyLTDMCDll" BeforeTargets="Build">

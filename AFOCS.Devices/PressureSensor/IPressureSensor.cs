@@ -4,7 +4,6 @@ namespace AFOCS.Devices.PressureSensor;
 
 public interface IPressureSensor : IDevice
 {
-
     PressureSensorType SensorType { get; }
 
     event EventHandler<PressureDataChangedEventArgs>? DataChanged;

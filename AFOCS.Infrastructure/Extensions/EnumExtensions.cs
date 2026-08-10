@@ -22,3 +22,11 @@ public static class EnumExtensions
         return attr?.Description ?? value.ToString();
     }
 }
+public static class TypeExtensions
+{
+    public static string GetDescription(this Type type)
+    {
+        var attr = type.GetCustomAttribute<DescriptionAttribute>();
+        return attr?.Description ?? type.Name;
+    }
+}

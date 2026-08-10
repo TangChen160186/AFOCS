@@ -2,8 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using AFOCS.Devices;
-using AFOCS.Devices.Implementation;
+using AFOCS.Devices.AkribrisMotion;
 using AFOCS.Framework.Modules.Settings;
 using Caliburn.Micro;
 

@@ -2,9 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using AFOCS.Devices;
-using AFOCS.Devices.Enums;
-using AFOCS.Devices.Implementation;
+using AFOCS.Devices.BusAxisDevice;
 using AFOCS.Framework.Modules.Settings;
 using Caliburn.Micro;
 

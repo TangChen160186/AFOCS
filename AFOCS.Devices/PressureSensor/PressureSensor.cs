@@ -1,10 +1,12 @@
+using AFOCS.Devices.MotionControlCard;
 using AFOCS.Infrastructure;
 using Serilog;
 
 namespace AFOCS.Devices.PressureSensor;
 
-public abstract class PressureSensor(IMotionControlCard motionCard, IConfigService configService, ILogger logger)
+public abstract class PressureSensor<TConfig>(IMotionControlCard motionCard, IConfigService configService, ILogger logger)
     : IPressureSensor
+where TConfig : PressureSensorConfig
 {
     private PressureSensorConfig _config = new();
     private CancellationTokenSource? _cts;
@@ -20,20 +22,22 @@ public abstract class PressureSensor(IMotionControlCard motionCard, IConfigServi
     private const ushort OdBitLen32 = 32;
 
     public bool IsConnected => motionCard.IsConnected;
+    public abstract WorkPos WorkPos { get; }
     public bool IsMonitoring { get; private set; }
     public abstract PressureSensorType SensorType { get; }
+
     public event EventHandler<PressureDataChangedEventArgs>? DataChanged;
     public event EventHandler<PressureAlarmEventArgs>? AlarmTriggered;
 
     public async Task<Result> InitializeAsync(CancellationToken token = default)
     {
-        var loaded = await configService.LoadAsync(GetType());
+        var loaded = await configService.LoadAsync(typeof(TConfig));
         if (loaded is PressureSensorConfig config)
             _config = config;
         else
         {
-            _config = (PressureSensorConfig)Activator.CreateInstance(GetType())!;
-            await configService.SaveAsync(GetType(), _config);
+            _config = (PressureSensorConfig)Activator.CreateInstance(typeof(TConfig))!;
+            await configService.SaveAsync(typeof(TConfig), _config);
         }
 
         if (!motionCard.IsConnected)
@@ -209,13 +213,8 @@ public abstract class PressureSensor(IMotionControlCard motionCard, IConfigServi
 
     public async Task SaveConfigAsync(PressureSensorConfig config)
     {
-        var cloned = config.Clone();
-        lock (_lock)
-        {
-            _config = cloned;
-        }
-        await configService.SaveAsync(GetType(), _config);
-        logger.Information("[{Type}] 配置已保存", GetType().Name);
+        _config = config.Clone();
+        await configService.SaveAsync(typeof(TConfig), _config);
     }
 
 

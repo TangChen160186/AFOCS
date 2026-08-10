@@ -3,8 +3,7 @@ using System.ComponentModel.Composition;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using AFOCS.App.Services;
-using AFOCS.Devices;
-using AFOCS.Devices.Implementation;
+using AFOCS.Devices.ProgrammablePowerSupply;
 using AFOCS.Framework.Modules.Settings;
 using Caliburn.Micro;
 
