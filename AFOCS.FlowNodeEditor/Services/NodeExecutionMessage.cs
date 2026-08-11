@@ -1,0 +1,27 @@
+using AFOCS.Infrastructure;
+
+namespace AFOCS.FlowNodeEditor.Services;
+
+/// <summary>
+/// 节点执行结果消息 —— 通过 IEventAggregator 发布，供外部订阅
+/// </summary>
+public class NodeExecutionMessage
+{
+    /// <summary>当前工位</summary>
+    public WorkPos WorkPos { get; init; }
+
+    /// <summary>节点标题（DisplayName）</summary>
+    public string NodeTitle { get; init; } = string.Empty;
+
+    /// <summary>节点 TypeId</summary>
+    public string NodeTypeId { get; init; } = string.Empty;
+
+    /// <summary>执行是否成功</summary>
+    public bool IsSuccess { get; init; }
+
+    /// <summary>错误信息（失败时有值）</summary>
+    public string? ErrorMessage { get; init; }
+
+    /// <summary>执行耗时（毫秒）</summary>
+    public long ElapsedMs { get; init; }
+}

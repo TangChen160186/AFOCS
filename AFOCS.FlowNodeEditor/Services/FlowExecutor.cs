@@ -1,8 +1,11 @@
+using System.ComponentModel.Composition;
+using System.Diagnostics;
+using System.Reflection;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.ViewModels;
+using AFOCS.Infrastructure;
+using Caliburn.Micro;
 using Serilog;
-using System.ComponentModel.Composition;
-using System.Reflection;
 
 namespace AFOCS.FlowNodeEditor.Services;
 
@@ -13,11 +16,14 @@ public enum NodeExecutionState
     Completed,
     Error
 }
+
 [Export]
 [PartCreationPolicy(CreationPolicy.NonShared)]
-[method: ImportingConstructor]
-public class FlowExecutor(ILogger logger)
+public class FlowExecutor
 {
+    private readonly ILogger _logger;
+    private readonly IEventAggregator _eventAggregator;
+
     /// <summary>分支结果在 ExecuteAsync 返回值中的约定 Key（bool 值，true=真分支，false=假分支）</summary>
     public const string BranchResultKey = "_branch";
 
@@ -27,24 +33,45 @@ public class FlowExecutor(ILogger logger)
     /// <summary>假分支执行输出端口名（与 IfNodeDefinition 的端口名一致）</summary>
     public const string FalseBranchPortName = "False";
 
-    private readonly HashSet<Guid> _executed = [];
+    /// <summary>上下文中的工位 Key</summary>
+    public const string WorkPosKey = "WorkPos";
 
-    
+    private readonly HashSet<Guid> _executed = [];
+    private WorkPos _currentWorkPos;
+    private readonly Dictionary<Guid, Stopwatch> _nodeTimers = [];
+
+    [ImportingConstructor]
+    public FlowExecutor(ILogger logger, IEventAggregator eventAggregator)
+    {
+        _logger = logger;
+        _eventAggregator = eventAggregator;
+    }
 
     /// <summary>节点状态变化回调（节点实例Id, 状态）</summary>
     public event Action<Guid, NodeExecutionState>? NodeStateChanged;
 
+    /// <summary>设置当前执行的全局工位（在调用 ExecuteFromNodeAsync/ExecuteSingleNodeAsync 之前需要先设置）</summary>
+    public void SetWorkPos(WorkPos workPos)
+    {
+        _currentWorkPos = workPos;
+        _nodeTimers.Clear();
+    }
+
     public async Task<Dictionary<Guid, Dictionary<string, object?>>> ExecuteAsync(
         IReadOnlyList<NodeViewModel> nodes,
-        IReadOnlyList<ConnectionViewModel> connections)
+        IReadOnlyList<ConnectionViewModel> connections,
+        WorkPos workPos)
     {
+        _currentWorkPos = workPos;
+        _nodeTimers.Clear();
+
         var entryNodes = nodes.Where(n =>
             n.Outputs.Any(o => o.PortType == NodePortType.Execution) &&
             n.Inputs.All(i => i.PortType != NodePortType.Execution)).ToList();
 
         if (entryNodes.Count == 0)
         {
-            logger.Information("[FlowExecutor] 未找到 Entry 节点，无法执行");
+            _logger.Information("[FlowExecutor] 未找到 Entry 节点，无法执行");
             return new Dictionary<Guid, Dictionary<string, object?>>();
         }
 
@@ -62,7 +89,7 @@ public class FlowExecutor(ILogger logger)
         IReadOnlyList<ConnectionViewModel> connections)
     {
         var results = new Dictionary<Guid, Dictionary<string, object?>>();
-        var context = new Dictionary<string, object?>();
+        var context = new Dictionary<string, object?> { [WorkPosKey] = _currentWorkPos };
 
         var grouped = entryNodes.GroupBy(n =>
             {
@@ -72,11 +99,11 @@ public class FlowExecutor(ILogger logger)
             .OrderBy(g => g.Key)
             .ToList();
 
-        logger.Information($"[FlowExecutor] 找到 {entryNodes.Count} 个入口，按优先级分组: {string.Join(", ", grouped.Select(g => $"优先级{g.Key}({g.Count()}个)"))}");
+        _logger.Information($"[FlowExecutor] 找到 {entryNodes.Count} 个入口，按优先级分组: {string.Join(", ", grouped.Select(g => $"优先级{g.Key}({g.Count()}个)"))}");
 
         foreach (var group in grouped)
         {
-            logger.Information($"[FlowExecutor] 执行优先级 {group.Key} 的 {group.Count()} 个入口(并行)");
+            _logger.Information($"[FlowExecutor] 执行优先级 {group.Key} 的 {group.Count()} 个入口(并行)");
 
             var tasks = group.Select(async entryNode =>
             {
@@ -104,7 +131,7 @@ public class FlowExecutor(ILogger logger)
             await Task.WhenAll(tasks);
         }
 
-        logger.Information(
+        _logger.Information(
             $"[FlowExecutor] 执行完成，共 {results.Count}/{nodes.Count} 个节点");
         return results;
     }
@@ -115,15 +142,15 @@ public class FlowExecutor(ILogger logger)
         IReadOnlyList<ConnectionViewModel> connections)
     {
         var results = new Dictionary<Guid, Dictionary<string, object?>>();
-        var context = new Dictionary<string, object?>();
+        var context = new Dictionary<string, object?> { [WorkPosKey] = _currentWorkPos };
         _executed.Clear();
 
-        logger.Information($"[FlowExecutor] 从节点 '{startNode.Title}' 开始执行");
+        _logger.Information($"[FlowExecutor] 从节点 '{startNode.Title}' 开始执行");
 
         await ExecuteNodeWithDeps(startNode, nodes, connections, results, context);
         await FollowExecutionChain(startNode, nodes, connections, results, context);
 
-        logger.Information(
+        _logger.Information(
             $"[FlowExecutor] 执行完成，共 {_executed.Count}/{nodes.Count} 个节点");
         return results;
     }
@@ -134,10 +161,10 @@ public class FlowExecutor(ILogger logger)
         IReadOnlyList<ConnectionViewModel> connections)
     {
         var results = new Dictionary<Guid, Dictionary<string, object?>>();
-        var context = new Dictionary<string, object?>();
+        var context = new Dictionary<string, object?> { [WorkPosKey] = _currentWorkPos };
         _executed.Clear();
 
-        logger.Information($"[FlowExecutor] 只执行节点 '{node.Title}'");
+        _logger.Information($"[FlowExecutor] 只执行节点 '{node.Title}'");
 
         foreach (var input in node.Inputs)
         {
@@ -165,55 +192,12 @@ public class FlowExecutor(ILogger logger)
 
         if (!isEnabled)
         {
-            logger.Information(
+            _logger.Information(
                 $"[FlowExecutor] 节点 '{node.Title}' 已禁用，跳过执行");
             return results;
         }
 
-        NodeStateChanged?.Invoke(node.InstanceId, NodeExecutionState.Executing);
-        node.IsExecuting = true;
-        node.IsCompleted = false;
-
-        try
-        {
-            if (node.Definition is IExecutableNode execNode)
-            {
-                var outputs = await execNode.ExecuteAsync(context);
-                results[node.InstanceId] = outputs;
-
-                foreach (var kv in outputs)
-                {
-                    var prop = node.Definition.GetType().GetProperty(kv.Key);
-                    if (prop != null && prop.CanWrite)
-                        prop.SetValue(node.Definition, kv.Value);
-                }
-
-                logger.Information(
-                    $"[FlowExecutor] 节点 '{node.Title}' 执行成功，输出 {outputs.Count} 项");
-
-                node.IsExecuting = false;
-                node.IsCompleted = true;
-                NodeStateChanged?.Invoke(node.InstanceId, NodeExecutionState.Completed);
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine(
-                    $"[FlowExecutor] 节点 '{node.Title}' 未实现 IExecutableNode，跳过");
-                node.IsExecuting = false;
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.Information(
-                $"[FlowExecutor] 节点 '{node.Title}' 执行失败: {ex.Message}");
-            results[node.InstanceId] = new Dictionary<string, object?> { ["_error"] = ex.Message };
-
-            node.IsExecuting = false;
-            node.HasError = true;
-            NodeStateChanged?.Invoke(node.InstanceId, NodeExecutionState.Error);
-        }
-
-        return results;
+        return await ExecuteNodeInternalAsync(node, context, results);
     }
 
     private static PropertyInfo? GetPropertyByPortName(INodeDefinition definition, string portName)
@@ -233,7 +217,7 @@ public class FlowExecutor(ILogger logger)
         // 如果当前节点没有产生执行结果（被禁用/跳过），终止链路传播
         if (!results.ContainsKey(fromNode.InstanceId))
         {
-            logger.Information($"[FlowExecutor] 节点 '{fromNode.Title}' 未执行（已禁用），停止向下游传播");
+            _logger.Information($"[FlowExecutor] 节点 '{fromNode.Title}' 未执行（已禁用），停止向下游传播");
             return;
         }
 
@@ -259,12 +243,12 @@ public class FlowExecutor(ILogger logger)
                     return;
                 }
 
-                logger.Information(
+                _logger.Information(
                     $"[FlowExecutor] 节点 '{fromNode.Title}' 分支结果 {taken}，但未找到对应输出端口");
                 return;
             }
 
-            logger.Warning(
+            _logger.Warning(
                 $"[FlowExecutor] 节点 '{fromNode.Title}' 有多个执行输出但缺少分支结果，按第一个端口执行");
         }
 
@@ -328,11 +312,26 @@ public class FlowExecutor(ILogger logger)
 
         if (!isEnabled)
         {
-            logger.Information(
+            _logger.Information(
                 $"[FlowExecutor] 节点 '{node.Title}' 已禁用，跳过执行");
             _executed.Add(node.InstanceId);
             return;
         }
+
+        await ExecuteNodeInternalAsync(node, context, results);
+    }
+
+    /// <summary>执行单个节点并记录计时与发布消息</summary>
+    private async Task<Dictionary<Guid, Dictionary<string, object?>>> ExecuteNodeInternalAsync(
+        NodeViewModel node,
+        Dictionary<string, object?> context,
+        Dictionary<Guid, Dictionary<string, object?>> results)
+    {
+        if (_executed.Contains(node.InstanceId))
+            return results;
+
+        var sw = Stopwatch.StartNew();
+        _nodeTimers[node.InstanceId] = sw;
 
         NodeStateChanged?.Invoke(node.InstanceId, NodeExecutionState.Executing);
         node.IsExecuting = true;
@@ -343,30 +342,36 @@ public class FlowExecutor(ILogger logger)
             if (node.Definition is IExecutableNode execNode)
             {
                 var outputs = await execNode.ExecuteAsync(context);
+                sw.Stop();
+
                 results[node.InstanceId] = outputs;
                 _executed.Add(node.InstanceId);
 
                 foreach (var kv in outputs)
                     context[kv.Key] = kv.Value;
 
-                logger.Information(
-                    $"[FlowExecutor] 节点 '{node.Title}' 执行成功，输出 {outputs.Count} 项");
+                _logger.Information(
+                    $"[FlowExecutor] 节点 '{node.Title}' 执行成功，输出 {outputs.Count} 项，耗时 {sw.ElapsedMilliseconds}ms");
 
                 node.IsExecuting = false;
                 node.IsCompleted = true;
                 NodeStateChanged?.Invoke(node.InstanceId, NodeExecutionState.Completed);
+
+                PublishMessage(node, isSuccess: true, elapsedMs: sw.ElapsedMilliseconds);
             }
             else
             {
-                logger.Information(
+                sw.Stop();
+                _logger.Information(
                     $"[FlowExecutor] 节点 '{node.Title}' 未实现 IExecutableNode，跳过");
                 node.IsExecuting = false;
             }
         }
         catch (Exception ex)
         {
-            logger.Information(
-                $"[FlowExecutor] 节点 '{node.Title}' 执行失败: {ex.Message}");
+            sw.Stop();
+            _logger.Information(
+                $"[FlowExecutor] 节点 '{node.Title}' 执行失败: {ex.Message}，耗时 {sw.ElapsedMilliseconds}ms");
             results[node.InstanceId] = new Dictionary<string, object?> { ["_error"] = ex.Message };
             _executed.Add(node.InstanceId);
 
@@ -374,9 +379,29 @@ public class FlowExecutor(ILogger logger)
             node.HasError = true;
             NodeStateChanged?.Invoke(node.InstanceId, NodeExecutionState.Error);
 
+            PublishMessage(node, isSuccess: false, elapsedMs: sw.ElapsedMilliseconds, errorMessage: ex.Message);
+
             // 出错立即终止流程，不再执行任何下游节点
             throw;
         }
+
+        return results;
+    }
+
+    /// <summary>通过 IEventAggregator 发布节点执行消息</summary>
+    private void PublishMessage(NodeViewModel node, bool isSuccess, long elapsedMs, string? errorMessage = null)
+    {
+        var msg = new NodeExecutionMessage
+        {
+            WorkPos = _currentWorkPos,
+            NodeTitle = node.Title,
+            NodeTypeId = NodeDefinitionHelper.GetTypeId(node.Definition) ?? "Unknown",
+            IsSuccess = isSuccess,
+            ElapsedMs = elapsedMs,
+            ErrorMessage = errorMessage,
+        };
+
+        _eventAggregator.PublishOnUIThreadAsync(msg);
     }
 
     private static void SetInputPortValue(INodeDefinition definition, string portName, object? value)

@@ -149,8 +149,29 @@
                             Padding="12,4"
                             Margin="0,0,8,0"
                             Cursor="Hand" />
+
+                    <!-- 分隔线 -->
+                    <Separator Style="{DynamicResource {x:Static ToolBar.SeparatorStyleKey}}"
+                               Margin="4,2" />
+
+                    <!-- 全局工位选择器 -->
+                    <TextBlock Text="工位:" VerticalAlignment="Center"
+                               Margin="0,0,4,0" Foreground="#FFE0E0E0" FontSize="12" />
+                    <ComboBox ItemsSource="{Binding WorkPosOptions}"
+                              SelectedValue="{Binding GlobalWorkPos, Mode=TwoWay}"
+                              SelectedValuePath="Value"
+                              DisplayMemberPath="DisplayName"
+                              Width="90"
+                              VerticalAlignment="Center"
+                              VerticalContentAlignment="Center"
+                              Background="#FF505050"
+                              Foreground="White"
+                              BorderBrush="#FF6A6A6A"
+                              FontSize="12" />
+
                     <TextBlock Text="{Binding ExecutionStatus}"
-                               VerticalAlignment="Center">
+                               VerticalAlignment="Center"
+                               Margin="12,0,0,0">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="#FF4EC9B0" />

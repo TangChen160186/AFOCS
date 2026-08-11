@@ -1,13 +1,14 @@
-using AFOCS.FlowNodeEditor.Models;
-using AFOCS.FlowNodeEditor.Services;
-using AFOCS.Framework.Framework;
-using Caliburn.Micro;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
+using AFOCS.FlowNodeEditor.Models;
+using AFOCS.FlowNodeEditor.Services;
+using AFOCS.Framework.Framework;
+using AFOCS.Infrastructure;
+using Caliburn.Micro;
 
 namespace AFOCS.FlowNodeEditor.ViewModels;
 
@@ -139,7 +140,25 @@ public class NodeEditorDocumentViewModel : PersistedDocument
         HasExecutionError = isError;
     }
 
+    // ========== 全局工位选择 ==========
 
+    /// <summary>全局工位选择，覆盖 EntryNodeDefinition 的独立 Workpos 设置</summary>
+    public WorkPos GlobalWorkPos
+    {
+        get;
+        set => Set(ref field, value);
+    } = WorkPos.Left;
+
+    /// <summary>工位选项列表（供 ComboBox 绑定）</summary>
+    public IReadOnlyList<WorkPosItem> WorkPosOptions { get; } =
+    [
+        new WorkPosItem(WorkPos.Left, "左工位"),
+        new WorkPosItem(WorkPos.Right, "右工位"),
+        new WorkPosItem(WorkPos.None, "通用"),
+    ];
+
+    /// <summary>工位下拉项</summary>
+    public record WorkPosItem(WorkPos Value, string DisplayName);
 
     // ========== 命令 ==========
     public ICommand DeleteSelectedNodeCommand { get; }
@@ -455,7 +474,7 @@ public class NodeEditorDocumentViewModel : PersistedDocument
                     await Task.Delay(300);
             };
 
-            var results = await executor.ExecuteAsync(Nodes.ToList(), Connections.ToList());
+            var results = await executor.ExecuteAsync(Nodes.ToList(), Connections.ToList(), GlobalWorkPos);
             SetExecutionStatus($"执行完成，共 {results.Count} 个节点");
         }
         catch (Exception ex)
@@ -486,6 +505,8 @@ public class NodeEditorDocumentViewModel : PersistedDocument
                     await Task.Delay(300);
             };
 
+            // 设置全局工位后再从选中节点执行
+            executor.SetWorkPos(GlobalWorkPos);
             var results = await executor.ExecuteFromNodeAsync(SelectedNode, Nodes.ToList(), Connections.ToList());
             SetExecutionStatus($"执行完成，共 {results.Count} 个节点");
         }
@@ -517,6 +538,8 @@ public class NodeEditorDocumentViewModel : PersistedDocument
                     await Task.Delay(300);
             };
 
+            // 设置全局工位
+            executor.SetWorkPos(GlobalWorkPos);
             var results = await executor.ExecuteSingleNodeAsync(SelectedNode, Nodes.ToList(), Connections.ToList());
             SetExecutionStatus(results.Count > 0 ? "执行完成" : "节点未执行");
         }

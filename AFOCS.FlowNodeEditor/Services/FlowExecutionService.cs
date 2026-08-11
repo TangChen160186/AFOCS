@@ -3,16 +3,17 @@ using System.IO;
 using System.Text.Json;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.ViewModels;
+using AFOCS.Infrastructure;
 using Caliburn.Micro;
 
 namespace AFOCS.FlowNodeEditor.Services;
 
 public interface IFlowExecutionService
 {
-    Task<FlowExecutionResult> ExecuteFlowAsync(string filePath);
-    Task<FlowExecutionResult> ExecuteFlowAsync(FlowGraph graph);
-    Task<FlowExecutionResult> ExecuteFromNodeAsync(string filePath, Guid nodeInstanceId);
-    Task<FlowExecutionResult> ExecuteSingleNodeAsync(string filePath, Guid nodeInstanceId);
+    Task<FlowExecutionResult> ExecuteFlowAsync(string filePath, WorkPos workPos = WorkPos.Left);
+    Task<FlowExecutionResult> ExecuteFlowAsync(FlowGraph graph, WorkPos workPos = WorkPos.Left);
+    Task<FlowExecutionResult> ExecuteFromNodeAsync(string filePath, Guid nodeInstanceId, WorkPos workPos = WorkPos.Left);
+    Task<FlowExecutionResult> ExecuteSingleNodeAsync(string filePath, Guid nodeInstanceId, WorkPos workPos = WorkPos.Left);
 }
 
 public class FlowExecutionResult
@@ -35,7 +36,7 @@ public class FlowExecutionService : IFlowExecutionService
         _nodeRegistry = nodeRegistry;
     }
 
-    public async Task<FlowExecutionResult> ExecuteFlowAsync(string filePath)
+    public async Task<FlowExecutionResult> ExecuteFlowAsync(string filePath, WorkPos workPos = WorkPos.Left)
     {
         try
         {
@@ -50,7 +51,7 @@ public class FlowExecutionService : IFlowExecutionService
                 };
             }
 
-            return await ExecuteFlowAsync(graph);
+            return await ExecuteFlowAsync(graph, workPos);
         }
         catch (FileNotFoundException)
         {
@@ -70,7 +71,7 @@ public class FlowExecutionService : IFlowExecutionService
         }
     }
 
-    public async Task<FlowExecutionResult> ExecuteFlowAsync(FlowGraph graph)
+    public async Task<FlowExecutionResult> ExecuteFlowAsync(FlowGraph graph, WorkPos workPos = WorkPos.Left)
     {
         var result = new FlowExecutionResult();
 
@@ -89,7 +90,7 @@ public class FlowExecutionService : IFlowExecutionService
                 }
             };
 
-            var outputs = await executor.ExecuteAsync(nodes.ToList(), connections.ToList());
+            var outputs = await executor.ExecuteAsync(nodes.ToList(), connections.ToList(), workPos);
 
             result.Success = true;
             result.ExecutedNodeCount = outputs.Count;
@@ -106,7 +107,7 @@ public class FlowExecutionService : IFlowExecutionService
         return result;
     }
 
-    public async Task<FlowExecutionResult> ExecuteFromNodeAsync(string filePath, Guid nodeInstanceId)
+    public async Task<FlowExecutionResult> ExecuteFromNodeAsync(string filePath, Guid nodeInstanceId, WorkPos workPos = WorkPos.Left)
     {
         var result = new FlowExecutionResult();
 
@@ -147,6 +148,7 @@ public class FlowExecutionService : IFlowExecutionService
                 }
             };
 
+            executor.SetWorkPos(workPos);
             var outputs = await executor.ExecuteFromNodeAsync(startNode, nodes.ToList(), connections.ToList());
 
             result.Success = true;
@@ -163,7 +165,7 @@ public class FlowExecutionService : IFlowExecutionService
         return result;
     }
 
-    public async Task<FlowExecutionResult> ExecuteSingleNodeAsync(string filePath, Guid nodeInstanceId)
+    public async Task<FlowExecutionResult> ExecuteSingleNodeAsync(string filePath, Guid nodeInstanceId, WorkPos workPos = WorkPos.Left)
     {
         var result = new FlowExecutionResult();
 
@@ -195,6 +197,7 @@ public class FlowExecutionService : IFlowExecutionService
             result.ExecutionLog.Add($"只执行节点 '{targetNode.Title}'");
 
             var executor = IoC.Get<FlowExecutor>();
+            executor.SetWorkPos(workPos);
             var outputs = await executor.ExecuteSingleNodeAsync(targetNode, nodes.ToList(), connections.ToList());
 
             result.Success = true;
