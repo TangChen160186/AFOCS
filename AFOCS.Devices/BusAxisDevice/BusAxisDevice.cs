@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.ComponentModel.Composition;
 using AFOCS.Devices.MotionControlCard;
 using AFOCS.Infrastructure;
@@ -7,6 +8,7 @@ namespace AFOCS.Devices.BusAxisDevice;
 
 [Export]
 [Export(typeof(IBusAxisDevice))]
+[Description("总线轴设备")]
 [method: ImportingConstructor]
 public class BusAxisDevice(IMotionControlCard motionCard, IConfigService configService, ILogger logger) : IBusAxisDevice
 {

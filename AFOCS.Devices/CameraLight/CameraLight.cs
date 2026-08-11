@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.Composition;
+﻿using System.ComponentModel;
+using System.ComponentModel.Composition;
 using AFOCS.Communication;
 using AFOCS.Infrastructure;
 using AFOCS.Infrastructure.Extensions;
@@ -7,6 +8,7 @@ using Serilog;
 namespace AFOCS.Devices.CameraLight;
 
 [Export(typeof(ICameraLight))]
+[Description("相机光源")]
 [method: ImportingConstructor]
 public class CameraLight(ISerialPortClient serialPortClient, IConfigService configService, ILogger logger)
     : ICameraLight

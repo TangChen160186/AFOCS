@@ -1,5 +1,8 @@
-﻿namespace AFOCS.Devices.CameraLight;
+﻿using AFOCS.Infrastructure;
 
+namespace AFOCS.Devices.CameraLight;
+
+[ConfigPath("设备/相机光源")]
 public class CameraLightConfig : ICloneable
 {
     public string PortName { get; set; } = "COM1";

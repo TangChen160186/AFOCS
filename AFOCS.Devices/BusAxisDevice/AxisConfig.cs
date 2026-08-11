@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using AFOCS.Infrastructure;
 
 namespace AFOCS.Devices.BusAxisDevice;
 
@@ -113,6 +114,7 @@ public class AxisConfig : ICloneable
     object ICloneable.Clone() => Clone();
 }
 
+[ConfigPath("设备/总线轴配置")]
 public class AxisConfigCollection
 {
     public Dictionary<int, AxisConfig> Axes { get; set; } = [];

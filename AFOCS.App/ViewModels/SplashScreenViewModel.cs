@@ -62,26 +62,25 @@ namespace AFOCS.App.ViewModels
         [Import] private IMainWindow _mainWindow = null!;
         [Import] private ILogger _logger = null!;
 
-        [Import] private ProgrammablePowerSupply _programmablePowerSupply = null!;
-        [Import] private IOpticalSwitch _opticalSwitch = null!;
-        [Import] private IHeightGauge _heightGauge = null!;
+        // ---------------总线相关设备---------------------
         [Import] private IMotionControlCard _leadShineMotionCard = null!;
         [Import] private IBusAxisDevice _busAxisDevice = null!;
-
-        [Import] private ICameraLight _cameraLight = null!;
-        [Import] private CameraLeftUp _cameraLeftUp = null!;
-        [Import] private CameraLeftDown _cameraLeftDown = null!;
-        [Import] private CameraRightUp _cameraRightUp = null!;
-        [Import] private CameraRightDown _cameraRightDown = null!;
-        [Import] private OpticalPowerMeterLeft _opticalPowerMeterLeft = null!;
-        [Import] private OpticalPowerMeterRight _opticalPowerMeterRight = null!;
-
         [Import] private IIoDevice _ioDevice = null!;
         [ImportMany] private IEnumerable<IPressureSensor> _pressureSensors = null!;
         [ImportMany] private IEnumerable<IGripper> _grippers = null!;
-        [ImportMany] private IEnumerable<IAkribisMotion> _akribisMotions = null!;
 
-        [Import] private ISPBoardDevice _boardDevice = null!;
+        // ---------------其他设备---------------------
+        [ImportMany] private IEnumerable<IAkribisMotion> _akribisMotions = null!;
+        [ImportMany] private IEnumerable<IOpticalPowerMeter> _opticalPowerMeters = null!;
+        [ImportMany] private IEnumerable<ICamera> _cameras = null!;
+
+        [Import] private IOpticalSwitch _opticalSwitch = null!;
+        [Import] private IHeightGauge _heightGauge = null!;
+        [Import] private ICameraLight _cameraLight = null!;
+        [Import] private ProgrammablePowerSupply _programmablePowerSupply = null!;
+
+        // ---------------ISP Board---------------------
+        [Import] private IIspBoardDevice _boardDevice = null!;
         protected override Task OnActivatedAsync(CancellationToken cancellationToken)
         {
             InitializeDevices();
@@ -132,32 +131,25 @@ namespace AFOCS.App.ViewModels
 
         private List<IDevice> GetAllDevices()
         {
-
             List<IDevice> devices =
             [
                 _leadShineMotionCard,
                 _busAxisDevice,
                 _ioDevice,
+                .. _pressureSensors,
+                .. _grippers,
+
+                .. _akribisMotions,
+                .. _opticalPowerMeters,
+                .. _cameras,
+                _opticalSwitch,
+                _heightGauge,
+                _cameraLight,
+                _programmablePowerSupply,
                 //_boardDevice
-                //_programmablePowerSupply,
-
-                //_opticalSwitch,
-                //_heightGauge,
-                //_opticalPowerMeterLeft,
-                //_opticalPowerMeterRight,
-                //_boardDevice,
-                //_cameraLight,
-
-                //_cameraLeftUp,
-                //_cameraLeftDown,
-                //_cameraRightUp,
-                //_cameraRightDown,
             ];
 
-            devices.AddRange(_pressureSensors);
-            devices.AddRange(_grippers);
-            devices.AddRange(_akribisMotions);
-            
+
             return devices;
         }
     

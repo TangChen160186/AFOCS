@@ -2,7 +2,6 @@ using AFOCS.Infrastructure;
 
 namespace AFOCS.Devices.Camera;
 
-
 public class HkCameraConfig : ICloneable
 {
     public string ChSerialNumber { get; set; } = "ChSerialNumber";

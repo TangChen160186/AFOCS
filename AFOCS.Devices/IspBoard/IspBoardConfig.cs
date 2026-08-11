@@ -6,7 +6,7 @@ namespace AFOCS.Devices.IspBoard;
 /// ISP Board 配置
 /// </summary>
 ///
-[ConfigPath("IspBoard")]
+[ConfigPath("设备/IspBoard")]
 public class IspBoardConfig
 {
     /// <summary>产品配置文件路径</summary>

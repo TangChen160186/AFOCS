@@ -18,8 +18,6 @@ public class IspInitResult
 /// </summary>
 public interface IIspBoardDevice : IDevice
 {
-    //Task<Result<string>> GetIpsn();
-        
     /// <summary>
     /// 初始化 ISP Board，加载产品配置文件
     /// </summary>
