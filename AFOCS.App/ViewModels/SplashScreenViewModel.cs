@@ -17,6 +17,7 @@ using AFOCS.Infrastructure.Extensions;
 using Caliburn.Micro;
 using Serilog;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Windows;
 
@@ -39,7 +40,7 @@ namespace AFOCS.App.ViewModels
     [Export]
     internal class SplashScreenViewModel : Screen
     {
-        public override string DisplayName { get; set; } = "AFOCS 初始化设备初始化界面";
+        public override string DisplayName { get; set; } = "";
         public ObservableCollection<LogMessage> LogMessages { get; } = [];
 
         public string CurrentStatus
@@ -137,7 +138,7 @@ namespace AFOCS.App.ViewModels
                 _leadShineMotionCard,
                 _busAxisDevice,
                 _ioDevice,
-
+                //_boardDevice
                 //_programmablePowerSupply,
 
                 //_opticalSwitch,

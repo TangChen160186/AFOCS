@@ -2,14 +2,6 @@ using AFOCS.Infrastructure;
 
 namespace AFOCS.Devices.AkribrisMotion;
 
-
-public class AkribisPositionChangedEventArgs(int x, int y, int z) : EventArgs
-{
-    public int X { get; } = x; // 脉冲值
-    public int Y { get; } = y;
-    public int Z { get; } = z;
-}
-
 public interface IAkribisMotion : IDevice
 {
     AkribisMotionType AkribisMotionType { get; }
@@ -32,4 +24,11 @@ public interface IAkribisMotion : IDevice
     Task<Result> StopAxisAsync();
     Task<Result> EmergencyStopAsync(AkribisAxisId axis);
     Task<Result> EmergencyStopAllAsync();
+}
+
+public class AkribisPositionChangedEventArgs(int x, int y, int z) : EventArgs
+{
+    public int X { get; } = x; // 脉冲值
+    public int Y { get; } = y;
+    public int Z { get; } = z;
 }

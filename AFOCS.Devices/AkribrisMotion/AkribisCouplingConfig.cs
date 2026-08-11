@@ -23,7 +23,10 @@ public class AkribisCouplingConfig : ICloneable
     };
     object ICloneable.Clone() => Clone();
 }
-
+ 
+/*
+ * 备注:雅克贝斯轴，2048_00 == 1mm,如果要用mm作为运动单位，加速度、减速度、速度、传入值都要进行和2048_00换算
+ */
 public class AkribisAxisParams : ICloneable
 {
     public int Speed { get; set; } = 2048_000; // 默认:10mm/s
