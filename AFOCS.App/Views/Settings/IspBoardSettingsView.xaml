@@ -1,0 +1,289 @@
+<UserControl x:Class="AFOCS.App.Views.Settings.IspBoardSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:cal="http://www.caliburnproject.org"
+             xmlns:settings="clr-namespace:AFOCS.App.ViewModels.Settings"
+             mc:Ignorable="d"
+             d:DesignHeight="620" d:DesignWidth="520"
+             d:DataContext="{d:DesignInstance settings:IspBoardSettingsViewModel}"
+             IsTabStop="False">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="ConnectedBrush" Color="#10B981" />
+        <SolidColorBrush x:Key="DisconnectedBrush" Color="#EF4444" />
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="0,5">
+
+            <!-- ========== 连接状态 ========== -->
+            <Border BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="0,0,0,8" Margin="0,0,0,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Ellipse Width="10" Height="10" Margin="0,0,6,0">
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Setter Property="Fill" Value="{StaticResource DisconnectedBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                            <Setter Property="Fill" Value="{StaticResource ConnectedBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
+                        <TextBlock Text="连接状态:" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center"
+                                   FontWeight="Bold" Margin="4,0,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                        <Button cal:Message.Attach="SaveAsync" Width="50" Height="22"
+                                FontSize="10" Padding="4,2" Margin="0,0,4,0">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            保存
+                        </Button>
+                        <Button cal:Message.Attach="ReconnectAsync" Width="50" Height="22"
+                                FontSize="10" Padding="4,2">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            重连
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- ========== 基础设置 ========== -->
+            <TextBlock Text="基础设置" FontWeight="Bold" Margin="0,0,0,6" />
+
+            <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                <Label Width="110" Content="产品配置文件:" VerticalAlignment="Center" />
+                <TextBox Width="280" Text="{Binding ProductCfgFilePath, UpdateSourceTrigger=PropertyChanged}" />
+                <Button cal:Message.Attach="BrowseProductCfg" Width="50" Height="22"
+                        FontSize="10" Padding="4,2" Margin="4,0,0,0">浏览</Button>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Label Width="110" Content="轮询间隔(ms):" VerticalAlignment="Center" />
+                <TextBox Width="80" Text="{Binding RspPollingIntervalMs, UpdateSourceTrigger=PropertyChanged}" />
+            </StackPanel>
+
+            <!-- App 名称 -->
+            <TextBlock Text="App 名称" FontWeight="SemiBold" Margin="0,10,0,4" Foreground="#374151" />
+            <Grid Margin="0,3,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="0,0,6,4">
+                    <Label Width="70" Content="IPSN:" VerticalAlignment="Center" />
+                    <TextBox Width="140" Text="{Binding IpsnAppName, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,4">
+                    <Label Width="70" Content="RxADC:" VerticalAlignment="Center" />
+                    <TextBox Width="140" Text="{Binding RxAdcAppName, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" Margin="0,0,6,4">
+                    <Label Width="70" Content="RxADC_R:" VerticalAlignment="Center" />
+                    <TextBox Width="140" Text="{Binding RxAdcFormulaAppName, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,4">
+                    <Label Width="70" Content="MPD In:" VerticalAlignment="Center" />
+                    <TextBox Width="140" Text="{Binding MpdInAppName, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Margin="0,0,6,0">
+                    <Label Width="70" Content="MPD Out:" VerticalAlignment="Center" />
+                    <TextBox Width="140" Text="{Binding MpdOutAppName, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+            </Grid>
+
+            <!-- ========== 左工位 ========== -->
+            <Border BorderBrush="#E5E7EB" BorderThickness="0,1,0,0" Margin="0,12,0,0" Padding="0,10,0,0">
+                <StackPanel>
+                    <TextBlock Text="左工位" FontWeight="Bold" Margin="0,0,0,6" Foreground="#2563EB" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Label Grid.Row="0" Grid.Column="0" Width="110" Content="Device ID:" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="0" Grid.Column="1" Width="80" HorizontalAlignment="Left"
+                                 Text="{Binding LeftDeviceId, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <Label Grid.Row="1" Grid.Column="0" Width="110" Content="Dut Slot:" VerticalAlignment="Center" Margin="0,4,0,0" />
+                        <TextBox Grid.Row="1" Grid.Column="1" Width="80" HorizontalAlignment="Left" Margin="0,4,0,0"
+                                 Text="{Binding LeftDutSlot, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <Label Grid.Row="2" Grid.Column="0" Width="110" Content="Dut Channel:" VerticalAlignment="Center" Margin="0,4,0,0" />
+                        <TextBox Grid.Row="2" Grid.Column="1" Width="80" HorizontalAlignment="Left" Margin="0,4,0,0"
+                                 Text="{Binding LeftDutChannel, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <StackPanel Grid.Row="3" Grid.Column="1" Margin="0,4,0,0">
+                            <TextBlock Text="通道光功率 (dB):" Margin="0,0,0,3" />
+                            <WrapPanel>
+                                <StackPanel Margin="0,0,8,3" Width="52">
+                                    <TextBlock Text="Ch0" FontSize="10" Foreground="#6B7280" TextAlignment="Center" />
+                                    <TextBox Text="{Binding LeftCh0dB, UpdateSourceTrigger=PropertyChanged}" Width="48" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,8,3" Width="52">
+                                    <TextBlock Text="Ch1" FontSize="10" Foreground="#6B7280" TextAlignment="Center" />
+                                    <TextBox Text="{Binding LeftCh1dB, UpdateSourceTrigger=PropertyChanged}" Width="48" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,8,3" Width="52">
+                                    <TextBlock Text="Ch2" FontSize="10" Foreground="#6B7280" TextAlignment="Center" />
+                                    <TextBox Text="{Binding LeftCh2dB, UpdateSourceTrigger=PropertyChanged}" Width="48" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,8,3" Width="52">
+                                    <TextBlock Text="Ch3" FontSize="10" Foreground="#6B7280" TextAlignment="Center" />
+                                    <TextBox Text="{Binding LeftCh3dB, UpdateSourceTrigger=PropertyChanged}" Width="48" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,8,3" Width="52">
+                                    <TextBlock Text="Ch4" FontSize="10" Foreground="#6B7280" TextAlignment="Center" />
+                                    <TextBox Text="{Binding LeftCh4dB, UpdateSourceTrigger=PropertyChanged}" Width="48" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,8,3" Width="52">
+                                    <TextBlock Text="Ch5" FontSize="10" Foreground="#6B7280" TextAlignment="Center" />
+                                    <TextBox Text="{Binding LeftCh5dB, UpdateSourceTrigger=PropertyChanged}" Width="48" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,8,3" Width="52">
+                                    <TextBlock Text="Ch6" FontSize="10" Foreground="#6B7280" TextAlignment="Center" />
+                                    <TextBox Text="{Binding LeftCh6dB, UpdateSourceTrigger=PropertyChanged}" Width="48" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,0,3" Width="52">
+                                    <TextBlock Text="Ch7" FontSize="10" Foreground="#6B7280" TextAlignment="Center" />
+                                    <TextBox Text="{Binding LeftCh7dB, UpdateSourceTrigger=PropertyChanged}" Width="48" />
+                                </StackPanel>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ========== 右工位 ========== -->
+            <Border BorderBrush="#E5E7EB" BorderThickness="0,1,0,0" Margin="0,12,0,0" Padding="0,10,0,0">
+                <StackPanel>
+                    <TextBlock Text="右工位" FontWeight="Bold" Margin="0,0,0,6" Foreground="#DC2626" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Label Grid.Row="0" Grid.Column="0" Width="110" Content="Device ID:" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="0" Grid.Column="1" Width="80" HorizontalAlignment="Left"
+                                 Text="{Binding RightDeviceId, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <Label Grid.Row="1" Grid.Column="0" Width="110" Content="Dut Slot:" VerticalAlignment="Center" Margin="0,4,0,0" />
+                        <TextBox Grid.Row="1" Grid.Column="1" Width="80" HorizontalAlignment="Left" Margin="0,4,0,0"
+                                 Text="{Binding RightDutSlot, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <Label Grid.Row="2" Grid.Column="0" Width="110" Content="Dut Channel:" VerticalAlignment="Center" Margin="0,4,0,0" />
+                        <TextBox Grid.Row="2" Grid.Column="1" Width="80" HorizontalAlignment="Left" Margin="0,4,0,0"
+                                 Text="{Binding RightDutChannel, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <StackPanel Grid.Row="3" Grid.Column="1" Margin="0,4,0,0">
+                            <TextBlock Text="通道光功率 (dB):" Margin="0,0,0,3" />
+                            <WrapPanel>
+                                <StackPanel Margin="0,0,8,3" Width="52">
+                                    <TextBlock Text="Ch0" FontSize="10" Foreground="#6B7280" TextAlignment="Center" />
+                                    <TextBox Text="{Binding RightCh0dB, UpdateSourceTrigger=PropertyChanged}" Width="48" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,8,3" Width="52">
+                                    <TextBlock Text="Ch1" FontSize="10" Foreground="#6B7280" TextAlignment="Center" />
+                                    <TextBox Text="{Binding RightCh1dB, UpdateSourceTrigger=PropertyChanged}" Width="48" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,8,3" Width="52">
+                                    <TextBlock Text="Ch2" FontSize="10" Foreground="#6B7280" TextAlignment="Center" />
+                                    <TextBox Text="{Binding RightCh2dB, UpdateSourceTrigger=PropertyChanged}" Width="48" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,8,3" Width="52">
+                                    <TextBlock Text="Ch3" FontSize="10" Foreground="#6B7280" TextAlignment="Center" />
+                                    <TextBox Text="{Binding RightCh3dB, UpdateSourceTrigger=PropertyChanged}" Width="48" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,8,3" Width="52">
+                                    <TextBlock Text="Ch4" FontSize="10" Foreground="#6B7280" TextAlignment="Center" />
+                                    <TextBox Text="{Binding RightCh4dB, UpdateSourceTrigger=PropertyChanged}" Width="48" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,8,3" Width="52">
+                                    <TextBlock Text="Ch5" FontSize="10" Foreground="#6B7280" TextAlignment="Center" />
+                                    <TextBox Text="{Binding RightCh5dB, UpdateSourceTrigger=PropertyChanged}" Width="48" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,8,3" Width="52">
+                                    <TextBlock Text="Ch6" FontSize="10" Foreground="#6B7280" TextAlignment="Center" />
+                                    <TextBox Text="{Binding RightCh6dB, UpdateSourceTrigger=PropertyChanged}" Width="48" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,0,3" Width="52">
+                                    <TextBlock Text="Ch7" FontSize="10" Foreground="#6B7280" TextAlignment="Center" />
+                                    <TextBox Text="{Binding RightCh7dB, UpdateSourceTrigger=PropertyChanged}" Width="48" />
+                                </StackPanel>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ========== 说明 ========== -->
+            <TextBlock Margin="0,14,0,0" TextWrapping="Wrap" Foreground="{DynamicResource EnvironmentWindowText}"
+                       Opacity="0.7" FontSize="12">
+                通道光功率界面输入单位为 dB，实际存储为 mW。
+                &#10;公式：P(mW) = 10^(dB/10)，界面 0dB 对应存储 1mW。
+                &#10;修改配置后请先保存再重连使配置生效。
+            </TextBlock>
+
+            <!-- 底部进度条 -->
+            <ProgressBar Height="6" IsIndeterminate="True" Margin="0,10,0,0">
+                <ProgressBar.Style>
+                    <Style TargetType="ProgressBar">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ProgressBar.Style>
+            </ProgressBar>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

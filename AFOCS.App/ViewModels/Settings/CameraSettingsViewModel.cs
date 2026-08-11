@@ -158,7 +158,7 @@ namespace AFOCS.App.ViewModels.Settings
 
         // ========== 扫描 ==========
 
-        public ObservableCollection<(string, string)> AvailableCameras
+        public ObservableCollection<string> AvailableCameras
         {
             get;
             set => Set(ref field, value);
@@ -177,16 +177,16 @@ namespace AFOCS.App.ViewModels.Settings
             {
                 var cameras = await Task.Run(() =>
                     Camera<HkCameraConfig>.GetAllCameraSerialNumbers(Serilog.Log.Logger));
-                AvailableCameras = new ObservableCollection<(string, string)>();
+                AvailableCameras = new ObservableCollection<string>();
                 foreach (var item in cameras)
-                    AvailableCameras.Add(item);
+                    AvailableCameras.Add(item.Item1);
             }
             finally { IsScanning = false; }
         }
 
         public void SelectCamera(System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            if (e.AddedItems.Count > 0 && e.AddedItems[0] is (string sn, string _))
+            if (e.AddedItems.Count > 0 && e.AddedItems[0] is string sn)
                 SerialNumber = sn;
         }
 

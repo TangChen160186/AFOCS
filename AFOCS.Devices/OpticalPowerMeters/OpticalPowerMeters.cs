@@ -14,7 +14,10 @@ public class OpticalPowerMeterLeft(
     ITcpClient tcpClient,
     IConfigService configService,
     ILogger logger)
-    : OpticalPowerMeter<OpticalPowerMeterConfigLeft>(tcpClient, configService, logger);
+    : OpticalPowerMeter<OpticalPowerMeterConfigLeft>(tcpClient, configService, logger)
+{
+    public override WorkPos WorkPos => WorkPos.Left;
+}
 
 
 [Export]
@@ -25,4 +28,7 @@ public class OpticalPowerMeterRight(
     ITcpClient tcpClient,
     IConfigService configService,
     ILogger logger)
-    : OpticalPowerMeter<OpticalPowerMeterConfigRight>(tcpClient, configService, logger);
+    : OpticalPowerMeter<OpticalPowerMeterConfigRight>(tcpClient, configService, logger)
+{
+    public override WorkPos WorkPos => WorkPos.Right;
+}

@@ -79,7 +79,7 @@ namespace AFOCS.App.ViewModels
         [Import] private ProgrammablePowerSupply _programmablePowerSupply = null!;
 
         // ---------------ISP Board---------------------
-        [Import] private IIspBoardDevice _boardDevice = null!;
+        [Import] private IIspBoardDevice _ispBoard = null!;
         protected override Task OnActivatedAsync(CancellationToken cancellationToken)
         {
             InitializeDevices();
@@ -131,23 +131,24 @@ namespace AFOCS.App.ViewModels
         private List<IDevice> GetAllDevices()
         {
             List<IDevice> devices =
-            [_boardDevice,
-                _leadShineMotionCard,
-                _busAxisDevice,
-                _ioDevice,
-                .. _pressureSensors,
-                .. _grippers,
+            [
+                //.. _ispBoards,
+                //_leadShineMotionCard,
+                //_busAxisDevice,
+                //_ioDevice,
+                //.. _pressureSensors,
+                //.. _grippers,
 
-                .. _akribisMotions,
-                .. _opticalPowerMeters,
-                .. _cameras,
-                _opticalSwitch,
-                _heightGauge,
-                _cameraLight,
-                _programmablePowerSupply,
-                
+                //.. _akribisMotions,
+                //.. _opticalPowerMeters,
+                //.. _cameras,
+                //_opticalSwitch,
+                //_heightGauge,
+                //_cameraLight,
+                //_programmablePowerSupply,
             ];
-
+            // 添加 ISP Board
+            devices.Add(_ispBoard);
 
             return devices;
         }

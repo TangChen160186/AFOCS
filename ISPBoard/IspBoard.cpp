@@ -169,7 +169,7 @@ void IspDutReadWriteEx(uint32_t devIndex,
     uint8_t dutSlot, uint8_t dutChannel, const char *appName,
     uint8_t operation,
     uint16_t *dataIn, uint16_t dataInCount,
-    uint16_t *dataOut, uint16_t dataOutCount,
+    uint16_t *dataOut, uint16_t *dataOutCount,
     char **errorInfo, uint16_t *errorSize)
 {
     *errorInfo = nullptr; *errorSize = 0;
@@ -186,8 +186,8 @@ void IspDutReadWriteEx(uint32_t devIndex,
     if (errLStr && *errLStr && (*errLStr)->cnt > 0)
         *errorInfo = ReadLStr(errLStr, errorSize);
 
-    if (dataOut && dataOutCount > 0)
-        CopyTD2ToBuf(tdDataOut, dataOut, dataOutCount);
+    if (dataOut && dataOutCount)
+        *dataOutCount = (uint16_t)CopyTD2ToBuf(tdDataOut, dataOut, *dataOutCount);
 
     FreeTD2(tdDataIn);
     FreeLStrHandle(appLStr);
@@ -217,8 +217,8 @@ void IspFormularCalc(const char *appName,
     else if (result)
         *result = r;
 
-    FreeTD3(tdDataIn);
-    FreeLStrHandle(appLStr);
+    // 不释放 tdDataIn 和 appLStr —— LabVIEW FormularCalc 内部接管了这些 handle，
+    // 再用 CoTaskMemFree 释放会导致 double-free 堆损坏，第二次调用必崩。
 }
 
 // ============================================================================
@@ -227,8 +227,8 @@ void IspFormularCalc(const char *appName,
 void IspDutHeaterScanEx(uint32_t devIndex,
     uint8_t dutSlot, uint8_t dutChannel, const char *appName,
     uint16_t *dataIn, uint16_t dataInCount,
-    uint16_t *mpdOutAdc, uint16_t mpdOutAdcCount,
-    uint16_t *mpdInAdc, uint16_t mpdInAdcCount,
+    uint16_t *mpdOutAdc, uint16_t *mpdOutAdcCount,
+    uint16_t *mpdInAdc, uint16_t *mpdInAdcCount,
     char **errorInfo, uint16_t *errorSize)
 {
     *errorInfo = nullptr; *errorSize = 0;
@@ -246,10 +246,10 @@ void IspDutHeaterScanEx(uint32_t devIndex,
     if (errLStr && *errLStr && (*errLStr)->cnt > 0)
         *errorInfo = ReadLStr(errLStr, errorSize);
 
-    if (mpdOutAdc && mpdOutAdcCount > 0)
-        CopyTD5ToBuf(tdMpdOut, mpdOutAdc, mpdOutAdcCount);
-    if (mpdInAdc && mpdInAdcCount > 0)
-        CopyTD2ToBuf(tdMpdIn, mpdInAdc, mpdInAdcCount);
+    if (mpdOutAdc && mpdOutAdcCount)
+        *mpdOutAdcCount = (uint16_t)CopyTD5ToBuf(tdMpdOut, mpdOutAdc, *mpdOutAdcCount);
+    if (mpdInAdc && mpdInAdcCount)
+        *mpdInAdcCount = (uint16_t)CopyTD2ToBuf(tdMpdIn, mpdInAdc, *mpdInAdcCount);
 
     FreeTD2(tdDataIn);
     FreeLStrHandle(appLStr);

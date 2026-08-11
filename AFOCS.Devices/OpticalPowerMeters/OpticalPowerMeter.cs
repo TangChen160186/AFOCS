@@ -5,13 +5,13 @@ using Serilog;
 
 namespace AFOCS.Devices.OpticalPowerMeters;
 
-public class OpticalPowerMeter<TConfig>(ITcpClient tcpClient, IConfigService configService, ILogger logger)
+public abstract class OpticalPowerMeter<TConfig>(ITcpClient tcpClient, IConfigService configService, ILogger logger)
     : IOpticalPowerMeter
     where TConfig : OpticalPowerMeterConfig, new()
 {
     private OpticalPowerMeterConfig _config = new();
     public bool IsConnected => tcpClient.IsConnected;
-    public WorkPos WorkPos { get; }
+    public abstract WorkPos WorkPos { get; }
 
     public OpticalPowerMeterConfig GetConfig() => _config.Clone();
 

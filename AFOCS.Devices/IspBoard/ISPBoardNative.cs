@@ -30,7 +30,7 @@ internal static class IspBoardNative
         [MarshalAs(UnmanagedType.LPStr)] string appName,
         byte operation,
         IntPtr dataIn,          ushort dataInCount,
-        IntPtr dataOut,         ushort dataOutCount,
+        IntPtr dataOut,         ref ushort dataOutCount,
         out IntPtr errorInfo,   out ushort errorSize);
 
     [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
@@ -46,8 +46,8 @@ internal static class IspBoardNative
         byte dutSlot, byte dutChannel,
         [MarshalAs(UnmanagedType.LPStr)] string appName,
         IntPtr dataIn,          ushort dataInCount,
-        IntPtr mpdOutAdc,       ushort mpdOutAdcCount,
-        IntPtr mpdInAdc,        ushort mpdInAdcCount,
+        IntPtr mpdOutAdc,       ref ushort mpdOutAdcCount,
+        IntPtr mpdInAdc,        ref ushort mpdInAdcCount,
         out IntPtr errorInfo,   out ushort errorSize);
 
     // ====================================================================

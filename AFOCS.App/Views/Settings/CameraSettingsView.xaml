@@ -128,8 +128,7 @@
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding Item1}" FontWeight="Bold" Margin="0,0,8,0" />
-                            <TextBlock Text="{Binding Item2}" Foreground="Gray" FontSize="11" />
+                            <TextBlock Text="{Binding .}" FontWeight="Bold" Margin="0,0,8,0" />
                         </StackPanel>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
