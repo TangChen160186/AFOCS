@@ -1,242 +1,229 @@
+using System.ComponentModel;
 using System.ComponentModel.Composition;
 using AFOCS.Infrastructure;
 using NationalInstruments.Visa;
 using Serilog;
 
 
-namespace AFOCS.Devices.ProgrammablePowerSupply
+namespace AFOCS.Devices.ProgrammablePowerSupply;
+
+[Export]
+[Export(typeof(IProgrammablePowerSupply))]
+[Description("可编程电源")]
+[method: ImportingConstructor]
+public class ProgrammablePowerSupply(IConfigService configService, ILogger logger) : IProgrammablePowerSupply
 {
-    public class ProgrammablePowerSupplyConfig : ICloneable
+    private ProgrammablePowerSupplyConfig _config = new();
+    public bool IsConnected { get; private set; }
+    public WorkPos WorkPos => WorkPos.None;
+    private MessageBasedSession? _session;
+    private ResourceManager? _resourceManager;
+    private readonly SemaphoreSlim _lock = new(1, 1);
+
+    public ProgrammablePowerSupplyConfig GetConfig() => _config.Clone();
+
+    public async Task SaveConfigAsync(ProgrammablePowerSupplyConfig config)
     {
-        public string VisaAddress { get; set; } = "TCPIP0::127.0.0.1::inst0::INSTR";
-        public int TimeoutMs { get; set; } = 3000;
-
-        public ProgrammablePowerSupplyConfig Clone() => new()
-        {
-            VisaAddress = VisaAddress,
-            TimeoutMs = TimeoutMs,
-        };
-
-        object ICloneable.Clone() => Clone();
+        _config = config.Clone();
+        await configService.SaveAsync(_config);
     }
 
-    [Export]
-    [Export(typeof(IProgrammablePowerSupply))]
-    [method: ImportingConstructor]
-    public class ProgrammablePowerSupply(IConfigService configService, ILogger logger) : IProgrammablePowerSupply
+    public async Task<Result> InitializeAsync(CancellationToken token = default)
     {
-        private ProgrammablePowerSupplyConfig _config = new();
-        public bool IsConnected { get; private set; }
-        public WorkPos WorkPos => WorkPos.None;
-        private MessageBasedSession? _session;
-        private ResourceManager? _resourceManager;
-        private readonly SemaphoreSlim _lock = new(1, 1);
-
-        public ProgrammablePowerSupplyConfig GetConfig() => _config.Clone();
-
-        public async Task SaveConfigAsync(ProgrammablePowerSupplyConfig config)
+        var config = await configService.LoadAsync<ProgrammablePowerSupplyConfig>();
+        if (config == null)
         {
-            _config = config.Clone();
-            await configService.SaveAsync(_config);
+            config = new ProgrammablePowerSupplyConfig();
+            await configService.SaveAsync(config);
         }
+        _config = config;
 
-        public async Task<Result> InitializeAsync(CancellationToken token = default)
+        try
         {
-            var config = await configService.LoadAsync<ProgrammablePowerSupplyConfig>();
-            if (config == null)
-            {
-                config = new ProgrammablePowerSupplyConfig();
-                await configService.SaveAsync(config);
-            }
-            _config = config;
+            _resourceManager = new ResourceManager();
+            _session = (MessageBasedSession)_resourceManager.Open(_config.VisaAddress);
+            _session.TimeoutMilliseconds = _config.TimeoutMs;
+            IsConnected = true;
+            logger.Information($"可编程电源({_config.VisaAddress})初始化成功");
 
-            try
+            await SendCommandAsync("*CLS");
+            var errorResult = await GetErrorStatusAsync();
+            if (!errorResult.IsSuccess)
             {
-                _resourceManager = new ResourceManager();
-                _session = (MessageBasedSession)_resourceManager.Open(_config.VisaAddress);
-                _session.TimeoutMilliseconds = _config.TimeoutMs;
-                IsConnected = true;
-                logger.Information($"可编程电源({_config.VisaAddress})初始化成功");
-
-                await SendCommandAsync("*CLS");
-                var errorResult = await GetErrorStatusAsync();
-                if (!errorResult.IsSuccess)
-                {
-                    logger.Warning($"设备错误状态: {errorResult.Message}");
-                }
-                return Result.Success($"可编程电源({_config.VisaAddress})初始化成功");
+                logger.Warning($"设备错误状态: {errorResult.Message}");
             }
-            catch (Exception ex)
-            {
-                logger.Error(ex, $"可编程电源初始化失败: {_config.VisaAddress}");
-                HandleConnectionError();
-                return Result.Fail(ResultCode.Fail, ex.Message, ex);
-            }
+            return Result.Success($"可编程电源({_config.VisaAddress})初始化成功");
         }
-
-        public async Task<Result> StopAsync(CancellationToken token = default)
+        catch (Exception ex)
         {
-            if (!IsConnected) return Result.Fail(ResultCode.Fail, "未连接设备");
-            try
-            {
-                CleanupConnection();
-                IsConnected = false;
-                logger.Information("可编程电源已停止");
-                return Result.Success();
-            }
-            catch (Exception ex)
-            {
-                logger.Error(ex, "停止可编程电源失败");
-                return Result.Fail(ResultCode.Fail, ex.Message, ex);
-            }
+            logger.Error(ex, $"可编程电源初始化失败: {_config.VisaAddress}");
+            HandleConnectionError();
+            return Result.Fail(ResultCode.Fail, ex.Message, ex);
         }
+    }
 
-        public async Task<Result> ReConnectAsync(CancellationToken token = default)
-        {
-            await StopAsync(token);
-            return await InitializeAsync(token);
-        }
-
-        public void Dispose()
+    public async Task<Result> StopAsync(CancellationToken token = default)
+    {
+        if (!IsConnected) return Result.Fail(ResultCode.Fail, "未连接设备");
+        try
         {
             CleanupConnection();
-            _lock.Dispose();
+            IsConnected = false;
+            logger.Information("可编程电源已停止");
+            return Result.Success();
         }
-
-        private void CleanupConnection()
+        catch (Exception ex)
         {
-            _session?.Dispose();
-            _session = null;
-            _resourceManager?.Dispose();
-            _resourceManager = null;
+            logger.Error(ex, "停止可编程电源失败");
+            return Result.Fail(ResultCode.Fail, ex.Message, ex);
         }
+    }
 
-        public static string[] GetAvailableResources(ILogger? logger = null)
+    public async Task<Result> ReConnectAsync(CancellationToken token = default)
+    {
+        await StopAsync(token);
+        return await InitializeAsync(token);
+    }
+
+    public void Dispose()
+    {
+        CleanupConnection();
+        _lock.Dispose();
+    }
+
+    private void CleanupConnection()
+    {
+        _session?.Dispose();
+        _session = null;
+        _resourceManager?.Dispose();
+        _resourceManager = null;
+    }
+
+    public static string[] GetAvailableResources(ILogger? logger = null)
+    {
+        try
         {
-            try
-            {
-                using var rm = new ResourceManager();
-                return rm.Find("?*INSTR").ToArray();
-            }
-            catch(Exception e)
-            {
-                logger?.Error(e,e.Message);
-                return [];
-            }
+            using var rm = new ResourceManager();
+            return rm.Find("?*INSTR").ToArray();
         }
-
-        public async Task<Result> SetChannelStatusAsync(int channel, bool status)
+        catch(Exception e)
         {
-            return await SendCommandAsync($"OUTPut CH{channel},{(status ? "ON" : "OFF")}");
+            logger?.Error(e,e.Message);
+            return [];
         }
+    }
 
-        public async Task<Result<bool>> GetChannelStatusAsync(int channel)
+    public async Task<Result> SetChannelStatusAsync(int channel, bool status)
+    {
+        return await SendCommandAsync($"OUTPut CH{channel},{(status ? "ON" : "OFF")}");
+    }
+
+    public async Task<Result<bool>> GetChannelStatusAsync(int channel)
+    {
+        var result = await SendQueryAsync($"OUTP? CH{channel}");
+        if (!result.IsSuccess || string.IsNullOrWhiteSpace(result.Data))
+            return Result<bool>.Fail(result.Code, result.Message);
+        return Result<bool>.Success(result.Data.ToLower().Equals("on"));
+    }
+
+    public async Task<Result> SetVoltageAndCurrentAsync(int channel, double voltage, double current)
+    {
+        return await SendCommandAsync($"APPL CH{channel.ToString()},{voltage},{current}");
+    }
+
+    public async Task<Result<(double, double)>> GetVoltageAndCurrentAsync(int channel)
+    {
+        var result = await SendQueryAsync($"APPL? CH{channel}");
+        if (!result.IsSuccess) return Result<(double, double)>.Fail(result.Code, result.Message);
+        var datas = result.Data?.Split(",");
+
+        if (datas != null && datas.Length == 3)
         {
-            var result = await SendQueryAsync($"OUTP? CH{channel}");
-            if (!result.IsSuccess || string.IsNullOrWhiteSpace(result.Data))
-                return Result<bool>.Fail(result.Code, result.Message);
-            return Result<bool>.Success(result.Data.ToLower().Equals("on"));
+            if (double.TryParse(datas[1], out double voltage) && double.TryParse(datas[2], out double current))
+            {
+                return Result<(double, double)>.Success((voltage, current));
+            }
         }
 
-        public async Task<Result> SetVoltageAndCurrentAsync(int channel, double voltage, double current)
+        return Result<(double, double)>.Fail(ResultCode.Fail, $"未知返回数据:{result.Data}");
+    }
+
+    public async Task<Result<string>> GetErrorStatusAsync()
+    {
+        var result = await SendQueryAsync("SYSTem:ERRor?");
+        if (!result.IsSuccess) return Result<string>.Fail(result.Code, result.Message);
+
+        var errorText = result.Data?.Trim();
+        if (errorText?.StartsWith("+0") == true || errorText?.StartsWith("0") == true)
         {
-            return await SendCommandAsync($"APPL CH{channel.ToString()},{voltage},{current}");
+            return Result<string>.Success("无错误");
         }
+        return Result<string>.Fail(ResultCode.Fail, $"设备错误: {errorText}");
+    }
 
-        public async Task<Result<(double, double)>> GetVoltageAndCurrentAsync(int channel)
+    private async Task<Result<string>> SendQueryAsync(string command)
+    {
+        await _lock.WaitAsync().ConfigureAwait(false);
+        try
         {
-            var result = await SendQueryAsync($"APPL? CH{channel}");
-            if (!result.IsSuccess) return Result<(double, double)>.Fail(result.Code, result.Message);
-            var datas = result.Data?.Split(",");
-
-            if (datas != null && datas.Length == 3)
+            if (!IsConnected || _session == null)
             {
-                if (double.TryParse(datas[1], out double voltage) && double.TryParse(datas[2], out double current))
-                {
-                    return Result<(double, double)>.Success((voltage, current));
-                }
+                return Result<string>.Fail(ResultCode.Fail, "未连接设备");
             }
 
-            return Result<(double, double)>.Fail(ResultCode.Fail, $"未知返回数据:{result.Data}");
+            command += Environment.NewLine;
+            logger.Verbose($"发送查询指令:{command}");
+            _session.RawIO.Write(command);
+            var response = _session.RawIO.ReadString().Trim();
+            logger.Verbose($"收到响应:{response}");
+            return Result<string>.Success(response);
         }
-
-        public async Task<Result<string>> GetErrorStatusAsync()
+        catch (Exception ex)
         {
-            var result = await SendQueryAsync("SYSTem:ERRor?");
-            if (!result.IsSuccess) return Result<string>.Fail(result.Code, result.Message);
-
-            var errorText = result.Data?.Trim();
-            if (errorText?.StartsWith("+0") == true || errorText?.StartsWith("0") == true)
-            {
-                return Result<string>.Success("无错误");
-            }
-            return Result<string>.Fail(ResultCode.Fail, $"设备错误: {errorText}");
+            logger.Error(ex, $"发送查询指令失败:{command}");
+            HandleConnectionError();
+            return Result<string>.Fail(ResultCode.Fail, ex.Message, ex);
         }
-
-        private async Task<Result<string>> SendQueryAsync(string command)
+        finally
         {
-            await _lock.WaitAsync().ConfigureAwait(false);
-            try
-            {
-                if (!IsConnected || _session == null)
-                {
-                    return Result<string>.Fail(ResultCode.Fail, "未连接设备");
-                }
-
-                command += Environment.NewLine;
-                logger.Verbose($"发送查询指令:{command}");
-                _session.RawIO.Write(command);
-                var response = _session.RawIO.ReadString().Trim();
-                logger.Verbose($"收到响应:{response}");
-                return Result<string>.Success(response);
-            }
-            catch (Exception ex)
-            {
-                logger.Error(ex, $"发送查询指令失败:{command}");
-                HandleConnectionError();
-                return Result<string>.Fail(ResultCode.Fail, ex.Message, ex);
-            }
-            finally
-            {
-                _lock.Release();
-            }
+            _lock.Release();
         }
+    }
 
-        private async Task<Result> SendCommandAsync(string command)
+    private async Task<Result> SendCommandAsync(string command)
+    {
+        await _lock.WaitAsync().ConfigureAwait(false);
+        try
         {
-            await _lock.WaitAsync().ConfigureAwait(false);
-            try
+            if (!IsConnected || _session == null)
             {
-                if (!IsConnected || _session == null)
-                {
-                    return Result.Fail(ResultCode.Fail, "未连接设备");
-                }
+                return Result.Fail(ResultCode.Fail, "未连接设备");
+            }
 
-                command += Environment.NewLine;
-                logger.Verbose($"发送指令:{command}");
-                _session.RawIO.Write(command);
-                return Result.Success();
-            }
-            catch (Exception ex)
-            {
-                logger.Error(ex, $"发送指令失败:{command}");
-                HandleConnectionError();
-                return Result.Fail(ResultCode.Fail, ex.Message, ex);
-            }
-            finally
-            {
-                _lock.Release();
-            }
+            command += Environment.NewLine;
+            logger.Verbose($"发送指令:{command}");
+            _session.RawIO.Write(command);
+            return Result.Success();
         }
-
-        private void HandleConnectionError()
+        catch (Exception ex)
         {
-            try
-            {
-                IsConnected = false;
-                CleanupConnection();
-            }
-            catch { }
+            logger.Error(ex, $"发送指令失败:{command}");
+            HandleConnectionError();
+            return Result.Fail(ResultCode.Fail, ex.Message, ex);
         }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
+    private void HandleConnectionError()
+    {
+        try
+        {
+            IsConnected = false;
+            CleanupConnection();
+        }
+        catch { }
     }
 }

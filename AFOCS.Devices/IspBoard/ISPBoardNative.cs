@@ -8,7 +8,7 @@ namespace AFOCS.Devices.IspBoard;
 /// 内存约定：C++ 端用 CoTaskMemAlloc 分配的输出（字符串、数组），C# 端用 Marshal.FreeCoTaskMem 释放。
 /// 调用者分配的数值缓冲区（dataOut, mpdOutAdc 等）由调用者管理。
 /// </summary>
-internal static class ISPBoardNative
+internal static class IspBoardNative
 {
     private const string DllName = "ISPBoard.dll";
 

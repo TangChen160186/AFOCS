@@ -1,13 +1,13 @@
+using System.ComponentModel;
 using System.ComponentModel.Composition;
 using AFOCS.Devices.MotionControlCard;
 using AFOCS.Infrastructure;
 using Serilog;
-using AllInputs = AFOCS.Devices.IO.AllInputs;
-using AllOutputs = AFOCS.Devices.IO.AllOutputs;
 
 namespace AFOCS.Devices.IO;
 
 [Export(typeof(IIoDevice))]
+[Description("IO Device")]
 [method: ImportingConstructor]
 public class IoDevice(IMotionControlCard motionCard, IConfigService configService, ILogger logger) : IIoDevice
 {
@@ -71,14 +71,11 @@ public class IoDevice(IMotionControlCard motionCard, IConfigService configServic
             if (loaded?.Inputs is { Count: > 0 } || loaded?.Outputs is { Count: > 0 })
             {
                 _config = loaded;
-                logger.Information("IO 配置已加载，输入 {InputCount} 项，输出 {OutputCount} 项",
-                    _config.Inputs.Count, _config.Outputs.Count);
             }
             else
             {
                 _config = IoMappingConfig.CreateDefault();
                 await configService.SaveAsync(_config);
-                logger.Information("IO 配置已初始化为默认值");
             }
         }
         catch (Exception ex)

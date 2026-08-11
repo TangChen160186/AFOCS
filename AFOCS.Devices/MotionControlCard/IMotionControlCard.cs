@@ -26,6 +26,7 @@ public interface IMotionControlCard : IDevice
     Task<Result> WriteRxPDOAsync(ushort slaveAddr, ushort index, ushort subIndex, ushort bitLength, int value);
     Task<Result<int>> ReadTxPDOAsync(ushort slaveAddr, ushort index, ushort subIndex, ushort bitLength);
 
+
     // ========== 底层轴操作（薄封装，供 BusAxisDevice 调用） ==========
 
     Task<Result<double>> GetPositionAsync(ushort axis);

@@ -1,29 +1,14 @@
+using System.ComponentModel;
 using AFOCS.Infrastructure;
 using Serilog;
 using System.ComponentModel.Composition;
 using System.Text;
-using YamlDotNet.Core.Tokens;
 
 namespace AFOCS.Devices.MotionControlCard;
 
-public class LeadShineMotionCardConfig : ICloneable
-{
-    public string EniPath { get; set; } = "";
-    public string IniPath { get; set; } = "";
-    public int TimeoutMs { get; set; } = 30000;
-
-    public LeadShineMotionCardConfig Clone() => new()
-    {
-        EniPath = EniPath,
-        IniPath = IniPath,
-        TimeoutMs = TimeoutMs,
-    };
-
-    object ICloneable.Clone() => Clone();
-}
-
 [Export]
 [Export(typeof(IMotionControlCard))]
+[Description("雷赛板卡")]
 [method: ImportingConstructor]
 public class LeadShineMotionCard(IConfigService configService, ILogger logger) : IMotionControlCard
 {

@@ -1,9 +1,13 @@
+using AFOCS.Infrastructure;
+
 namespace AFOCS.Devices.IO;
 
 /// <summary>
 /// IO 信号映射配置 —— 可持久化到 JSON，支持机器变化时仅改配置文件
 /// Key = 信号名称（如 "Left_EmergencyStop"），Value = 板卡位号
 /// </summary>
+///
+[ConfigPath("设备/IO")]
 public class IoMappingConfig
 {
     /// <summary>输入信号 → 位号 映射</summary>
