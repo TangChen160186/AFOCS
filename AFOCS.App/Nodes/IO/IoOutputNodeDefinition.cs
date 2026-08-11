@@ -1,9 +1,8 @@
 using System.ComponentModel;
 using System.ComponentModel.Composition;
-using AFOCS.Devices;
+using AFOCS.Devices.IO;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
-using AFOCS.Infrastructure;
 using AFOCS.Infrastructure.Extensions;
 using Serilog;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
@@ -19,7 +18,7 @@ namespace AFOCS.App.Nodes.IO;
 [NodeDefinition("App.IoOutput", "IO输出", "设备")]
 [method: ImportingConstructor]
 public class IoOutputNodeDefinition(
-    IIODevice ioDevice,
+    IIoDevice ioDevice,
     ILogger logger)
     : NodeDefinitionBase, IExecutableNode
 {

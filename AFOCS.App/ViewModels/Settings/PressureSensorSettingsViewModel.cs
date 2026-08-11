@@ -1,10 +1,8 @@
 using System.ComponentModel.Composition;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using AFOCS.Devices;
-using AFOCS.Devices.Implementation;
+using AFOCS.Devices.PressureSensor;
 using AFOCS.Framework.Modules.Settings;
-using AFOCS.Infrastructure;
 using Caliburn.Micro;
 
 namespace AFOCS.App.ViewModels.Settings

@@ -1,8 +1,7 @@
 using System.ComponentModel.Composition;
 using System.Runtime.CompilerServices;
 using AFOCS.App.Services;
-using AFOCS.Devices;
-using AFOCS.Devices.Implementation;
+using AFOCS.Devices.OpticalPowerMeters;
 using AFOCS.Framework.Modules.Settings;
 using Caliburn.Micro;
 

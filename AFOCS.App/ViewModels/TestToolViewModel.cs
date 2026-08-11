@@ -1,4 +1,4 @@
-using AFOCS.Devices;
+using AFOCS.Devices.BusAxisDevice;
 using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Framework.Framework;
 using AFOCS.Framework.Framework.Services;

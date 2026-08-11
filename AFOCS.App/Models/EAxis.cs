@@ -1,5 +1,5 @@
-using AFOCS.Devices;
-using AFOCS.Devices.Implementation;
+using AFOCS.Devices.AkribrisMotion;
+using AFOCS.Devices.BusAxisDevice;
 using AFOCS.Infrastructure;
 using System.ComponentModel;
 

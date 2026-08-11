@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.ComponentModel.Composition;
-using AFOCS.Devices;
+using AFOCS.Devices.ProgrammablePowerSupply;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using Serilog;

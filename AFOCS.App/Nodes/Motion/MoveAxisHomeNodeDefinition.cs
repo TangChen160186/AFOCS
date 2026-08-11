@@ -1,7 +1,8 @@
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using AFOCS.App.Models;
-using AFOCS.Devices;
+using AFOCS.Devices.AkribrisMotion;
+using AFOCS.Devices.BusAxisDevice;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Infrastructure;

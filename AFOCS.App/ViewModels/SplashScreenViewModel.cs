@@ -1,11 +1,24 @@
+using AFOCS.Devices;
+using AFOCS.Devices.AkribrisMotion;
+using AFOCS.Devices.BusAxisDevice;
+using AFOCS.Devices.Camera;
+using AFOCS.Devices.CameraLight;
+using AFOCS.Devices.Gripper;
+using AFOCS.Devices.HeightGauge;
+using AFOCS.Devices.IO;
+using AFOCS.Devices.IspBoard;
+using AFOCS.Devices.MotionControlCard;
+using AFOCS.Devices.OpticalPowerMeters;
+using AFOCS.Devices.OpticalSwitch;
+using AFOCS.Devices.PressureSensor;
+using AFOCS.Devices.ProgrammablePowerSupply;
+using AFOCS.Framework.Framework.Services;
+using AFOCS.Infrastructure.Extensions;
+using Caliburn.Micro;
+using Serilog;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.Windows;
-using AFOCS.Devices;
-using AFOCS.Devices.Implementation;
-using AFOCS.Framework.Framework.Services;
-using Caliburn.Micro;
-using Serilog;
 
 namespace AFOCS.App.ViewModels
 {
@@ -26,7 +39,7 @@ namespace AFOCS.App.ViewModels
     [Export]
     internal class SplashScreenViewModel : Screen
     {
-        public override string DisplayName { get; set; } = "AFOCS 初始化设备初始化界面";
+        public override string DisplayName { get; set; } = "";
         public ObservableCollection<LogMessage> LogMessages { get; } = [];
 
         public string CurrentStatus
@@ -48,41 +61,25 @@ namespace AFOCS.App.ViewModels
         [Import] private IMainWindow _mainWindow = null!;
         [Import] private ILogger _logger = null!;
 
-        [Import] private ProgrammablePowerSupply _programmablePowerSupply = null!;
-        [Import] private IOpticalSwitch _opticalSwitch = null!;
-        [Import] private IHeightGauge _heightGauge = null!;
+        // ---------------总线相关设备---------------------
         [Import] private IMotionControlCard _leadShineMotionCard = null!;
         [Import] private IBusAxisDevice _busAxisDevice = null!;
+        [Import] private IIoDevice _ioDevice = null!;
+        [ImportMany] private IEnumerable<IPressureSensor> _pressureSensors = null!;
+        [ImportMany] private IEnumerable<IGripper> _grippers = null!;
 
+        // ---------------其他设备---------------------
+        [ImportMany] private IEnumerable<IAkribisMotion> _akribisMotions = null!;
+        [ImportMany] private IEnumerable<IOpticalPowerMeter> _opticalPowerMeters = null!;
+        [ImportMany] private IEnumerable<ICamera> _cameras = null!;
+
+        [Import] private IOpticalSwitch _opticalSwitch = null!;
+        [Import] private IHeightGauge _heightGauge = null!;
         [Import] private ICameraLight _cameraLight = null!;
-        [Import] private CameraLeftUp _cameraLeftUp = null!;
-        [Import] private CameraLeftDown _cameraLeftDown = null!;
-        [Import] private CameraRightUp _cameraRightUp = null!;
-        [Import] private CameraRightDown _cameraRightDown = null!;
-        [Import] private OpticalPowerMeterLeft _opticalPowerMeterLeft = null!;
-        [Import] private OpticalPowerMeterRight _opticalPowerMeterRight = null!;
+        [Import] private ProgrammablePowerSupply _programmablePowerSupply = null!;
 
-        [Import] private ISPBoardDevice _boardDevice = null!;
-
-        [Import] private LeftCouplingLGripper _leftCouplingLGripper = null!;
-        [Import] private LeftCouplingRGripper _leftCouplingRGripper = null!;
-        [Import] private RightCouplingLGripper _rightCouplingLGripper = null!;
-        [Import] private RightCouplingRGripper _rightCouplingRGripper = null!;
-
-
-        [Import] private IIODevice _ioDevice = null!;
-
-        [Import] private LeftCouplingLPressureSensor _leftCouplingLPressure = null!;
-        [Import] private LeftCouplingRPressureSensor _leftCouplingRPressure = null!;
-        [Import] private LeftDispensePressureSensor _leftDispensePressure = null!;
-        [Import] private RightCouplingLPressureSensor _rightCouplingLPressure = null!;
-        [Import] private RightCouplingRPressureSensor _rightCouplingRPressure = null!;
-        [Import] private RightDispensePressureSensor _rightDispensePressure = null!;
-
-        [Import] private AkribisLeftCouplingL _arAkribisLeftCouplingL = null!;
-        [Import] private AkribisLeftCouplingR _akribisLeftCouplingR = null!;
-        [Import] private AkribisRightCouplingL _akribisRightCouplingL = null!;
-        [Import] private AkribisRightCouplingR _akribisRightCouplingR = null!;
+        // ---------------ISP Board---------------------
+        [Import] private IIspBoardDevice _boardDevice = null!;
         protected override Task OnActivatedAsync(CancellationToken cancellationToken)
         {
             InitializeDevices();
@@ -133,46 +130,25 @@ namespace AFOCS.App.ViewModels
 
         private List<IDevice> GetAllDevices()
         {
-
             List<IDevice> devices =
-            [
+            [_boardDevice,
                 _leadShineMotionCard,
                 _busAxisDevice,
                 _ioDevice,
+                .. _pressureSensors,
+                .. _grippers,
 
-                _leftCouplingLGripper,
-                _leftCouplingRGripper,
-                _rightCouplingLGripper,
-                _rightCouplingRGripper,
-
-                _leftCouplingLPressure,
-                _leftCouplingRPressure,
-                _leftDispensePressure,
-                _rightCouplingLPressure,
-                _rightCouplingRPressure,
-                _rightDispensePressure,
-
-                _arAkribisLeftCouplingL,
-                _akribisLeftCouplingR,
-                _akribisRightCouplingL,
-                _akribisRightCouplingR,
-
-                _programmablePowerSupply,
-
-                //_opticalSwitch,
-                //_heightGauge,
-                //_opticalPowerMeterLeft,
-                //_opticalPowerMeterRight,
-
+                .. _akribisMotions,
+                .. _opticalPowerMeters,
+                .. _cameras,
+                _opticalSwitch,
+                _heightGauge,
                 _cameraLight,
-
-                //_cameraLeftUp,
-                //_cameraLeftDown,
-                //_cameraRightUp,
-                //_cameraRightDown,
-
-
+                _programmablePowerSupply,
+                
             ];
+
+
             return devices;
         }
     
@@ -180,37 +156,7 @@ namespace AFOCS.App.ViewModels
 
         private string GetDeviceName(IDevice device)
         {
-            return device switch
-            {
-                OpticalPowerMeterLeft => "左工位光功率计",
-                OpticalPowerMeterRight => "右工位光功率计",
-                ProgrammablePowerSupply => "可编程电源",
-                OpticalSwitch => "光开关",
-                CameraLight => "相机光源",
-                HeightGauge => "测高仪",
-                CameraLeftDown => "左下相机",
-                CameraRightDown => "右下相机",
-                CameraLeftUp => "左上相机",
-                CameraRightUp => "右上相机",
-                LeadShineMotionCard => "雷赛控制卡",
-                BusAxisDevice => "总线轴设备",
-                IODevice => "IO 设备",
-                LeftCouplingLGripper => "左耦合左夹爪",
-                LeftCouplingRGripper => "左耦合右夹爪",
-                RightCouplingLGripper => "右耦合左夹爪",
-                RightCouplingRGripper => "右耦合右夹爪",
-                LeftCouplingLPressureSensor => "左工位左耦合压力传感器",
-                LeftCouplingRPressureSensor => "左工位右耦合压力传感器",
-                LeftDispensePressureSensor => "左工位点胶压力传感器",
-                RightCouplingLPressureSensor => "右工位左耦合压力传感器",
-                RightCouplingRPressureSensor => "右工位右耦合压力传感器",
-                RightDispensePressureSensor => "右工位点胶压力传感器",
-                LeftCouplingLConfig => "左工位左耦合轴",
-                LeftCouplingRConfig => "左工位右耦合轴",
-                RightCouplingLConfig => "右工位左耦合轴",
-                RightCouplingRConfig => "右工位右耦合轴",
-                _ => device.GetType().Name
-            };
+            return device.GetType().GetDescription();
         }
 
         private async Task FinalizeInitialization()

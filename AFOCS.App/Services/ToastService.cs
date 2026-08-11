@@ -2,6 +2,7 @@ using System.Windows;
 
 namespace AFOCS.App.Services
 {
+
     public interface IToastService
     {
         void ShowInfo(string message);

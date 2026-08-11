@@ -6,8 +6,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using AFOCS.App.Services;
-using AFOCS.Devices;
-using AFOCS.Devices.Implementation;
+using AFOCS.Devices.Camera;
 using AFOCS.Framework.Modules.Settings;
 using Caliburn.Micro;
 

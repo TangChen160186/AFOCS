@@ -3,8 +3,9 @@ using System.ComponentModel.Composition;
 using System.Windows;
 using AFOCS.App.Models;
 using AFOCS.App.Services;
-using AFOCS.Devices;
-using AFOCS.Devices.Implementation;
+using AFOCS.Devices.AkribrisMotion;
+using AFOCS.Devices.BusAxisDevice;
+using AFOCS.Devices.Gripper;
 using AFOCS.Framework.Framework;
 using AFOCS.Framework.Framework.Services;
 using AFOCS.Infrastructure;
@@ -75,12 +76,12 @@ public class HomeTestViewModel(
     IToastService toastService,
     IBusAxisDevice busAxisDevice,
     [ImportMany] IEnumerable<IAkribisMotion> akribisMotions,
-    [ImportMany] IEnumerable<ISmcGripper> grippers) : Tool, IHomeTest
+    [ImportMany] IEnumerable<IGripper> grippers) : Tool, IHomeTest
 {
     private readonly IToastService _toastService = toastService;
     private readonly IBusAxisDevice _busAxisDevice = busAxisDevice;
     private readonly Dictionary<string, IAkribisMotion> _akribisInstances = [];
-    private readonly Dictionary<string, ISmcGripper> _grippers = [];
+    private readonly Dictionary<string, IGripper> _grippers = [];
 
     public override PaneLocation PreferredLocation => PaneLocation.Right;
     public override double PreferredWidth => 400;

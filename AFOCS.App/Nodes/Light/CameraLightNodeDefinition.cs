@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.ComponentModel.DataAnnotations;
-using AFOCS.Devices;
+using AFOCS.Devices.CameraLight;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using Serilog;

@@ -1,8 +1,7 @@
 using System.ComponentModel.Composition;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using AFOCS.Devices;
-using AFOCS.Devices.Implementation;
+using AFOCS.Devices.Gripper;
 using AFOCS.Framework.Modules.Settings;
 using Caliburn.Micro;
 
@@ -11,9 +10,9 @@ namespace AFOCS.App.ViewModels.Settings
     /// <summary>
     /// 夹爪设置基类 —— 每个子类对应一个物理夹爪
     /// </summary>
-    public abstract class GripperSettingsViewModel(string name, ISmcGripper gripper) : Screen, ISettingsEditor
+    public abstract class GripperSettingsViewModel(string name, IGripper gripper) : Screen, ISettingsEditor
     {
-        protected readonly ISmcGripper Gripper = gripper;
+        protected readonly IGripper Gripper = gripper;
 
         public string Name { get; } = name;
 
@@ -23,7 +22,7 @@ namespace AFOCS.App.ViewModels.Settings
 
         // ========== 配置编辑 ==========
 
-        private readonly SmcGripperConfig _editConfig = gripper.GetConfig();
+        private readonly GripperConfig _editConfig = gripper.GetConfig();
 
         private bool _isModify;
 
