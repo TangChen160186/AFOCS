@@ -17,7 +17,6 @@ using AFOCS.Infrastructure.Extensions;
 using Caliburn.Micro;
 using Serilog;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Windows;
 
@@ -132,7 +131,7 @@ namespace AFOCS.App.ViewModels
         private List<IDevice> GetAllDevices()
         {
             List<IDevice> devices =
-            [
+            [_boardDevice,
                 _leadShineMotionCard,
                 _busAxisDevice,
                 _ioDevice,
@@ -146,7 +145,7 @@ namespace AFOCS.App.ViewModels
                 _heightGauge,
                 _cameraLight,
                 _programmablePowerSupply,
-                //_boardDevice
+                
             ];
 
 

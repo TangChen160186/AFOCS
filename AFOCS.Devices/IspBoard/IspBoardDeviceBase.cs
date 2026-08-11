@@ -15,7 +15,7 @@ namespace AFOCS.Devices.IspBoard;
 [Export(typeof(IIspBoardDevice))]
 [Description("ISP Board")]
 [method: ImportingConstructor]
-public class ISPBoardDevice(IConfigService configService, ILogger logger) : IIspBoardDevice
+public class IspBoardDeviceBase(IConfigService configService, ILogger logger) : IIspBoardDevice
 {
     private readonly SemaphoreSlim _lock = new(1, 1);
     private bool _initialized;
