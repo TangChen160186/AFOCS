@@ -3,6 +3,7 @@ using System.ComponentModel.Composition;
 using AFOCS.Devices.Camera;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
+using AFOCS.Infrastructure.Extensions;
 using AFOCS.VisionEditor.Models;
 using Serilog;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
@@ -16,11 +17,25 @@ namespace AFOCS.App.Nodes.Vision;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.CameraCapture", "相机采集", "视觉")]
-[method: ImportingConstructor]
-public class CameraCaptureNodeDefinition(
-    ILogger logger,
-    [ImportMany] IEnumerable<ICamera> cameras) : NodeDefinitionBase, IExecutableNode
+public class CameraCaptureNodeDefinition : NodeDefinitionBase, IExecutableNode
 {
+    /// <summary>
+    /// 所有已注册相机的描述名称。
+    /// PropertyGrid 通过无参构造创建 ItemsSource，故用静态字段共享 MEF 注入的相机列表。
+    /// </summary>
+    private static string[] _cameraNames = [];
+
+    private readonly Dictionary<string, ICamera> _cameraMap;
+
+    [ImportingConstructor]
+    public CameraCaptureNodeDefinition(
+        ILogger logger,
+        [ImportMany] IEnumerable<ICamera> cameras) : base()
+    {
+        _cameraNames = cameras.Select(c => c.GetType().GetDescription()).ToArray();
+        _cameraMap = cameras.ToDictionary(c => c.GetType().GetDescription());
+    }
+
     // ========== 输出端口 ==========
 
     [Browsable(false)]
@@ -28,9 +43,6 @@ public class CameraCaptureNodeDefinition(
     public PixelData? Image { get; set; }
 
     // ========== 配置属性 ==========
-
-    private readonly Dictionary<string, ICamera> _cameraMap = cameras
-        .ToDictionary(c => c.GetType().Name);
 
     [DisplayName("相机")]
     [ItemsSource(typeof(CameraItemsSource))]
@@ -87,7 +99,8 @@ public class CameraCaptureNodeDefinition(
         public ItemCollection GetValues()
         {
             var items = new ItemCollection();
-            foreach (var name in new[] { "左上相机", "左下相机", "右上相机", "右下相机" })
+
+            foreach (var name in _cameraNames)
                 items.Add(name, name);
             return items;
         }

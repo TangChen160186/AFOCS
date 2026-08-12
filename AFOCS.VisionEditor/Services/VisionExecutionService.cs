@@ -15,6 +15,9 @@ public class VisionExecutionService
     /// </summary>
     public bool Execute(string imagePath, VisionTemplate template, Action<string, bool>? progress = null)
     {
+        // 每次执行前清理上次的结果值，避免流程失败时界面上残留旧结果
+        ClearResults(template);
+
         var allOk = true;
 
         // Step 1: NCC（Halcon ShapeModel）
@@ -46,6 +49,32 @@ public class VisionExecutionService
         }
 
         return allOk;
+    }
+
+    // ==================== 结果清理 ====================
+
+    /// <summary>清零模板中所有流程的结果值</summary>
+    private static void ClearResults(VisionTemplate template)
+    {
+        template.Ncc.ResultX = 0;
+        template.Ncc.ResultY = 0;
+        template.Ncc.ResultAngle = 0;
+        template.Ncc.ResultScore = 0;
+
+        template.EdgeFind1.ResultStartX = 0;
+        template.EdgeFind1.ResultStartY = 0;
+        template.EdgeFind1.ResultEndX = 0;
+        template.EdgeFind1.ResultEndY = 0;
+        template.EdgeFind1.ResultAngleDeg = 0;
+
+        template.EdgeFind2.ResultStartX = 0;
+        template.EdgeFind2.ResultStartY = 0;
+        template.EdgeFind2.ResultEndX = 0;
+        template.EdgeFind2.ResultEndY = 0;
+        template.EdgeFind2.ResultAngleDeg = 0;
+
+        template.PointFind.ResultX = 0;
+        template.PointFind.ResultY = 0;
     }
 
     // ==================== NCC：Halcon ShapeModel ====================

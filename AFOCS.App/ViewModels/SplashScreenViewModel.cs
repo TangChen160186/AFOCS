@@ -39,7 +39,7 @@ namespace AFOCS.App.ViewModels
     [Export]
     internal class SplashScreenViewModel : Screen
     {
-        public override string DisplayName { get; set; } = "";
+        public override string DisplayName { get; set; } = "AFOCS 设备初始化界面-----";
         public ObservableCollection<LogMessage> LogMessages { get; } = [];
 
         public string CurrentStatus
@@ -132,21 +132,21 @@ namespace AFOCS.App.ViewModels
         {
             List<IDevice> devices =
             [
-                //_leadShineMotionCard,
-                //_busAxisDevice,
-                //_ioDevice,
-                //.. _pressureSensors,
-                //.. _grippers,
+                _leadShineMotionCard,
+               _busAxisDevice,
+                _ioDevice,
+                .. _pressureSensors,
+                .. _grippers,
 
                 //.. _akribisMotions,
                 //.. _opticalPowerMeters,
-                //.. _cameras,
+                .. _cameras,
                 //_opticalSwitch,
                 //_heightGauge,
-                //_cameraLight,
-                //_programmablePowerSupply,
+                _cameraLight,
+                _programmablePowerSupply,
             ];
-            // 添加 ISP Board
+            //添加 ISP Board
             //devices.Add(_ispBoard);
 
             return devices;

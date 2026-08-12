@@ -16,6 +16,11 @@ public partial class VisionEditorDocumentView : UserControl
 
     private void HSmart_OnLoaded(object sender, RoutedEventArgs e)
     {
+        
+    }
+
+    private void VisionEditorDocumentView_OnLoaded(object sender, RoutedEventArgs e)
+    {
         if (DataContext is ViewModels.VisionEditorDocumentViewModel vm)
         {
             vm.SetHalconControl(hSmart);

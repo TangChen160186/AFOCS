@@ -54,6 +54,14 @@ public class VisionEditorDocumentViewModel : PersistedDocument
     private HDrawingObject? _currentHObject;
     private HDrawingObject.HDrawingObjectCallback? _activeCallback; // 防 GC 回收
 
+    /// <summary>执行结果是否已绘制（保持显示直到下次执行）</summary>
+    private bool _hasDrawnResults;
+
+    protected override Task OnActivatedAsync(CancellationToken cancellationToken)
+    {
+        return base.OnActivatedAsync(cancellationToken);
+    }
+
     public void SetHalconControl(HSmartWindowControlWPF control)
     {
         _halconControl = control;
@@ -71,6 +79,22 @@ public class VisionEditorDocumentViewModel : PersistedDocument
                 EdgeFind1.NotifyDragEnd();
             else if (SelectedProcessType == VisionProcessType.EdgeFind2)
                 EdgeFind2.NotifyDragEnd();
+
+            // 平移图片 / 拖拽结束后窗口可能已重绘，恢复执行结果显示（保持到下次执行）
+            if (_hasDrawnResults && _halconWindow != null)
+                DrawResultsOnHalcon();
+        };
+
+        // 鼠标移动时实时显示图像像素坐标
+        control.HMouseMove += (_, e) =>
+        {
+            MousePosition = $"X: {e.Column:F0}, Y: {e.Row:F0}";
+        };
+
+        // 鼠标离开 Halcon 窗口后清空坐标显示
+        control.MouseLeave += (_, _) =>
+        {
+            MousePosition = "--, --";
         };
 
         // 如果已有图片路径，立即显示
@@ -214,6 +238,13 @@ public class VisionEditorDocumentViewModel : PersistedDocument
         set => Set(ref field, value);
     }
 
+    /// <summary>鼠标在图像上的当前像素坐标（实时，格式 "X, Y"）</summary>
+    public string MousePosition
+    {
+        get;
+        set => Set(ref field, value);
+    } = "--, --";
+
     // ========== 命令 ==========
 
     public ICommand ExecuteCommand { get; }
@@ -260,6 +291,9 @@ public class VisionEditorDocumentViewModel : PersistedDocument
 
     private void DisplayImageOnHalcon(string? path)
     {
+        // 显示新图时，旧的执行结果不再有效
+        _hasDrawnResults = false;
+
         if (_halconWindow == null) return;
         if (string.IsNullOrEmpty(path) || !File.Exists(path)) return;
 
@@ -306,7 +340,12 @@ public class VisionEditorDocumentViewModel : PersistedDocument
 
         // 重绘底图（默认行为；执行结果绘制时跳过以免清除结果）
         if (redrawImage)
+        {
             _halconWindow.DispObj(_halconImage);
+            // 底图重绘会清掉手工绘制的图形，这里恢复执行结果（保持显示直到下次执行）
+            if (_hasDrawnResults)
+                DrawResultsOnHalcon();
+        }
 
         // 根据当前选中的流程创建对应的 DrawingObject
         switch (SelectedProcessType)
@@ -328,6 +367,8 @@ public class VisionEditorDocumentViewModel : PersistedDocument
         _currentHObject = HDrawingObject.CreateDrawingObject(
             HDrawingObject.HDrawingObjectType.RECTANGLE2,
             new HTuple[] { Ncc.Row, Ncc.Column, Ncc.Phi, Ncc.Length1, Ncc.Length2 });
+        // 绿色框：与执行结果（红色）区分
+        _currentHObject.SetDrawingObjectParams(new HTuple("color"), new HTuple("green"));
 
         _activeCallback = OnNccDrawingObjectChanged;
         _currentHObject.OnDrag(_activeCallback);
@@ -355,6 +396,8 @@ public class VisionEditorDocumentViewModel : PersistedDocument
         _currentHObject = HDrawingObject.CreateDrawingObject(
             HDrawingObject.HDrawingObjectType.LINE,
             new HTuple[] { cfg.Row1, cfg.Col1, cfg.Row2, cfg.Col2 });
+        // 绿色框：与执行结果（红色）区分
+        _currentHObject.SetDrawingObjectParams(new HTuple("color"), new HTuple("green"));
 
         _activeCallback = OnEdgeDrawingObjectChanged;
         _currentHObject.OnDrag(_activeCallback);
@@ -398,11 +441,12 @@ public class VisionEditorDocumentViewModel : PersistedDocument
             var imgPath = template.ImagePath;
             if (!Path.IsPathRooted(imgPath))
                 imgPath = Path.Combine(Path.GetDirectoryName(filePath)!, imgPath);
-            if (File.Exists(imgPath))
-            {
-                _imagePath = imgPath;
-                DisplayImageOnHalcon(imgPath);
-            }
+
+            // 记录路径（工具栏可显示）；文件存在时显示到 Halcon 窗口。
+            // 若窗口尚未就绪，SetHalconControl 会基于 ImagePath 兜底显示。
+            _imagePath = imgPath;
+            NotifyOfPropertyChange(nameof(ImagePath));
+            DisplayImageOnHalcon(imgPath);
         }
     }
 
@@ -462,8 +506,9 @@ public class VisionEditorDocumentViewModel : PersistedDocument
         HasExecutionError = false;
         ExecutionStatus = "执行中...";
 
-        // 执行前移除 DrawingObject
+        // 执行前移除 DrawingObject，并作废旧结果（新结果绘制前不显示旧数据）
         DetachDrawingObject();
+        _hasDrawnResults = false;
 
         try
         {
@@ -549,19 +594,19 @@ public class VisionEditorDocumentViewModel : PersistedDocument
                         out HTuple homMat);
                     HOperatorSet.AffineTransContourXld(contours, out HObject transContours, homMat);
 
-                    _halconWindow.SetColor("green");
+                    _halconWindow.SetColor("red");
                     _halconWindow.DispObj(transContours);
                 }
                 else
                 {
                     // fallback: 十字
-                    _halconWindow.SetColor("green");
+                    _halconWindow.SetColor("red");
                     _halconWindow.DispCross(Ncc.ResultY, Ncc.ResultX, 50, Ncc.ResultAngle);
                 }
             }
             catch
             {
-                _halconWindow.SetColor("green");
+                _halconWindow.SetColor("red");
                 _halconWindow.DispCross(Ncc.ResultY, Ncc.ResultX, 50, Ncc.ResultAngle);
             }
         }
@@ -575,10 +620,10 @@ public class VisionEditorDocumentViewModel : PersistedDocument
                 EdgeFind1.ResultEndY, EdgeFind1.ResultEndX);
         }
 
-        // 找边2 结果：蓝色线段
+        // 找边2 结果：红色线段（与找边1、NCC 模板统一红色）
         if (EdgeFind2.IsEnabled)
         {
-            _halconWindow.SetColor("blue");
+            _halconWindow.SetColor("red");
             _halconWindow.DispLine(
                 EdgeFind2.ResultStartY, EdgeFind2.ResultStartX,
                 EdgeFind2.ResultEndY, EdgeFind2.ResultEndX);
@@ -591,6 +636,8 @@ public class VisionEditorDocumentViewModel : PersistedDocument
             _halconWindow.DispCircle(PointFind.ResultY, PointFind.ResultX, 10);
             _halconWindow.DispCross(PointFind.ResultY, PointFind.ResultX, 12, 0);
         }
+
+        _hasDrawnResults = true;
     }
 
     // ========== 验证 ==========

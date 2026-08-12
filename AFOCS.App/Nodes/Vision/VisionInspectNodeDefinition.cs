@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.IO;
+using System.Text.Json.Serialization;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Infrastructure;
@@ -24,31 +25,33 @@ public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, I
     // ========== 输入端口 ==========
 
     /// <summary>输入图像（PixelData 灰度图，来自相机采集或图片文件节点）</summary>
+    [JsonIgnore]
     [NodePort("Image", "图像", NodePortType.Object, true)]
     public PixelData? Image { get; set; }
 
     // ========== 输出端口 ==========
-
+    [JsonIgnore]
     [ReadOnly(true)]
+
     [NodePort("NccDx", "NCC ΔX", NodePortType.Double, false)]
     public double NccDx { get; set; }
-
+    [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("NccDy", "NCC ΔY", NodePortType.Double, false)]
     public double NccDy { get; set; }
-
+    [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("Edge1AngleDev", "边1角度偏差", NodePortType.Double, false)]
     public double Edge1AngleDev { get; set; }
-
+    [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("Edge2AngleDev", "边2角度偏差", NodePortType.Double, false)]
     public double Edge2AngleDev { get; set; }
-
+    [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("PointDevX", "交点ΔX", NodePortType.Double, false)]
     public double PointDevX { get; set; }
-
+    [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("PointDevY", "交点ΔY", NodePortType.Double, false)]
     public double PointDevY { get; set; }

@@ -9,7 +9,7 @@
              xmlns:local="clr-namespace:AFOCS.VisionEditor.Views"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:VisionEditorDocumentViewModel}"
-             d:DesignHeight="600" d:DesignWidth="1000">
+             d:DesignHeight="600" d:DesignWidth="1000"  Loaded="VisionEditorDocumentView_OnLoaded">
 
     <UserControl.Resources>
         <!-- Light theme colors -->
@@ -150,7 +150,7 @@
 
             <!-- === 中间：Halcon 图像编辑区 === -->
             <Grid Grid.Column="1" Background="#FFFFFF">
-                <halconDotNet:HSmartWindowControlWPF x:Name="hSmart" Loaded="HSmart_OnLoaded" />
+                <halconDotNet:HSmartWindowControlWPF x:Name="hSmart" />
             </Grid>
 
             <!-- === 右侧：PropertyGrid + 结果预览 === -->
@@ -188,21 +188,34 @@
         <!-- ===== 底部状态栏 ===== -->
         <Border Grid.Row="2" Background="{StaticResource ToolbarBg}" Padding="10,5"
                 BorderBrush="{StaticResource PanelBorder}" BorderThickness="0,1,0,0">
-            <TextBlock Text="{Binding ExecutionStatus}" FontSize="12"
-                       Foreground="{StaticResource TextSecondary}">
-                <TextBlock.Style>
-                    <Style TargetType="TextBlock">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasExecutionError}" Value="True">
-                                <Setter Property="Foreground" Value="#D32F2F" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding HasExecutionError}" Value="False">
-                                <Setter Property="Foreground" Value="#2E7D32" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBlock.Style>
-            </TextBlock>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="{Binding ExecutionStatus}" FontSize="12"
+                           VerticalAlignment="Center">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasExecutionError}" Value="True">
+                                    <Setter Property="Foreground" Value="#D32F2F" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding HasExecutionError}" Value="False">
+                                    <Setter Property="Foreground" Value="#2E7D32" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <!-- 鼠标像素坐标实时显示 -->
+                <TextBlock Grid.Column="1" Text="{Binding MousePosition}" FontSize="12"
+                           Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"
+                           Margin="16,0,0,0" />
+            </Grid>
         </Border>
     </Grid>
 </UserControl>

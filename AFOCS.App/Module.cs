@@ -14,7 +14,7 @@ namespace AFOCS.App
         [Export]
         public static readonly MenuDefinition TestMenu = new MenuDefinition(
             MenuDefinitions.MainMenuBar, 5, "测试");
-
+         
         [Export]
         public static readonly MenuItemGroupDefinition TestMenuGroup = new MenuItemGroupDefinition(
             TestMenu, 0);
