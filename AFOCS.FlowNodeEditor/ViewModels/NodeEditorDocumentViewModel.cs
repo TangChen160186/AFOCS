@@ -115,7 +115,7 @@ public class NodeEditorDocumentViewModel : PersistedDocument
     } = 1.0f;
 
     
-    public System.Windows.Point ViewportLocation
+    public Point ViewportLocation
     {
         get;
         set => Set(ref field, value);
@@ -154,7 +154,6 @@ public class NodeEditorDocumentViewModel : PersistedDocument
     [
         new WorkPosItem(WorkPos.Left, "左工位"),
         new WorkPosItem(WorkPos.Right, "右工位"),
-        new WorkPosItem(WorkPos.None, "通用"),
     ];
 
     /// <summary>工位下拉项</summary>

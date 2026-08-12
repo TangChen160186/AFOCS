@@ -164,9 +164,6 @@
                               Width="90"
                               VerticalAlignment="Center"
                               VerticalContentAlignment="Center"
-                              Background="#FF505050"
-                              Foreground="White"
-                              BorderBrush="#FF6A6A6A"
                               FontSize="12" />
 
                     <TextBlock Text="{Binding ExecutionStatus}"
