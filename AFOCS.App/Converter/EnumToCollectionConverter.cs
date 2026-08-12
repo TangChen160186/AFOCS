@@ -1,5 +1,6 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Windows.Data;
+using AFOCS.Infrastructure;
 using AFOCS.Infrastructure.Extensions;
 
 namespace AFOCS.App.Converter;
@@ -20,6 +21,8 @@ public class EnumToCollectionConverter : IValueConverter
 
         return Enum.GetValues(enumType)
             .Cast<Enum>()
+            // 工位选择只保留左/右工位，排除"通用"(None)
+            .Where(e => enumType != typeof(WorkPos) || (WorkPos)e != WorkPos.None)
             .Select(e => new
             {
                 Value = e,

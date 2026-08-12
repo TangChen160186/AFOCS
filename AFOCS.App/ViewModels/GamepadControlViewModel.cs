@@ -5,6 +5,7 @@ using AFOCS.App.Services;
 using AFOCS.Devices.AkribrisMotion;
 using AFOCS.Devices.BusAxisDevice;
 using AFOCS.Devices.Gripper;
+using AFOCS.Devices.PressureSensor;
 using AFOCS.Framework.Framework;
 using AFOCS.Framework.Framework.Services;
 using AFOCS.Infrastructure;
@@ -19,14 +20,16 @@ public interface IGamepadControl : ITool;
 [PartCreationPolicy(CreationPolicy.Shared)]
 [method: ImportingConstructor]
 public class GamepadControlViewModel(
-    IBusAxisDevice busAxisDevice,IToastService toastService,
+    IBusAxisDevice busAxisDevice, IToastService toastService,
     [ImportMany] IEnumerable<IAkribisMotion> akribisMotions,
-    [ImportMany] IEnumerable<IGripper> grippers) : Tool, IGamepadControl
+    [ImportMany] IEnumerable<IGripper> grippers,
+    [ImportMany] IEnumerable<IPressureSensor> pressureSensors) : Tool, IGamepadControl
 {
     private readonly IBusAxisDevice _busAxisDevice = busAxisDevice;
     private readonly IToastService _toastService = toastService;
     private readonly Dictionary<string, IAkribisMotion> _akribisInstances = [];
     private readonly Dictionary<string, IGripper> _grippers = [];
+    private readonly Dictionary<(WorkPos, PressureSensorType), IPressureSensor> _pressureSensors = [];
 
     public override PaneLocation PreferredLocation => PaneLocation.Right;
     public override double PreferredWidth => 390;
@@ -56,6 +59,7 @@ public class GamepadControlViewModel(
                 NotifyOfPropertyChange(nameof(HasGripperR));
                 ReadAkribisPositions();
                 ReadGripperPositions();
+                ReadPressureValues();
                 RefreshAllDisplay();
             }
         }
@@ -144,6 +148,18 @@ public class GamepadControlViewModel(
     public bool HasGripperL => _grippers.ContainsKey(GripperLName);
     public bool HasGripperR => _grippers.ContainsKey(GripperRName);
 
+    // ========== 压力值显示字段 ==========
+
+    private int _plx, _ply, _plz;          // 左耦合
+    private int _prx, _pry, _prz;          // 右耦合
+    private int _pdx, _pdy, _pdz;          // 点胶
+    public string PressureLText => $"X:{_plx,5}  Y:{_ply,5}  Z:{_plz,5}";
+    public string PressureRText => $"X:{_prx,5}  Y:{_pry,5}  Z:{_prz,5}";
+    public string PressureDispenseText => $"X:{_pdx,5}  Y:{_pdy,5}  Z:{_pdz,5}";
+    public bool HasPressureL => _pressureSensors.ContainsKey((SelectedStation, PressureSensorType.LeftCoupling));
+    public bool HasPressureR => _pressureSensors.ContainsKey((SelectedStation, PressureSensorType.RightCoupling));
+    public bool HasPressureDispense => _pressureSensors.ContainsKey((SelectedStation, PressureSensorType.Dispense));
+
     // ========== 状态 ==========
 
     public string StatusText
@@ -155,8 +171,15 @@ public class GamepadControlViewModel(
     public bool IsBusy
     {
         get;
-        set => Set(ref field, value);
+        set
+        {
+            if (Set(ref field, value))
+                NotifyOfPropertyChange(nameof(CanJog));
+        }
     }
+
+    /// <summary>运动未完成前禁用所有运动按钮，防止误操作</summary>
+    public bool CanJog => !IsBusy;
 
     // ========== 构造 & 事件订阅 ==========
 
@@ -174,6 +197,12 @@ public class GamepadControlViewModel(
             var name = gripper.GetType().Name;
             _grippers[name] = gripper;
             gripper.DataChanged += OnGripperDataChanged;
+        }
+
+        foreach (var sensor in pressureSensors)
+        {
+            _pressureSensors[(sensor.WorkPos, sensor.SensorType)] = sensor;
+            sensor.DataChanged += OnPressureDataChanged;
         }
 
         _busAxisDevice.AxisStateChanged += OnBusAxisStateChanged;
@@ -281,6 +310,36 @@ public class GamepadControlViewModel(
             _grpos = gR.CurrentPosition;
     }
 
+    // ========== 压力事件 ==========
+
+    private void OnPressureDataChanged(object? sender, PressureDataChangedEventArgs e)
+    {
+        if (sender is not IPressureSensor sensor) return;
+
+        // 只处理匹配当前工位的事件
+        if (sensor.WorkPos != SelectedStation) return;
+
+        switch (sensor.SensorType)
+        {
+            case PressureSensorType.LeftCoupling: (_plx, _ply, _plz) = (e.X, e.Y, e.Z); break;
+            case PressureSensorType.RightCoupling: (_prx, _pry, _prz) = (e.X, e.Y, e.Z); break;
+            case PressureSensorType.Dispense: (_pdx, _pdy, _pdz) = (e.X, e.Y, e.Z); break;
+            default: return;
+        }
+
+        Execute.OnUIThreadAsync(() => RefreshAllDisplay());
+    }
+
+    private void ReadPressureValues()
+    {
+        if (_pressureSensors.TryGetValue((SelectedStation, PressureSensorType.LeftCoupling), out var sL))
+            (_plx, _ply, _plz) = (sL.GetX(), sL.GetY(), sL.GetZ());
+        if (_pressureSensors.TryGetValue((SelectedStation, PressureSensorType.RightCoupling), out var sR))
+            (_prx, _pry, _prz) = (sR.GetX(), sR.GetY(), sR.GetZ());
+        if (_pressureSensors.TryGetValue((SelectedStation, PressureSensorType.Dispense), out var sD))
+            (_pdx, _pdy, _pdz) = (sD.GetX(), sD.GetY(), sD.GetZ());
+    }
+
     private Task RefreshAllDisplay()
     {
         NotifyOfPropertyChange(nameof(CameraPosText));
@@ -296,6 +355,9 @@ public class GamepadControlViewModel(
         NotifyOfPropertyChange(nameof(HasAkribisRPos));
         NotifyOfPropertyChange(nameof(GripperLPosText));
         NotifyOfPropertyChange(nameof(GripperRPosText));
+        NotifyOfPropertyChange(nameof(PressureLText));
+        NotifyOfPropertyChange(nameof(PressureRText));
+        NotifyOfPropertyChange(nameof(PressureDispenseText));
 
         return Task.CompletedTask;
     }
