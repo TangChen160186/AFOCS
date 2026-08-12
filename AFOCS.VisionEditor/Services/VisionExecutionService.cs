@@ -1,327 +1,192 @@
-using System.Runtime.InteropServices;
-using System.Windows.Media.Imaging;
+using System.IO;
 using AFOCS.VisionEditor.Models;
-using Emgu.CV;
-using Emgu.CV.CvEnum;
-using Emgu.CV.Structure;
-using System.Drawing;
-using Emgu.CV.Util;
-using VisionToolkit.EdgeFinder;
-using VisionToolkit.TemplateMatcher;
+using HalconDotNet;
 
 namespace AFOCS.VisionEditor.Services;
 
 /// <summary>
-/// 视觉流水线执行服务 —— 按 NCC → 找边1 → 找边2 → 找点 顺序执行，
-/// 每步成功后在一个 clone 的彩色 Mat 上绘制结果，最后返回 BitmapSource。
+/// 视觉流水线执行服务 —— 按 NCC → 找边1 → 找边2 → 找点 顺序执行。
+/// NCC 使用 Halcon CreateShapeModel/FindShapeModel，找边使用 Halcon HMetrologyModel。
 /// </summary>
 public class VisionExecutionService
 {
     /// <summary>
-    /// 执行完整流水线，结果写回 template，返回带绘图的 BitmapSource
+    /// 执行完整流水线，结果写回 template。返回是否成功。
     /// </summary>
-    public BitmapSource? Execute(string imagePath, VisionTemplate template, Action<string, bool>? progress = null)
+    public bool Execute(string imagePath, VisionTemplate template, Action<string, bool>? progress = null)
     {
-        using var grayImage = CvInvoke.Imread(imagePath, ImreadModes.Grayscale);
-        if (grayImage == null || grayImage.IsEmpty)
-        {
-            progress?.Invoke("无法加载图片", false);
-            return null;
-        }
+        var allOk = true;
 
-        // Clone 一份彩色图用于画结果
-        using var drawMat = CvInvoke.Imread(imagePath, ImreadModes.ColorRgb);
-        if (drawMat == null || drawMat.IsEmpty)
-        {
-            progress?.Invoke("无法加载彩色图片", false);
-            return null;
-        }
-
-        // Step 1: NCC
+        // Step 1: NCC（Halcon ShapeModel）
         if (template.Ncc.IsEnabled)
         {
-            ExecuteNcc(grayImage, template.Ncc, progress);
-            if (template.Ncc.ResultScore > 0)
-                DrawNccResult(drawMat, template.Ncc);
+            var ok = ExecuteNccHalcon(imagePath, template.Ncc, progress);
+            if (!ok) allOk = false;
         }
 
         // Step 2: 找边 1
         if (template.EdgeFind1.IsEnabled)
         {
-            ExecuteEdgeFind(grayImage, template.EdgeFind1, "找边1", progress);
-            DrawEdgeResult(drawMat, template.EdgeFind1);
+            var ok = ExecuteEdgeFindHalcon(imagePath, template.EdgeFind1, "找边1", progress);
+            if (!ok) allOk = false;
         }
 
         // Step 3: 找边 2
         if (template.EdgeFind2.IsEnabled)
         {
-            ExecuteEdgeFind(grayImage, template.EdgeFind2, "找边2", progress);
-            DrawEdgeResult(drawMat, template.EdgeFind2);
+            var ok = ExecuteEdgeFindHalcon(imagePath, template.EdgeFind2, "找边2", progress);
+            if (!ok) allOk = false;
         }
 
         // Step 4: 找点
         if (template.PointFind.IsEnabled)
         {
-            ExecutePointFind(template.EdgeFind1, template.EdgeFind2, template.PointFind, progress);
-            if (template.PointFind.ResultX != 0 || template.PointFind.ResultY != 0)
-                DrawPointResult(drawMat, template.PointFind);
+            var ok = ExecutePointFind(template.EdgeFind1, template.EdgeFind2, template.PointFind, progress);
+            if (!ok) allOk = false;
         }
 
-        var bmp = drawMat.ToBitmapSource();
-        bmp.Freeze();
-        return bmp;
+        return allOk;
     }
 
-    // ==================== 执行逻辑 ====================
+    // ==================== NCC：Halcon ShapeModel ====================
 
-    private static void ExecuteNcc(Mat fullImage, NccConfig cfg, Action<string, bool>? progress)
+    private static bool ExecuteNccHalcon(string imagePath, NccConfig cfg, Action<string, bool>? progress)
     {
         try
         {
-            if (!cfg.TemplateRoi.IsValid || !cfg.SearchRoi.IsValid)
+            using var image = new HImage(imagePath);
+
+            // 1. 创建旋转矩形 ROI 并缩小区域
+            HOperatorSet.GenRectangle2(out HObject roiRect,
+                cfg.Row, cfg.Column, cfg.Phi, cfg.Length1, cfg.Length2);
+            HOperatorSet.ReduceDomain(image, roiRect, out HObject imageReduced);
+
+            // 2. 创建形状模板
+            HOperatorSet.CreateShapeModel(imageReduced, "auto",
+                new HTuple(0).TupleRad(), new HTuple(360).TupleRad(),
+                "auto", "auto", "use_polarity", "auto", "auto",
+                out HTuple modelId);
+
+            // 3. 保存模型到 .shm 文件（与图片同目录）
+            string modelDir = Path.GetDirectoryName(imagePath) ?? ".";
+            string modelFile = Path.GetFileNameWithoutExtension(imagePath) + ".shm";
+            string modelAbsPath = Path.Combine(modelDir, modelFile);
+            HOperatorSet.WriteShapeModel(modelId, modelAbsPath);
+            cfg.ModelPath = modelAbsPath;
+
+            // 4. 在全图上搜索
+            HOperatorSet.FindShapeModel(image, modelId,
+                new HTuple(0).TupleRad(), new HTuple(360).TupleRad(),
+                cfg.MinScore, 1, 0.5, "least_squares",
+                new HTuple(4).TupleConcat(1), 0.4,
+                out HTuple hvRow, out HTuple hvColumn, out HTuple hvAngle, out HTuple hvScore);
+
+            if (hvScore.Length > 0 && hvScore[0].D > 0)
             {
-                progress?.Invoke("NCC: ROI 未设置", false);
-                return;
+                cfg.ResultX = hvColumn[0].D;
+                cfg.ResultY = hvRow[0].D;
+                cfg.ResultAngle = hvAngle[0].D * 180.0 / Math.PI;
+                cfg.ResultScore = hvScore[0].D;
+                progress?.Invoke($"NCC: 匹配成功 (分数={hvScore[0].D:F3})", true);
+                return true;
             }
 
-            var tRoi = ToRect(cfg.TemplateRoi);
-            using var templateMat = new Mat(fullImage, tRoi);
-
-            var sRoi = ToRect(cfg.SearchRoi);
-            using var searchMat = new Mat(fullImage, sRoi);
-         
-            var param = new MatcherParam
-            {
-                ScoreThreshold = cfg.ScoreThreshold,
-                Angle = cfg.SearchAngle,
-                MaxCount = cfg.MaxCount,
-                MinArea = cfg.MinArea,
-                IouThreshold = cfg.IouThreshold,
-            };
-
-            using var matcher = new PatternMatcher(param);
-            if (!matcher.SetTemplate(templateMat))
-            {
-                progress?.Invoke("NCC: 模板学习失败", false);
-                return;
-            }
-
-            int count = matcher.Match(searchMat, out var results);
-            if (count > 0 && results.Count > 0)
-            {
-                var best = results[0];
-                cfg.ResultX = best.Center.X + cfg.SearchRoi.X;
-                cfg.ResultY = best.Center.Y + cfg.SearchRoi.Y;
-                cfg.ResultAngle = best.Angle;
-                cfg.ResultScore = best.Score;
-                cfg.Result = best;
-                progress?.Invoke($"NCC: 匹配成功 (分数={best.Score:F3})", true);
-            }
-            else
-            {
-                progress?.Invoke("NCC: 未找到匹配", false);
-            }
+            progress?.Invoke("NCC: 未找到匹配", false);
+            return false;
         }
         catch (Exception ex)
         {
             progress?.Invoke($"NCC: 执行异常 - {ex.Message}", false);
+            return false;
         }
     }
 
-    private static void ExecuteEdgeFind(Mat fullImage, EdgeFindConfig cfg, string label, Action<string, bool>? progress)
+    // ==================== 找边 ====================
+
+    private static bool ExecuteEdgeFindHalcon(string imagePath, EdgeFindConfig cfg, string label, Action<string, bool>? progress)
     {
         try
         {
-            if (!cfg.SearchRoi.IsValid)
-            {
-                progress?.Invoke($"{label}: ROI 未设置", false);
-                return;
-            }
+            using var image = new HImage(imagePath);
+            image.GetImageSize(out int width, out int height);
 
-            // 按 ROI 角度旋转裁剪，得到与 ROI 对齐的轴正图像
-            using var roiMat = CropRotatedRoi(fullImage, cfg.SearchRoi);
+            using var metrologyModel = new HMetrologyModel();
+            metrologyModel.SetMetrologyModelImageSize(width, height);
 
-            // 边缘方向角按图像坐标系解释，裁剪旋转后需换算到 ROI 坐标系
-            double edgeAngleInRoi = cfg.EdgeDirectionDeg - cfg.SearchRoi.Angle;
+            metrologyModel.AddMetrologyObjectLineMeasure(
+                cfg.Row1, cfg.Col1, cfg.Row2, cfg.Col2,
+                cfg.MeasureLength1, cfg.MeasureLength2,
+                cfg.MeasureSigma, cfg.MeasureThreshold,
+                new HTuple(), new HTuple());
 
-            var result = CaliperEdgeFinder.Detect(
-                roiMat,
-                edgeAngleDeg: edgeAngleInRoi,
-                caliperCount: cfg.CaliperCount,
-                caliperWidth: cfg.CaliperWidth,
-                searchHalf: cfg.SearchHalf,
-                inlierThreshold: cfg.InlierThreshold);
+            metrologyModel.ApplyMetrologyModel(image);
 
-            if (result.InlierCount < 2)
-            {
-                progress?.Invoke($"{label}: 未找到有效边缘", false);
-                return;
-            }
+            HTuple lineRet = metrologyModel.GetMetrologyObjectResult(
+                "all", "all", "result_type", "all_param");
 
-            // 裁剪坐标系 → 原图坐标系（旋转还原）
-            var start = RotatedRoiToImage(cfg.SearchRoi, result.Start.X, result.Start.Y);
-            var end = RotatedRoiToImage(cfg.SearchRoi, result.End.X, result.End.Y);
+            double[] retAry = lineRet.DArr;
 
-            cfg.ResultStartX = start.X;
-            cfg.ResultStartY = start.Y;
-            cfg.ResultEndX = end.X;
-            cfg.ResultEndY = end.Y;
-            cfg.ResultAngleDeg = result.AngleDeg + cfg.SearchRoi.Angle;
+            cfg.ResultStartX = retAry[1]; // column_begin
+            cfg.ResultStartY = retAry[0]; // row_begin
+            cfg.ResultEndX = retAry[3];   // column_end
+            cfg.ResultEndY = retAry[2];   // row_end
 
-            progress?.Invoke($"{label}: 找到边缘 (内点数={result.InlierCount})", true);
+            HOperatorSet.AngleLx(
+                cfg.ResultEndY, cfg.ResultEndX,
+                cfg.ResultStartY, cfg.ResultStartX,
+                out HTuple angle);
+            cfg.ResultAngleDeg = angle[0].D * 180.0 / Math.PI;
+
+            progress?.Invoke($"{label}: 找到边缘 (角度={cfg.ResultAngleDeg:F2}°)", true);
+            return true;
         }
         catch (Exception ex)
         {
             progress?.Invoke($"{label}: 执行异常 - {ex.Message}", false);
+            return false;
         }
     }
 
-    private static void ExecutePointFind(EdgeFindConfig edge1, EdgeFindConfig edge2, PointFindConfig cfg, Action<string, bool>? progress)
+    // ==================== 找点（两线交点） ====================
+
+    private static bool ExecutePointFind(EdgeFindConfig edge1, EdgeFindConfig edge2, PointFindConfig cfg, Action<string, bool>? progress)
     {
         try
         {
-            var p1Start = new PointF((float)edge1.ResultStartX, (float)edge1.ResultStartY);
-            var p1End = new PointF((float)edge1.ResultEndX, (float)edge1.ResultEndY);
-            var p2Start = new PointF((float)edge2.ResultStartX, (float)edge2.ResultStartY);
-            var p2End = new PointF((float)edge2.ResultEndX, (float)edge2.ResultEndY);
-
-            if (LineIntersection(p1Start, p1End, p2Start, p2End, out var intersection))
-            {
-                cfg.ResultX = intersection.X;
-                cfg.ResultY = intersection.Y;
-                progress?.Invoke($"找点: 交点=({intersection.X:F1}, {intersection.Y:F1})", true);
-            }
-            else
+            if (!LineIntersection(
+                    edge1.ResultStartX, edge1.ResultStartY, edge1.ResultEndX, edge1.ResultEndY,
+                    edge2.ResultStartX, edge2.ResultStartY, edge2.ResultEndX, edge2.ResultEndY,
+                    out var ix, out var iy))
             {
                 progress?.Invoke("找点: 两线平行或未找到交点", false);
+                return false;
             }
+
+            cfg.ResultX = ix;
+            cfg.ResultY = iy;
+            progress?.Invoke($"找点: 交点=({ix:F1}, {iy:F1})", true);
+            return true;
         }
         catch (Exception ex)
         {
             progress?.Invoke($"找点: 执行异常 - {ex.Message}", false);
+            return false;
         }
-    }
-
-    // ==================== 绘图逻辑（在彩色 clone 上画） ====================
-
-    private static void DrawNccResult(Mat draw, NccConfig cfg)
-    {
-        var tw = cfg.TemplateRoi.Width;
-        var th = cfg.TemplateRoi.Height;
-        var cx = (float)cfg.ResultX;
-        var cy = (float)cfg.ResultY;
-
-        var rect = new RotatedRect(
-            new PointF(cx, cy),
-            new SizeF((float)tw, (float)th),
-            (float)cfg.ResultAngle);
-        var pts = rect.GetVertices();
-        var red = new Bgr(0,0, 255).MCvScalar;
-        for (int i = 0; i < 4; i++)
-            CvInvoke.Line(draw,
-                new((int)pts[i].X, (int)pts[i].Y),
-                new((int)pts[(i + 1) % 4].X, (int)pts[(i + 1) % 4].Y),
-                red, 5);
-
-        // 中心十字
-        DrawCross(draw, cx, cy, 50, red);
-
-    }
-
-    private static void DrawEdgeResult(Mat draw, EdgeFindConfig cfg)
-    {
-        if (cfg.ResultStartX == 0 && cfg.ResultStartY == 0 &&
-            cfg.ResultEndX == 0 && cfg.ResultEndY == 0)
-            return;
-
-        var blue = new Bgr(0, 255, 0).MCvScalar;
-        CvInvoke.Line(draw,
-            new((int)cfg.ResultStartX, (int)cfg.ResultStartY),
-            new((int)cfg.ResultEndX, (int)cfg.ResultEndY),
-            blue, 5);
-    }
-
-    private static void DrawPointResult(Mat draw, PointFindConfig cfg)
-    {
-        var red = new Bgr(255, 0, 255).MCvScalar;
-        var pt = new Point((int)cfg.ResultX, (int)cfg.ResultY);
-        CvInvoke.Circle(draw, pt, 10, red, -1);
-        DrawCross(draw, cfg.ResultX, cfg.ResultY, 12, red);
-    }
-
-    private static void DrawCross(Mat draw, double cx, double cy, int size, Emgu.CV.Structure.MCvScalar color)
-    {
-        var x = (int)cx;
-        var y = (int)cy;
-        CvInvoke.Line(draw, new(x - size, y), new(x + size, y), color, 5);
-        CvInvoke.Line(draw, new(x, y - size), new(x, y + size), color, 5);
     }
 
     // ==================== 几何工具 ====================
 
-    private static bool LineIntersection(PointF p1, PointF p2, PointF p3, PointF p4, out PointF intersection)
+    private static bool LineIntersection(
+        double x1, double y1, double x2, double y2,
+        double x3, double y3, double x4, double y4,
+        out double ix, out double iy)
     {
-        intersection = PointF.Empty;
-
-        float x1 = p1.X, y1 = p1.Y, x2 = p2.X, y2 = p2.Y;
-        float x3 = p3.X, y3 = p3.Y, x4 = p4.X, y4 = p4.Y;
-
-        float denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
-        if (Math.Abs(denom) < 1e-10f) return false;
-
-        float t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom;
-        intersection = new PointF(
-            x1 + t * (x2 - x1),
-            y1 + t * (y2 - y1));
+        ix = iy = 0;
+        double denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+        if (Math.Abs(denom) < 1e-10) return false;
+        double t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom;
+        ix = x1 + t * (x2 - x1);
+        iy = y1 + t * (y2 - y1);
         return true;
-    }
-
-    internal static Rectangle ToRect(RoiData roi) =>
-        new((int)roi.X, (int)roi.Y, (int)roi.Width, (int)roi.Height);
-
-    /// <summary>
-    /// 按 ROI 角度旋转裁剪出与 ROI 对齐的轴正图像。
-    /// 角度为 0 时退化为普通矩形裁剪，行为与原实现一致。
-    /// </summary>
-    internal static Mat CropRotatedRoi(Mat fullImage, RoiData roi)
-    {
-        if (roi.Angle == 0)
-            return new Mat(fullImage, ToRect(roi));
-
-        double rad = roi.Angle * Math.PI / 180;
-        double cosA = Math.Cos(rad), sinA = Math.Sin(rad);
-        double cx = roi.X + roi.Width / 2;
-        double cy = roi.Y + roi.Height / 2;
-        double w = roi.Width, h = roi.Height;
-
-        // 仿射矩阵：将 ROI 中心置为坐标原点，按 -Angle 反向旋转使内容轴对齐，
-        // 平移使 ROI 左上角映射到输出 (0,0)
-        using (var M = new Mat(2, 3, DepthType.Cv64F, 1))
-        {
-            double[] m =
-            {
-                cosA, -sinA, cx - w / 2 * cosA + h / 2 * sinA,
-                sinA,  cosA, cy - w / 2 * sinA - h / 2 * cosA,
-            };
-            Marshal.Copy(m, 0, M.DataPointer, 6);
-
-            var dst = new Mat();
-            CvInvoke.WarpAffine(fullImage, dst, M,
-                new Size((int)Math.Round(w), (int)Math.Round(h)),
-                Inter.Linear, Warp.Default, BorderType.Constant, new MCvScalar(0));
-            return dst;
-        }
-    }
-
-    /// <summary>旋转 ROI 裁剪坐标系坐标 → 原图坐标（旋转还原 + 平移）</summary>
-    internal static (double X, double Y) RotatedRoiToImage(RoiData roi, double cropX, double cropY)
-    {
-        double rad = roi.Angle * Math.PI / 180;
-        double cosA = Math.Cos(rad), sinA = Math.Sin(rad);
-        double cx = roi.X + roi.Width / 2;
-        double cy = roi.Y + roi.Height / 2;
-        double dx = cropX - roi.Width / 2;
-        double dy = cropY - roi.Height / 2;
-        return (cx + dx * cosA - dy * sinA, cy + dx * sinA + dy * cosA);
     }
 }

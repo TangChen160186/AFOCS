@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using AFOCS.VisionEditor.Models;
+using HalconDotNet;
 
 namespace AFOCS.VisionEditor.Views;
 
@@ -11,6 +12,14 @@ public partial class VisionEditorDocumentView : UserControl
     public VisionEditorDocumentView()
     {
         InitializeComponent();
+    }
+
+    private void HSmart_OnLoaded(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is ViewModels.VisionEditorDocumentViewModel vm)
+        {
+            vm.SetHalconControl(hSmart);
+        }
     }
 }
 

@@ -1,25 +1,7 @@
 using System.ComponentModel;
-using System.Text.Json.Serialization;
 using Caliburn.Micro;
-using VisionToolkit.TemplateMatcher;
 
 namespace AFOCS.VisionEditor.Models;
-
-// ==================== ROI 数据（内部序列化用） ====================
-
-public class RoiData
-{
-    public double X { get; set; }
-    public double Y { get; set; }
-    public double Width { get; set; }
-    public double Height { get; set; }
-    public double Angle { get; set; }
-
-    [JsonIgnore]
-    public bool IsValid => Width > 0 && Height > 0;
-
-    public static RoiData Empty => new();
-}
 
 // ==================== 视觉流程类型 ====================
 
@@ -31,7 +13,7 @@ public enum VisionProcessType
     PointFind,
 }
 
-// ==================== NCC 模板匹配配置 ====================
+// ==================== NCC 模板匹配配置（Halcon ShapeModel） ====================
 
 [DisplayName("NCC 模板匹配")]
 public class NccConfig : PropertyChangedBase
@@ -41,133 +23,78 @@ public class NccConfig : PropertyChangedBase
     [Browsable(false)]
     public bool IsEnabled { get; set; } = true;
 
-    // ---- 搜索 ROI（序列化用） ----
-    [Browsable(false)]
-    public RoiData SearchRoi { get; set; } = new();
+    // ---- 旋转矩形 ROI（RECTANGLE2） ----
 
-    [DisplayName("X")]
-    [Category("搜索 ROI")]
-    public double SearchRoiX
-    {
-        get => SearchRoi.X;
-        set { if (SetValue(SearchRoi.X, value, v => SearchRoi.X = v)) NotifyOfPropertyChange(); }
-    }
-
-    [DisplayName("Y")]
-    [Category("搜索 ROI")]
-    public double SearchRoiY
-    {
-        get => SearchRoi.Y;
-        set { if (SetValue(SearchRoi.Y, value, v => SearchRoi.Y = v)) NotifyOfPropertyChange(); }
-    }
-
-    [DisplayName("宽")]
-    [Category("搜索 ROI")]
-    public double SearchRoiWidth
-    {
-        get => SearchRoi.Width;
-        set { if (SetValue(SearchRoi.Width, value, v => SearchRoi.Width = v)) NotifyOfPropertyChange(); }
-    }
-
-    [DisplayName("高")]
-    [Category("搜索 ROI")]
-    public double SearchRoiHeight
-    {
-        get => SearchRoi.Height;
-        set { if (SetValue(SearchRoi.Height, value, v => SearchRoi.Height = v)) NotifyOfPropertyChange(); }
-    }
-
-    [DisplayName("角度")]
-    [Category("搜索 ROI")]
-    public double SearchRoiAngle
-    {
-        get => SearchRoi.Angle;
-        set { if (SetValue(SearchRoi.Angle, value, v => SearchRoi.Angle = v)) NotifyOfPropertyChange(); }
-    }
-
-    // ---- 模板 ROI（序列化用） ----
-    [Browsable(false)]
-    public RoiData TemplateRoi { get; set; } = new();
-
-    [DisplayName("X")]
+    private double _row = 300;
+    [DisplayName("中心行 Row")]
+    [Description("旋转矩形中心行坐标")]
     [Category("模板 ROI")]
-    public double TemplateRoiX
+    public double Row
     {
-        get => TemplateRoi.X;
-        set { if (SetValue(TemplateRoi.X, value, v => TemplateRoi.X = v)) NotifyOfPropertyChange(); }
+        get => _row;
+        set => Set(ref _row, value);
     }
 
-    [DisplayName("Y")]
+    private double _column = 400;
+    [DisplayName("中心列 Column")]
+    [Description("旋转矩形中心列坐标")]
     [Category("模板 ROI")]
-    public double TemplateRoiY
+    public double Column
     {
-        get => TemplateRoi.Y;
-        set { if (SetValue(TemplateRoi.Y, value, v => TemplateRoi.Y = v)) NotifyOfPropertyChange(); }
+        get => _column;
+        set => Set(ref _column, value);
     }
 
-    [DisplayName("宽")]
+    private double _phi = 0;
+    [DisplayName("旋转角 Phi")]
+    [Description("旋转矩形角度（弧度）")]
     [Category("模板 ROI")]
-    public double TemplateRoiWidth
+    public double Phi
     {
-        get => TemplateRoi.Width;
-        set { if (SetValue(TemplateRoi.Width, value, v => TemplateRoi.Width = v)) NotifyOfPropertyChange(); }
+        get => _phi;
+        set => Set(ref _phi, value);
     }
 
-    [DisplayName("高")]
+    private double _length1 = 300;
+    [DisplayName("半长 Length1")]
+    [Description("旋转矩形半长（px）")]
     [Category("模板 ROI")]
-    public double TemplateRoiHeight
+    public double Length1
     {
-        get => TemplateRoi.Height;
-        set { if (SetValue(TemplateRoi.Height, value, v => TemplateRoi.Height = v)) NotifyOfPropertyChange(); }
+        get => _length1;
+        set => Set(ref _length1, value);
     }
 
-    [DisplayName("角度")]
+    private double _length2 = 200;
+    [DisplayName("半宽 Length2")]
+    [Description("旋转矩形半宽（px）")]
     [Category("模板 ROI")]
-    public double TemplateRoiAngle
+    public double Length2
     {
-        get => TemplateRoi.Angle;
-        set { if (SetValue(TemplateRoi.Angle, value, v => TemplateRoi.Angle = v)) NotifyOfPropertyChange(); }
+        get => _length2;
+        set => Set(ref _length2, value);
     }
 
     // ---- 匹配参数 ----
 
-    [DisplayName("分数阈值")]
-    [Description("NCC 匹配分数下限（0~1）")]
+    [DisplayName("最小匹配分数")]
+    [Description("FindShapeModel 最低匹配分数（0~1）")]
     [Category("匹配参数")]
-    public double ScoreThreshold { get; set; } = 0.5;
+    public double MinScore { get; set; } = 0.5;
 
-    [DisplayName("搜索角度")]
-    [Description("角度搜索范围（度），0=不旋转")]
-    [Category("匹配参数")]
-    public double SearchAngle { get; set; } = 0;
-
-    [DisplayName("最大匹配数")]
-    [Description("最多返回多少个匹配结果")]
-    [Category("匹配参数")]
-    [ReadOnly(true)]
-    public int MaxCount { get; set; } = 1;
-
-    [DisplayName("最小面积")]
-    [Description("模板最小面积（px²），决定金字塔层数")]
-    [Category("匹配参数")]
-    public double MinArea { get; set; } = 256;
-
-    [DisplayName("IoU 阈值")]
-    [Description("NMS 去重重叠阈值，0=不启用")]
-    [Category("匹配参数")]
-    [ReadOnly(true)]
-    public double IouThreshold { get; set; } = 0.0;
+    [Browsable(false)]
+    public string ModelPath { get; set; } = string.Empty;
 
     // ---- 执行结果 ----
 
     [DisplayName("匹配中心 X")]
-    [Description("匹配到的模板中心 X 坐标（像素）")]
+    [Description("匹配到的模板中心 Column 坐标（像素）")]
     [Category("执行结果")]
     [ReadOnly(true)]
     public double ResultX { get; set; }
 
     [DisplayName("匹配中心 Y")]
-    [Description("匹配到的模板中心 Y 坐标（像素）")]
+    [Description("匹配到的模板中心 Row 坐标（像素）")]
     [Category("执行结果")]
     [ReadOnly(true)]
     public double ResultY { get; set; }
@@ -179,21 +106,10 @@ public class NccConfig : PropertyChangedBase
     public double ResultAngle { get; set; }
 
     [DisplayName("匹配分数")]
-    [Description("NCC 归一化互相关分数（0~1）")]
+    [Description("ShapeModel 匹配分数（0~1）")]
     [Category("执行结果")]
     [ReadOnly(true)]
     public double ResultScore { get; set; }
-
-    [JsonIgnore]
-    [Browsable(false)]
-    public MatchResult? Result { get; set; }
-
-    private static bool SetValue(double current, double newValue, Action<double> apply)
-    {
-        if (Math.Abs(current - newValue) < 0.001) return false;
-        apply(newValue);
-        return true;
-    }
 }
 
 // ==================== 找边配置 ====================
@@ -206,77 +122,69 @@ public class EdgeFindConfig : PropertyChangedBase
     [Browsable(false)]
     public bool IsEnabled { get; set; } = true;
 
-    // ---- 搜索 ROI（序列化用） ----
-    [Browsable(false)]
-    public RoiData SearchRoi { get; set; } = new();
+    // ---- 测量线 ROI（Halcon 计量模型线段） ----
 
-    [DisplayName("X")]
-    [Category("搜索 ROI")]
-    public double SearchRoiX
+    private double _row1 = 100;
+    [DisplayName("起点行 Row1")]
+    [Description("测量线段起点行坐标")]
+    [Category("测量线 ROI")]
+    public double Row1
     {
-        get => SearchRoi.X;
-        set { if (SetValue(SearchRoi.X, value, v => SearchRoi.X = v)) NotifyOfPropertyChange(); }
+        get => _row1;
+        set => Set(ref _row1, value);
     }
 
-    [DisplayName("Y")]
-    [Category("搜索 ROI")]
-    public double SearchRoiY
+    private double _col1 = 100;
+    [DisplayName("起点列 Col1")]
+    [Description("测量线段起点列坐标")]
+    [Category("测量线 ROI")]
+    public double Col1
     {
-        get => SearchRoi.Y;
-        set { if (SetValue(SearchRoi.Y, value, v => SearchRoi.Y = v)) NotifyOfPropertyChange(); }
+        get => _col1;
+        set => Set(ref _col1, value);
     }
 
-    [DisplayName("宽")]
-    [Category("搜索 ROI")]
-    public double SearchRoiWidth
+    private double _row2 = 100;
+    [DisplayName("终点行 Row2")]
+    [Description("测量线段终点行坐标")]
+    [Category("测量线 ROI")]
+    public double Row2
     {
-        get => SearchRoi.Width;
-        set { if (SetValue(SearchRoi.Width, value, v => SearchRoi.Width = v)) NotifyOfPropertyChange(); }
+        get => _row2;
+        set => Set(ref _row2, value);
     }
 
-    [DisplayName("高")]
-    [Category("搜索 ROI")]
-    public double SearchRoiHeight
+    private double _col2 = 200;
+    [DisplayName("终点列 Col2")]
+    [Description("测量线段终点列坐标")]
+    [Category("测量线 ROI")]
+    public double Col2
     {
-        get => SearchRoi.Height;
-        set { if (SetValue(SearchRoi.Height, value, v => SearchRoi.Height = v)) NotifyOfPropertyChange(); }
+        get => _col2;
+        set => Set(ref _col2, value);
     }
 
-    [DisplayName("角度")]
-    [Description("ROI 旋转角（度）")]
-    [Category("搜索 ROI")]
-    public double EdgeAngleDeg
-    {
-        get => SearchRoi.Angle;
-        set { if (SetValue(SearchRoi.Angle, value, v => SearchRoi.Angle = v)) NotifyOfPropertyChange(); }
-    }
+    // ---- 计量模型参数 ----
 
-    // ---- 找边参数 ----
+    [DisplayName("测量半长1")]
+    [Description("垂直于测量线方向的检测区域半长（px）")]
+    [Category("计量参数")]
+    public double MeasureLength1 { get; set; } = 20;
 
-    [DisplayName("边缘方向角")]
-    [Description("要找的边缘方向（度），0°=横边，90°=竖边")]
-    [Category("找边参数")]
-    public double EdgeDirectionDeg { get; set; } = 90;
+    [DisplayName("测量半长2")]
+    [Description("沿测量线方向的检测区域半长（px）")]
+    [Category("计量参数")]
+    public double MeasureLength2 { get; set; } = 20;
 
-    [DisplayName("卡尺数量")]
-    [Description("沿边方向等距放置的卡尺数量")]
-    [Category("找边参数")]
-    public int CaliperCount { get; set; } = 20;
+    [DisplayName("平滑系数 Sigma")]
+    [Description("高斯平滑系数")]
+    [Category("计量参数")]
+    public double MeasureSigma { get; set; } = 1;
 
-    [DisplayName("卡尺宽度")]
-    [Description("每条扫描线的投影宽度（px）")]
-    [Category("找边参数")]
-    public double CaliperWidth { get; set; } = 5;
-
-    [DisplayName("搜索半长")]
-    [Description("从中心向两侧搜索的半长（px）")]
-    [Category("找边参数")]
-    public double SearchHalf { get; set; } = 40;
-
-    [DisplayName("内点阈值")]
-    [Description("RANSAC 内点判定距离（px）")]
-    [Category("找边参数")]
-    public double InlierThreshold { get; set; } = 0.8;
+    [DisplayName("边缘阈值")]
+    [Description("边缘对比度阈值")]
+    [Category("计量参数")]
+    public double MeasureThreshold { get; set; } = 20;
 
     // ---- 执行结果 ----
 
@@ -309,13 +217,6 @@ public class EdgeFindConfig : PropertyChangedBase
     [Category("执行结果")]
     [ReadOnly(true)]
     public double ResultAngleDeg { get; set; }
-
-    private static bool SetValue(double current, double newValue, Action<double> apply)
-    {
-        if (Math.Abs(current - newValue) < 0.001) return false;
-        apply(newValue);
-        return true;
-    }
 }
 
 // ==================== 找点配置 ====================

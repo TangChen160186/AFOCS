@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Emgu.CV.Wpf" />
+
     <PackageReference Include="Nodify" />
     <PackageReference Include="Caliburn.Micro" />
     <PackageReference Include="Serilog" />
@@ -19,11 +19,26 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\VisionToolkit\VisionToolkit.csproj" />
     <ProjectReference Include="..\AFOCS.FlowNodeEditor\AFOCS.FlowNodeEditor.csproj" />
     <ProjectReference Include="..\AFOCS.Framework\AFOCS.Framework.csproj" />
     <ProjectReference Include="..\AFOCS.Infrastructure\AFOCS.Infrastructure.csproj" />
-    <ProjectReference Include="..\VisionEditControl\VisionEditControl.csproj" />
+
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="halcondotnet">
+      <HintPath>..\Vendor\HalconDll\halcondotnet.dll</HintPath>
+    </Reference>
+    <Reference Include="hdevenginedotnet">
+      <HintPath>..\Vendor\HalconDll\hdevenginedotnet.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+    <Target Name="CopyHalconDll" BeforeTargets="Build">
+        <PropertyGroup>
+            <SolutionDir>$(SolutionDir)</SolutionDir>
+        </PropertyGroup>
+        <Copy SourceFiles="$(SolutionDir)Vendor\HalconDll\halcondotnet.dll" DestinationFolder="$(MainOutput)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Condition="Exists('$(SolutionDir)Vendor\HalconDll\halcondotnet.dll')" />
+        <Copy SourceFiles="$(SolutionDir)Vendor\HalconDll\hdevenginedotnet.dll" DestinationFolder="$(MainOutput)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Condition="Exists('$(SolutionDir)Vendor\HalconDll\hdevenginedotnet.dll')" />
+      
+    </Target>
 </Project>

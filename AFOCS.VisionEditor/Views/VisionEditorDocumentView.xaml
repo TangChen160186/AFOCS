@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:vm="clr-namespace:AFOCS.VisionEditor.ViewModels"
-             xmlns:edit="clr-namespace:VisionEditControl;assembly=VisionEditControl"
+             xmlns:halconDotNet="clr-namespace:HalconDotNet;assembly=halcondotnet"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              xmlns:local="clr-namespace:AFOCS.VisionEditor.Views"
              mc:Ignorable="d"
@@ -68,7 +68,7 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-
+    
         <!-- ===== 顶部工具栏 ===== -->
         <Border Grid.Row="0" Background="{StaticResource ToolbarBg}" Padding="8,6"
                 BorderBrush="{StaticResource PanelBorder}" BorderThickness="0,0,0,1">
@@ -148,34 +148,9 @@
                 </Grid>
             </Border>
 
-            <!-- === 中间：图像编辑区 === -->
+            <!-- === 中间：Halcon 图像编辑区 === -->
             <Grid Grid.Column="1" Background="#FFFFFF">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <!-- NCC ROI 切换条 -->
-                <Border Grid.Row="0" Background="{StaticResource ToolbarBg}" Padding="8,4"
-                        BorderBrush="{StaticResource PanelBorder}" BorderThickness="0,0,0,1"
-                        Visibility="{Binding SelectedProcessType, Converter={StaticResource NccToVisibilityConverter}}">
-                    <StackPanel Orientation="Horizontal">
-                        <ToggleButton Content="搜索范围"
-                                      IsChecked="{Binding IsEditingTemplateRoi, Converter={StaticResource InvertBoolConverter}}"
-                                      Padding="12,4" Margin="0,0,4,0"
-                                      Background="#FFFFFF" Foreground="#333" BorderBrush="#CCC" BorderThickness="1" />
-                        <ToggleButton Content="模板范围"
-                                      IsChecked="{Binding IsEditingTemplateRoi}"
-                                      Padding="12,4"
-                                      Background="#FFFFFF" Foreground="#333" BorderBrush="#CCC" BorderThickness="1" />
-                    </StackPanel>
-                </Border>
-
-                <edit:RoiImageEditor Grid.Row="1"
-                                     x:Name="RoiEditor"
-                                     ImageSource="{Binding DisplayImage}"
-                                     RoiRect="{Binding EditorRoiRect, Mode=TwoWay}"
-                                     RotationAngle="{Binding EditorRoiAngle, Mode=TwoWay}" />
+                <halconDotNet:HSmartWindowControlWPF x:Name="hSmart" Loaded="HSmart_OnLoaded" />
             </Grid>
 
             <!-- === 右侧：PropertyGrid + 结果预览 === -->

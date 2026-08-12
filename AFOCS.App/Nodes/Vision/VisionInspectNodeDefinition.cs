@@ -6,7 +6,6 @@ using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Infrastructure;
 using AFOCS.VisionEditor.Models;
 using AFOCS.VisionEditor.Services;
-using Emgu.CV;
 using Serilog;
 
 namespace AFOCS.App.Nodes.Vision;
@@ -24,9 +23,9 @@ public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, I
 {
     // ========== 输入端口 ==========
 
-    /// <summary>输入图像（Mat 灰度图）</summary>
-    [NodePort("Image", "图像", NodePortType.Mat, true)]
-    public Mat? Image { get; set; }
+    /// <summary>输入图像（PixelData 灰度图，来自相机采集或图片文件节点）</summary>
+    [NodePort("Image", "图像", NodePortType.Object, true)]
+    public PixelData? Image { get; set; }
 
     // ========== 输出端口 ==========
 
@@ -68,29 +67,27 @@ public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, I
 
     public async Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
     {
-        // 校验模板路径
         if (string.IsNullOrWhiteSpace(TemplatePath))
             throw new InvalidOperationException("视觉检测节点：模板路径为空，请先选择 .vtemplate 文件");
         if (!File.Exists(TemplatePath))
             throw new InvalidOperationException($"视觉检测节点：模板文件不存在 \"{TemplatePath}\"");
 
-        // 获取输入图像
-        var grayImage = Image;
-        if (grayImage == null || grayImage.IsEmpty)
+        var pixelData = Image;
+        if (pixelData == null || pixelData.Data.Length == 0)
             throw new InvalidOperationException("视觉检测节点：输入图像为空，请连接相机节点");
 
-        // 加载模板
         var json = File.ReadAllText(TemplatePath);
         var template = JsonHelper.Deserialize<VisionTemplate>(json);
         if (template == null)
             throw new InvalidOperationException($"视觉检测节点：模板解析失败 \"{TemplatePath}\"");
 
-        // 执行检测
+        // PixelData → HImage → 执行检测
         VisionInspectionResult result;
         try
         {
+            using var hImage = pixelData.ToHImage();
             var service = new VisionInspectionService();
-            result = service.Inspect(grayImage, null, template)
+            result = service.Inspect(hImage, template)
                 ?? throw new InvalidOperationException("视觉检测节点：Inspect 返回 null");
         }
         catch (Exception ex)
@@ -99,21 +96,15 @@ public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, I
             throw;
         }
 
-        // 检查已启用的流程是否全部成功，任一失败则整个节点报错
         var errors = new List<string>(4);
-        if (template.Ncc.IsEnabled && !result.NccSuccess)
-            errors.Add("NCC 模板匹配失败");
-        if (template.EdgeFind1.IsEnabled && !result.Edge1Success)
-            errors.Add("找边1 失败");
-        if (template.EdgeFind2.IsEnabled && !result.Edge2Success)
-            errors.Add("找边2 失败");
-        if (template.PointFind.IsEnabled && !result.PointSuccess)
-            errors.Add("找点 失败");
+        if (template.Ncc.IsEnabled && !result.NccSuccess) errors.Add("NCC 模板匹配失败");
+        if (template.EdgeFind1.IsEnabled && !result.Edge1Success) errors.Add("找边1 失败");
+        if (template.EdgeFind2.IsEnabled && !result.Edge2Success) errors.Add("找边2 失败");
+        if (template.PointFind.IsEnabled && !result.PointSuccess) errors.Add("找点 失败");
 
         if (errors.Count > 0)
             throw new InvalidOperationException("视觉检测节点：" + string.Join("；", errors));
 
-        // 写回输出端口
         NccDx = result.Dx;
         NccDy = result.Dy;
         Edge1AngleDev = result.Edge1AngleDev;

@@ -11,13 +11,16 @@ using AFOCS.VisionEditor.Services;
 using AFOCS.VisionEditor.Views;
 using AFOCS.Framework.Framework;
 using Caliburn.Micro;
+using HalconDotNet;
 using Microsoft.Win32;
 using Action = System.Action;
 
 namespace AFOCS.VisionEditor.ViewModels;
 
 /// <summary>
-/// 视觉编辑器 Document ViewModel —— 管理 NCC → 找边1 → 找边2 → 找点 四条固定流程
+/// 视觉编辑器 Document ViewModel —— 管理 NCC → 找边1 → 找边2 → 找点 四条固定流程。
+/// Halcon HSmartWindowControlWPF 作为图像显示和 ROI 交互控件，
+/// 找边使用 HDrawingObject (LINE)，NCC 使用 HDrawingObject (RECTANGLE1)。
 /// </summary>
 [Export]
 [PartCreationPolicy(CreationPolicy.NonShared)]
@@ -42,6 +45,24 @@ public class VisionEditorDocumentViewModel : PersistedDocument
     public EdgeFindConfig EdgeFind1 => Template.EdgeFind1;
     public EdgeFindConfig EdgeFind2 => Template.EdgeFind2;
     public PointFindConfig PointFind => Template.PointFind;
+
+    // ========== Halcon 窗口 ==========
+
+    private HSmartWindowControlWPF? _halconControl;
+    private HWindow? _halconWindow;
+    private HImage? _halconImage;
+    private HDrawingObject? _currentHObject;
+    private HDrawingObject.HDrawingObjectCallback? _activeCallback; // 防 GC 回收
+
+    public void SetHalconControl(HSmartWindowControlWPF control)
+    {
+        _halconControl = control;
+        _halconWindow = control.HalconWindow;
+
+        // 如果已有图片路径，立即显示
+        if (!string.IsNullOrEmpty(ImagePath) && File.Exists(ImagePath))
+            DisplayImageOnHalcon(ImagePath);
+    }
 
     // ========== 流程列表 ==========
 
@@ -78,7 +99,7 @@ public class VisionEditorDocumentViewModel : PersistedDocument
                 NotifyOfPropertyChange(nameof(IsProcessSelected));
                 NotifyOfPropertyChange(nameof(SelectedProcessType));
                 SyncSelectedConfigObject();
-                SyncRoiToEditor();
+                SyncDrawingObject();
             }
         }
     }
@@ -94,11 +115,9 @@ public class VisionEditorDocumentViewModel : PersistedDocument
         {
             if (_selectedConfigObject == value) return;
 
-            // 取消订阅旧对象
             if (_selectedConfigObject is INotifyPropertyChanged oldNpc)
                 oldNpc.PropertyChanged -= OnConfigPropertyChanged;
 
-            // 订阅新对象
             if (value is INotifyPropertyChanged newNpc)
                 newNpc.PropertyChanged += OnConfigPropertyChanged;
 
@@ -109,8 +128,8 @@ public class VisionEditorDocumentViewModel : PersistedDocument
 
     private void OnConfigPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        // PropertyGrid 修改了 ROI 值 → 同步图像编辑器
-        SyncRoiToEditor();
+        // PropertyGrid 修改了参数 → 更新 Halcon 窗口上的 DrawingObject
+        SyncDrawingObject();
     }
 
     private void SyncSelectedConfigObject()
@@ -125,7 +144,6 @@ public class VisionEditorDocumentViewModel : PersistedDocument
         };
     }
 
-    /// <summary>ROI 变更后强制 PropertyGrid 刷新（null → obj 触发重绑）</summary>
     private void RefreshPropertyGrid()
     {
         var current = SelectedConfigObject;
@@ -135,16 +153,8 @@ public class VisionEditorDocumentViewModel : PersistedDocument
 
     // ========== NCC 专用：切换编辑 SearchRoi / TemplateRoi ==========
 
-    private bool _isEditingTemplateRoi;
-    public bool IsEditingTemplateRoi
-    {
-        get => _isEditingTemplateRoi;
-        set
-        {
-            if (Set(ref _isEditingTemplateRoi, value))
-                SyncRoiToEditor();
-        }
-    }
+    [Browsable(false)]
+    public bool IsEditingTemplateRoi { get; set; } // 保留字段，不再使用搜索/模板切换
 
     // ========== 图片 ==========
 
@@ -157,7 +167,7 @@ public class VisionEditorDocumentViewModel : PersistedDocument
             if (Set(ref _imagePath, value))
             {
                 Template.ImagePath = value ?? string.Empty;
-                LoadImage();
+                DisplayImageOnHalcon(value);
                 IsDirty = true;
             }
         }
@@ -168,44 +178,6 @@ public class VisionEditorDocumentViewModel : PersistedDocument
     {
         get => _displayImage;
         set => Set(ref _displayImage, value);
-    }
-
-
-    // ========== RoiImageEditor 绑定 ==========
-
-    /// <summary>直读当前 ROI 数据，双向绑定</summary>
-    public Rect EditorRoiRect
-    {
-        get
-        {
-            var roi = GetCurrentRoi();
-            return roi != null ? new Rect(roi.X, roi.Y, roi.Width, roi.Height) : Rect.Empty;
-        }
-        set
-        {
-            var roi = GetCurrentRoi();
-            if (roi == null) return;
-            roi.X = value.X;
-            roi.Y = value.Y;
-            roi.Width = value.Width;
-            roi.Height = value.Height;
-            RefreshPropertyGrid();
-            IsDirty = true;
-        }
-    }
-
-    /// <summary>直读当前 ROI 角度，双向绑定</summary>
-    public double EditorRoiAngle
-    {
-        get => GetCurrentRoi()?.Angle ?? 0;
-        set
-        {
-            var roi = GetCurrentRoi();
-            if (roi == null) return;
-            roi.Angle = value;
-            RefreshPropertyGrid();
-            IsDirty = true;
-        }
     }
 
     // ========== 执行状态 ==========
@@ -231,8 +203,8 @@ public class VisionEditorDocumentViewModel : PersistedDocument
     // ========== 命令 ==========
 
     public ICommand ExecuteCommand { get; }
-        public ICommand SelectImageCommand { get; }
-        public ICommand VerifyCommand { get; }
+    public ICommand SelectImageCommand { get; }
+    public ICommand VerifyCommand { get; }
 
     [ImportingConstructor]
     public VisionEditorDocumentViewModel()
@@ -270,6 +242,132 @@ public class VisionEditorDocumentViewModel : PersistedDocument
         VerifyCommand = new RelayCommand(_ => Verify());
     }
 
+    // ========== Halcon 图像显示 ==========
+
+    private void DisplayImageOnHalcon(string? path)
+    {
+        if (_halconWindow == null) return;
+        if (string.IsNullOrEmpty(path) || !File.Exists(path)) return;
+
+        _halconImage?.Dispose();
+        _halconImage = new HImage(path);
+        _halconImage.GetImageSize(out int width, out int height);
+
+        _halconWindow.SetPart(0, 0, height - 1, width - 1);
+        _halconWindow.DispObj(_halconImage);
+        _halconWindow.SetLineWidth(1);
+
+        // 自适应缩放
+        _halconControl?.SetFullImagePart();
+
+        // 刷新 DrawingObject
+        SyncDrawingObject();
+
+        // 同时设置 DisplayImage 用于 WPF 绑定（如果需要）
+        try
+        {
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.UriSource = new Uri(path);
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.EndInit();
+            bitmap.Freeze();
+            DisplayImage = bitmap;
+        }
+        catch { }
+    }
+
+    // ========== HDrawingObject 管理 ==========
+
+    private void SyncDrawingObject(bool redrawImage = true)
+    {
+        if (_halconWindow == null || _halconImage == null) return;
+
+        // 移除旧 DrawingObject
+        if (_currentHObject != null)
+        {
+            _currentHObject.Dispose();
+            _currentHObject = null;
+        }
+
+        // 重绘底图（默认行为；执行结果绘制时跳过以免清除结果）
+        if (redrawImage)
+            _halconWindow.DispObj(_halconImage);
+
+        // 根据当前选中的流程创建对应的 DrawingObject
+        switch (SelectedProcessType)
+        {
+            case VisionProcessType.Ncc:
+                SyncNccDrawingObject();
+                break;
+            case VisionProcessType.EdgeFind1:
+            case VisionProcessType.EdgeFind2:
+                SyncEdgeDrawingObject(SelectedProcessType == VisionProcessType.EdgeFind1 ? EdgeFind1 : EdgeFind2);
+                break;
+        }
+    }
+
+    private void SyncNccDrawingObject()
+    {
+        if (_halconWindow == null) return;
+
+        _currentHObject = HDrawingObject.CreateDrawingObject(
+            HDrawingObject.HDrawingObjectType.RECTANGLE2,
+            new HTuple[] { Ncc.Row, Ncc.Column, Ncc.Phi, Ncc.Length1, Ncc.Length2 });
+
+        _activeCallback = OnNccDrawingObjectChanged;
+        _currentHObject.OnDrag(_activeCallback);
+        _currentHObject.OnResize(_activeCallback);
+        _halconWindow.AttachDrawingObjectToWindow(_currentHObject);
+    }
+
+    private void OnNccDrawingObjectChanged(IntPtr drawid, IntPtr windowHandle, string type)
+    {
+        if (_currentHObject == null) return;
+        var param = _currentHObject.GetDrawingObjectParams(
+            new HTuple("row", "column", "phi", "length1", "length2"));
+        double[] vals = param.ToDArr();
+
+        Ncc.Row = vals[0];
+        Ncc.Column = vals[1];
+        Ncc.Phi = vals[2];
+        Ncc.Length1 = vals[3];
+        Ncc.Length2 = vals[4];
+
+        IsDirty = true;
+    }
+
+    private void SyncEdgeDrawingObject(EdgeFindConfig cfg)
+    {
+        if (_halconWindow == null) return;
+
+        _currentHObject = HDrawingObject.CreateDrawingObject(
+            HDrawingObject.HDrawingObjectType.LINE,
+            new HTuple[] { cfg.Row1, cfg.Col1, cfg.Row2, cfg.Col2 });
+
+        _activeCallback = OnEdgeDrawingObjectChanged;
+        _currentHObject.OnDrag(_activeCallback);
+        _currentHObject.OnResize(_activeCallback);
+        _halconWindow.AttachDrawingObjectToWindow(_currentHObject);
+    }
+
+    private void OnEdgeDrawingObjectChanged(IntPtr drawid, IntPtr windowHandle, string type)
+    {
+        if (SelectedProcessType == null || _currentHObject == null) return;
+
+        var cfg = SelectedProcessType == VisionProcessType.EdgeFind1 ? EdgeFind1 : EdgeFind2;
+
+        var param = _currentHObject.GetDrawingObjectParams(new HTuple("row1", "column1", "row2", "column2"));
+        double[] vals = param.ToDArr();
+
+        cfg.Row1 = vals[0];
+        cfg.Col1 = vals[1];
+        cfg.Row2 = vals[2];
+        cfg.Col2 = vals[3];
+
+        IsDirty = true;
+    }
+
     // ========== 持久化 ==========
 
     protected override Task DoNew()
@@ -294,7 +392,7 @@ public class VisionEditorDocumentViewModel : PersistedDocument
             if (File.Exists(imgPath))
             {
                 _imagePath = imgPath;
-                LoadImage();
+                DisplayImageOnHalcon(imgPath);
             }
         }
     }
@@ -320,47 +418,7 @@ public class VisionEditorDocumentViewModel : PersistedDocument
         }
     }
 
-    private void LoadImage()
-    {
-        if (string.IsNullOrEmpty(ImagePath) || !File.Exists(ImagePath))
-        {
-            DisplayImage = null;
-            return;
-        }
-
-        try
-        {
-            var bitmap = new BitmapImage();
-            bitmap.BeginInit();
-            bitmap.UriSource = new Uri(ImagePath);
-            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.EndInit();
-            bitmap.Freeze();
-            DisplayImage = bitmap;
-        }
-        catch
-        {
-            DisplayImage = null;
-        }
-    }
-
-    // ========== ROI 同步 ==========
-
-    private void SyncRoiToEditor()
-    {
-        NotifyOfPropertyChange(nameof(EditorRoiRect));
-        NotifyOfPropertyChange(nameof(EditorRoiAngle));
-    }
-
-    private RoiData? GetCurrentRoi() => SelectedProcessType switch
-    {
-        VisionProcessType.Ncc => IsEditingTemplateRoi ? Ncc.TemplateRoi : Ncc.SearchRoi,
-        VisionProcessType.EdgeFind1 => EdgeFind1.SearchRoi,
-        VisionProcessType.EdgeFind2 => EdgeFind2.SearchRoi,
-        _ => null
-    };
-
-    // ========== 模型 ↔ UI 同步 ==========
+    // ========== 执行流程 → 结果刷新 ==========
 
     private void SyncProcessStatesFromModel()
     {
@@ -395,25 +453,42 @@ public class VisionEditorDocumentViewModel : PersistedDocument
         HasExecutionError = false;
         ExecutionStatus = "执行中...";
 
+        // 执行前移除 DrawingObject
+        DetachDrawingObject();
+
         try
         {
-            BitmapSource? resultImage = null;
+            bool success = false;
 
             await Task.Run(() =>
             {
                 var service = new VisionExecutionService();
-                resultImage = service.Execute(ImagePath, Template, (msg, success) =>
+                success = service.Execute(ImagePath, Template, (msg, ok) =>
                 {
                     Application.Current?.Dispatcher.Invoke(() =>
                     {
                         ExecutionStatus = msg;
-                        HasExecutionError = !success;
+                        HasExecutionError = !ok;
                     });
                 });
             });
-            
-            Application.Current.Dispatcher.Invoke(() => DisplayImage = resultImage,
-                System.Windows.Threading.DispatcherPriority.Loaded);
+
+            // 执行完成后在 Halcon 窗口显示底图 → 绘制结果 → 挂载编辑工具
+            if (_halconWindow != null && _halconImage != null)
+            {
+                _halconWindow.DispObj(_halconImage);
+                _halconWindow.SetLineWidth(2);
+                DrawResultsOnHalcon();
+                SyncDrawingObject(redrawImage: false);
+                _halconControl?.SetFullImagePart();
+            }
+
+            if (!success)
+            {
+                ExecutionStatus = "执行完成（部分流程失败）";
+                HasExecutionError = true;
+            }
+
             RefreshPropertyGrid();
             NotifyOfPropertyChange(nameof(Template));
             IsDirty = true;
@@ -426,6 +501,86 @@ public class VisionEditorDocumentViewModel : PersistedDocument
         finally
         {
             IsBusy = false;
+            // 恢复 DrawingObject（不重绘底图，避免清除执行结果）
+            SyncDrawingObject(redrawImage: false);
+        }
+    }
+
+    private void DetachDrawingObject()
+    {
+        if (_currentHObject != null && _halconWindow != null)
+        {
+            _halconWindow.DetachDrawingObjectFromWindow(_currentHObject);
+            _currentHObject.Dispose();
+            _currentHObject = null;
+        }
+    }
+
+    /// <summary>在 Halcon 窗口绘制执行结果</summary>
+    private void DrawResultsOnHalcon()
+    {
+        if (_halconWindow == null || _halconImage == null) return;
+
+        _halconWindow.SetLineWidth(2);
+
+        // NCC 结果：绘制匹配到的模板轮廓
+        if (Ncc.IsEnabled && Ncc.ResultScore > 0)
+        {
+            try
+            {
+                if (File.Exists(Ncc.ModelPath))
+                {
+                    HOperatorSet.ReadShapeModel(Ncc.ModelPath, out HTuple modelId);
+                    HOperatorSet.GetShapeModelContours(out HObject contours, modelId, 1);
+
+                    // 变换到匹配位置
+                    HOperatorSet.VectorAngleToRigid(0, 0, 0,
+                        Ncc.ResultY, Ncc.ResultX,
+                        Ncc.ResultAngle * Math.PI / 180.0,
+                        out HTuple homMat);
+                    HOperatorSet.AffineTransContourXld(contours, out HObject transContours, homMat);
+
+                    _halconWindow.SetColor("green");
+                    _halconWindow.DispObj(transContours);
+                }
+                else
+                {
+                    // fallback: 十字
+                    _halconWindow.SetColor("green");
+                    _halconWindow.DispCross(Ncc.ResultY, Ncc.ResultX, 50, Ncc.ResultAngle);
+                }
+            }
+            catch
+            {
+                _halconWindow.SetColor("green");
+                _halconWindow.DispCross(Ncc.ResultY, Ncc.ResultX, 50, Ncc.ResultAngle);
+            }
+        }
+
+        // 找边1 结果：红色线段
+        if (EdgeFind1.IsEnabled)
+        {
+            _halconWindow.SetColor("red");
+            _halconWindow.DispLine(
+                EdgeFind1.ResultStartY, EdgeFind1.ResultStartX,
+                EdgeFind1.ResultEndY, EdgeFind1.ResultEndX);
+        }
+
+        // 找边2 结果：蓝色线段
+        if (EdgeFind2.IsEnabled)
+        {
+            _halconWindow.SetColor("blue");
+            _halconWindow.DispLine(
+                EdgeFind2.ResultStartY, EdgeFind2.ResultStartX,
+                EdgeFind2.ResultEndY, EdgeFind2.ResultEndX);
+        }
+
+        // 找点 结果：品红色圆
+        if (PointFind.IsEnabled && (PointFind.ResultX != 0 || PointFind.ResultY != 0))
+        {
+            _halconWindow.SetColor("magenta");
+            _halconWindow.DispCircle(PointFind.ResultY, PointFind.ResultX, 10);
+            _halconWindow.DispCross(PointFind.ResultY, PointFind.ResultX, 12, 0);
         }
     }
 

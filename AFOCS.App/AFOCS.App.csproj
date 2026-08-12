@@ -67,6 +67,12 @@
         <ProjectReference Include="..\ISPBoard\ISPBoard.vcxproj" />
     </ItemGroup>
     <ItemGroup>
+      <Reference Include="halcondotnet">
+        <HintPath>..\Vendor\HalconDll\halcondotnet.dll</HintPath>
+      </Reference>
+      <Reference Include="hdevenginedotnet">
+        <HintPath>..\Vendor\HalconDll\hdevenginedotnet.dll</HintPath>
+      </Reference>
       <Reference Include="MvCameraControl.Net">
         <HintPath>..\Vendor\Camera\win64\MvCameraControl.Net.dll</HintPath>
       </Reference>

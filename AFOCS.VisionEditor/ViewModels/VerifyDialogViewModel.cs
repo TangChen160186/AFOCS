@@ -1,96 +1,111 @@
+using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using AFOCS.Framework.Framework;
 using AFOCS.VisionEditor.Models;
 using AFOCS.VisionEditor.Services;
 using Caliburn.Micro;
-using Emgu.CV;
-using Emgu.CV.CvEnum;
+using HalconDotNet;
 using Microsoft.Win32;
 
 namespace AFOCS.VisionEditor.ViewModels;
 
 /// <summary>
-/// 视觉验证对话框VM —— 选择新图片，执行检测，显示结果图+偏差文字
+/// 视觉验证对话框VM —— 选择新图片，执行检测，在 Halcon 窗口上显示结果
 /// </summary>
 public class VerifyDialogViewModel : PropertyChangedBase
 {
     private readonly VisionTemplate _template;
 
-    // ========== 图片 ==========
+    // ---- Halcon ----
 
-    private string? _verifyImagePath;
-    public string? VerifyImagePath
-    {
-        get => _verifyImagePath;
-        set => Set(ref _verifyImagePath, value);
-    }
+    private HSmartWindowControlWPF? _halconControl;
+    private HWindow? _halconWindow;
+    private HImage? _hImage;
 
-    private ImageSource? _displayImage;
-    public ImageSource? DisplayImage
-    {
-        get => _displayImage;
-        set => Set(ref _displayImage, value);
-    }
+    // ---- 状态 ----
 
-    // ========== 状态 ==========
-
-    private bool _isBusy;
     public bool IsBusy
     {
-        get => _isBusy;
-        set => Set(ref _isBusy, value);
+        get;
+        set => Set(ref field, value);
     }
 
-    private bool _hasImage;
+    public string? VerifyImagePath
+    {
+        get;
+        set => Set(ref field, value);
+    }
+
     public bool HasImage
     {
-        get => _hasImage;
-        set => Set(ref _hasImage, value);
+        get;
+        set => Set(ref field, value);
     }
 
-    private bool _hasResult;
     public bool HasResult
     {
-        get => _hasResult;
-        set => Set(ref _hasResult, value);
+        get;
+        set => Set(ref field, value);
     }
 
-    // ========== 结果文字 ==========
+    // ---- 结果文字 ----
 
     public bool ShowNcc => _template.Ncc.IsEnabled;
     public bool ShowEdge1 => _template.EdgeFind1.IsEnabled;
     public bool ShowEdge2 => _template.EdgeFind2.IsEnabled;
     public bool ShowPoint => _template.PointFind.IsEnabled;
 
-    private string _nccText = string.Empty;
-    public string NccText { get => _nccText; set => Set(ref _nccText, value); }
+    public string NccText
+    {
+        get;
+        set => Set(ref field, value);
+    } = string.Empty;
 
-    private string _edge1Text = string.Empty;
-    public string Edge1Text { get => _edge1Text; set => Set(ref _edge1Text, value); }
+    public string Edge1Text
+    {
+        get;
+        set => Set(ref field, value);
+    } = string.Empty;
 
-    private string _edge2Text = string.Empty;
-    public string Edge2Text { get => _edge2Text; set => Set(ref _edge2Text, value); }
+    public string Edge2Text
+    {
+        get;
+        set => Set(ref field, value);
+    } = string.Empty;
 
-    private string _pointText = string.Empty;
-    public string PointText { get => _pointText; set => Set(ref _pointText, value); }
+    public string PointText
+    {
+        get;
+        set => Set(ref field, value);
+    } = string.Empty;
 
-    private bool _nccOk;
-    public bool NccOk { get => _nccOk; set => Set(ref _nccOk, value); }
+    public bool NccOk
+    {
+        get;
+        set => Set(ref field, value);
+    }
 
-    private bool _edge1Ok;
-    public bool Edge1Ok { get => _edge1Ok; set => Set(ref _edge1Ok, value); }
+    public bool Edge1Ok
+    {
+        get;
+        set => Set(ref field, value);
+    }
 
-    private bool _edge2Ok;
-    public bool Edge2Ok { get => _edge2Ok; set => Set(ref _edge2Ok, value); }
+    public bool Edge2Ok
+    {
+        get;
+        set => Set(ref field, value);
+    }
 
-    private bool _pointOk;
-    public bool PointOk { get => _pointOk; set => Set(ref _pointOk, value); }
+    public bool PointOk
+    {
+        get;
+        set => Set(ref field, value);
+    }
 
-    // ========== 命令 ==========
+    // ---- 命令 ----
 
     public ICommand SelectImageCommand { get; }
     public ICommand VerifyCommand { get; }
@@ -102,7 +117,13 @@ public class VerifyDialogViewModel : PropertyChangedBase
         VerifyCommand = new RelayCommand(_ => VerifyAsync(), _ => !string.IsNullOrEmpty(VerifyImagePath) && !IsBusy);
     }
 
-    // ========== 图片选择 ==========
+    public void SetHalconControl(HSmartWindowControlWPF control)
+    {
+        _halconControl = control;
+        _halconWindow = control.HalconWindow;
+    }
+
+    // ==================== 图片选择 ====================
 
     private void SelectImage()
     {
@@ -123,34 +144,40 @@ public class VerifyDialogViewModel : PropertyChangedBase
     {
         if (string.IsNullOrEmpty(VerifyImagePath) || !File.Exists(VerifyImagePath))
         {
-            DisplayImage = null;
+            _hImage?.Dispose();
+            _hImage = null;
             HasImage = false;
             return;
         }
 
         try
         {
-            var bitmap = new BitmapImage();
-            bitmap.BeginInit();
-            bitmap.UriSource = new Uri(VerifyImagePath);
-            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.EndInit();
-            bitmap.Freeze();
-            DisplayImage = bitmap;
+            _hImage?.Dispose();
+            _hImage = new HImage(VerifyImagePath);
+
+            if (_halconWindow != null)
+            {
+                _halconWindow.DispObj(_hImage);
+                _halconControl?.SetFullImagePart();
+            }
+
             HasImage = true;
         }
         catch
         {
-            DisplayImage = null;
+            _hImage?.Dispose();
+            _hImage = null;
             HasImage = false;
         }
     }
 
-    // ========== 验证执行 ==========
+    // ==================== 验证执行 ====================
 
     private async void VerifyAsync()
     {
         if (string.IsNullOrEmpty(VerifyImagePath) || !File.Exists(VerifyImagePath))
+            return;
+        if (_hImage == null || _halconWindow == null)
             return;
 
         IsBusy = true;
@@ -162,23 +189,32 @@ public class VerifyDialogViewModel : PropertyChangedBase
 
             await Task.Run(() =>
             {
-                using var grayImage = CvInvoke.Imread(VerifyImagePath, ImreadModes.Grayscale);
-                if (grayImage == null || grayImage.IsEmpty)
-                    return;
-                using var colorImage = CvInvoke.Imread(VerifyImagePath, ImreadModes.ColorRgb);
                 var service = new VisionInspectionService();
-                result = service.Inspect(grayImage, colorImage, _template);
+                result = service.Inspect(_hImage, _template);
             });
 
             if (result != null)
             {
+                // 清除旧结果，显示底图
+                _halconWindow.DispObj(_hImage);
+
+                // 绘制检测结果
+                DrawVerifyResults(result);
+
+                _halconControl?.SetFullImagePart();
+
                 ApplyResult(result);
                 HasResult = true;
             }
         }
         catch
         {
-            // 失败时保持原图
+            // 失败时至少显示原图
+            if (_hImage != null && _halconWindow != null)
+            {
+                _halconWindow.DispObj(_hImage);
+                _halconControl?.SetFullImagePart();
+            }
         }
         finally
         {
@@ -187,15 +223,91 @@ public class VerifyDialogViewModel : PropertyChangedBase
         }
     }
 
-    private void ApplyResult(VisionInspectionResult result)
+    // ==================== 绘制结果 ====================
+
+    private void DrawVerifyResults(VisionInspectionResult result)
     {
-        if (result.DrawMat != null)
+        if (_halconWindow == null) return;
+
+        if (result.NccSuccess && _template.Ncc.IsEnabled)
         {
-            var bmp = result.DrawMat.ToBitmapSource();
-            bmp.Freeze();
-            DisplayImage = bmp;
+            DrawNccResult(result);
         }
 
+        if (result.Edge1Success && _template.EdgeFind1.IsEnabled)
+        {
+            DrawEdgeResult(result.Edge1ResultStartX, result.Edge1ResultStartY,
+                           result.Edge1ResultEndX, result.Edge1ResultEndY,
+                           "green");
+        }
+
+        if (result.Edge2Success && _template.EdgeFind2.IsEnabled)
+        {
+            DrawEdgeResult(result.Edge2ResultStartX, result.Edge2ResultStartY,
+                           result.Edge2ResultEndX, result.Edge2ResultEndY,
+                           "yellow");
+        }
+
+        if (result.PointSuccess && _template.PointFind.IsEnabled)
+        {
+            DrawPointResult(result.PointResultX, result.PointResultY);
+        }
+    }
+
+    private void DrawNccResult(VisionInspectionResult result)
+    {
+        if (_halconWindow == null) return;
+
+        try
+        {
+            HOperatorSet.ReadShapeModel(_template.Ncc.ModelPath, out HTuple modelId);
+
+            HOperatorSet.GetShapeModelContours(out HObject ho_ModelContours, modelId, 1);
+
+            HOperatorSet.VectorAngleToRigid(
+                0, 0, 0,
+                result.NccResultRow, result.NccResultColumn, result.NccResultAngle * Math.PI / 180.0,
+                out HTuple hv_HomMat2D);
+
+            HOperatorSet.AffineTransContourXld(ho_ModelContours,
+                out HObject ho_TransContours, hv_HomMat2D);
+
+            _halconWindow.SetColor("red");
+            _halconWindow.SetLineWidth(2);
+            _halconWindow.DispObj(ho_TransContours);
+
+            ho_ModelContours.Dispose();
+            ho_TransContours.Dispose();
+            modelId.Dispose();
+        }
+        catch { }
+    }
+
+    private void DrawEdgeResult(
+        double startX, double startY, double endX, double endY, string color)
+    {
+        if (_halconWindow == null) return;
+
+        _halconWindow.SetColor(color);
+        _halconWindow.SetLineWidth(2);
+        _halconWindow.DispLine(startY, startX, endY, endX);
+    }
+
+    private void DrawPointResult(double x, double y)
+    {
+        if (_halconWindow == null) return;
+
+        _halconWindow.SetColor("red");
+        _halconWindow.SetLineWidth(1);
+        int crossSize = 10;
+        _halconWindow.DispLine(y - crossSize, x, y + crossSize, x);
+        _halconWindow.DispLine(y, x - crossSize, y, x + crossSize);
+    }
+
+    // ==================== 结果文字 ====================
+
+    private void ApplyResult(VisionInspectionResult result)
+    {
         NccOk = result.NccSuccess;
         NccText = result.NccSuccess
             ? $"NCC:  ΔX={result.Dx:+0.00;-0.00}  ΔY={result.Dy:+0.00;-0.00}"
