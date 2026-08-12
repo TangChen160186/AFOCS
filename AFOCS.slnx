@@ -3,10 +3,7 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Folder Name="/Core/">
-    <Project Path="VisionEditControl/VisionEditControl.csproj" Id="18c8ed94-3812-4460-81b4-d4f6c636eb91" />
-    <Project Path="VisionToolkit/VisionToolkit.csproj" />
-  </Folder>
+  <Folder Name="/Core/" />
   <Folder Name="/FrameWork/">
     <Project Path="AFOCS.Framework.Test/AFOCS.Framework.Test.csproj" Id="93f01b83-267d-4e8b-a587-ace81ec908c0">
       <Platform Project="x64" />

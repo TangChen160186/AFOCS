@@ -35,6 +35,12 @@ public class MoveAxisHomeNodeDefinition(
         set => Set(ref field, value);
     } = EAxis.CouplingLThetaX;
 
+    [DisplayName("回零超时时间")]
+    public int HomeTimeout
+    {
+        get;
+        set => Set(ref field, value);
+    } = 0;
     public async Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
     {
         // 工位由入口节点传入，未提供时直接报错，避免对错误工位的轴回零
@@ -45,7 +51,7 @@ public class MoveAxisHomeNodeDefinition(
         if (Axis.IsBusAxis())
         {
             var busId = Axis.ToBusAxisId(station);
-            var result = await busAxisDevice.MoveHomeAsync(busId);
+            var result = await busAxisDevice.MoveHomeAsync(busId,timeoutMs: HomeTimeout);
             error = result.IsSuccess ? null : result.Message;
         }
         else if (Axis.IsAkribisAxis())
@@ -58,7 +64,7 @@ public class MoveAxisHomeNodeDefinition(
             }
             else
             {
-                var result = await motion.HomeAsync(akAxis,30000);
+                var result = await motion.HomeAsync(akAxis, HomeTimeout);
                 error = result.IsSuccess ? null : result.Message;
             }
         }
