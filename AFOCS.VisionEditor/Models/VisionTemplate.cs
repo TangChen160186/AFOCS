@@ -75,6 +75,26 @@ public class NccConfig : PropertyChangedBase
         set => Set(ref _length2, value);
     }
 
+    /// <summary>拖拽回调用：直接设置字段，不触发 PropertyChanged（避免 PropertyGrid 双向绑定干扰 Halcon 鼠标捕获）</summary>
+    internal void UpdateFromDrag(double row, double column, double phi, double length1, double length2)
+    {
+        _row = row;
+        _column = column;
+        _phi = phi;
+        _length1 = length1;
+        _length2 = length2;
+    }
+
+    /// <summary>拖拽结束后一次性刷新所有 ROI 属性通知</summary>
+    internal void NotifyDragEnd()
+    {
+        NotifyOfPropertyChange(nameof(Row));
+        NotifyOfPropertyChange(nameof(Column));
+        NotifyOfPropertyChange(nameof(Phi));
+        NotifyOfPropertyChange(nameof(Length1));
+        NotifyOfPropertyChange(nameof(Length2));
+    }
+
     // ---- 匹配参数 ----
 
     [DisplayName("最小匹配分数")]
@@ -162,6 +182,24 @@ public class EdgeFindConfig : PropertyChangedBase
     {
         get => _col2;
         set => Set(ref _col2, value);
+    }
+
+    /// <summary>拖拽回调用：直接设置字段，不触发 PropertyChanged（避免 PropertyGrid 双向绑定干扰 Halcon 鼠标捕获）</summary>
+    internal void UpdateFromDrag(double row1, double col1, double row2, double col2)
+    {
+        _row1 = row1;
+        _col1 = col1;
+        _row2 = row2;
+        _col2 = col2;
+    }
+
+    /// <summary>拖拽结束后一次性刷新所有 ROI 属性通知</summary>
+    internal void NotifyDragEnd()
+    {
+        NotifyOfPropertyChange(nameof(Row1));
+        NotifyOfPropertyChange(nameof(Col1));
+        NotifyOfPropertyChange(nameof(Row2));
+        NotifyOfPropertyChange(nameof(Col2));
     }
 
     // ---- 计量模型参数 ----

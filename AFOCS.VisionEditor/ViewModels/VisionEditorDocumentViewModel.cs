@@ -59,6 +59,20 @@ public class VisionEditorDocumentViewModel : PersistedDocument
         _halconControl = control;
         _halconWindow = control.HalconWindow;
 
+        // 启用内容移动（图片拖拽平移）
+        control.HMoveContent = true;
+
+        // 鼠标松开时同步属性到 PropertyGrid
+        control.HMouseUp += (_, _) =>
+        {
+            if (SelectedProcessType == VisionProcessType.Ncc)
+                Ncc.NotifyDragEnd();
+            else if (SelectedProcessType == VisionProcessType.EdgeFind1)
+                EdgeFind1.NotifyDragEnd();
+            else if (SelectedProcessType == VisionProcessType.EdgeFind2)
+                EdgeFind2.NotifyDragEnd();
+        };
+
         // 如果已有图片路径，立即显示
         if (!string.IsNullOrEmpty(ImagePath) && File.Exists(ImagePath))
             DisplayImageOnHalcon(ImagePath);
@@ -327,13 +341,10 @@ public class VisionEditorDocumentViewModel : PersistedDocument
         var param = _currentHObject.GetDrawingObjectParams(
             new HTuple("row", "column", "phi", "length1", "length2"));
         double[] vals = param.ToDArr();
+        param.Dispose();
 
-        Ncc.Row = vals[0];
-        Ncc.Column = vals[1];
-        Ncc.Phi = vals[2];
-        Ncc.Length1 = vals[3];
-        Ncc.Length2 = vals[4];
-
+        // 拖拽中：直设字段，不触发 PropertyChanged，避免 PropertyGrid 刷新打断 Halcon 鼠标捕获
+        Ncc.UpdateFromDrag(vals[0], vals[1], vals[2], vals[3], vals[4]);
         IsDirty = true;
     }
 
@@ -359,12 +370,10 @@ public class VisionEditorDocumentViewModel : PersistedDocument
 
         var param = _currentHObject.GetDrawingObjectParams(new HTuple("row1", "column1", "row2", "column2"));
         double[] vals = param.ToDArr();
+        param.Dispose();
 
-        cfg.Row1 = vals[0];
-        cfg.Col1 = vals[1];
-        cfg.Row2 = vals[2];
-        cfg.Col2 = vals[3];
-
+        // 拖拽中：直设字段，不触发 PropertyChanged，避免 PropertyGrid 刷新打断 Halcon 鼠标捕获
+        cfg.UpdateFromDrag(vals[0], vals[1], vals[2], vals[3]);
         IsDirty = true;
     }
 
