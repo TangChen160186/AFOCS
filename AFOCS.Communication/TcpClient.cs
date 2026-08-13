@@ -120,6 +120,14 @@ namespace AFOCS.Communication
 
                 StopBackgroundTasks();
 
+                lock (_bufferLock)
+                {
+                    // 解除正在等待响应的调用方，避免手动断开后 ReadUntilAsync 永久挂起
+                    _responseTcs?.TrySetException(new IOException("连接已断开"));
+                    _responseTcs = null;
+                    _currentTerminator = null;
+                }
+
                 CleanupConnection();
 
                 logger?.Information("TCP 连接已断开");
@@ -193,7 +201,8 @@ namespace AFOCS.Communication
 
                             lock (_bufferLock)
                             {
-                                _receiveBuffer.Append(receivedText.TrimStart());
+                                // 不做 TrimStart：分隔符可能跨包到达，裁剪会破坏数据完整性
+                                _receiveBuffer.Append(receivedText);
 
                                 if (_responseTcs != null && !_responseTcs.Task.IsCompleted && _currentTerminator != null)
                                 {
@@ -364,6 +373,16 @@ namespace AFOCS.Communication
                 {
                     _currentTerminator = terminator;
                     _responseTcs = new TaskCompletionSource<string>();
+
+                    // 响应可能在注册等待之前就已到达并滞留在缓冲区（发送与等待之间存在竞态窗口），
+                    // 先匹配已有数据，避免响应被错过导致永久等待。
+                    var terminatorIndex = _receiveBuffer.ToString().IndexOf(terminator, StringComparison.Ordinal);
+                    if (terminatorIndex >= 0)
+                    {
+                        var responseText = _receiveBuffer.ToString(0, terminatorIndex);
+                        _receiveBuffer.Clear();
+                        _responseTcs.TrySetResult(responseText);
+                    }
                 }
 
                 using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -378,6 +397,11 @@ namespace AFOCS.Communication
                 catch (OperationCanceledException)
                 {
                     logger?.Warning($"等待响应超时 ({timeoutMs}ms)");
+                    lock (_bufferLock)
+                    {
+                        // 清掉本次超时残留的半截数据，避免污染下一次请求的匹配
+                        _receiveBuffer.Clear();
+                    }
                     throw new TimeoutException($"在 {timeoutMs}ms 内未收到以 {EscapeLineEnding(terminator)} 结尾的响应");
                 }
             }

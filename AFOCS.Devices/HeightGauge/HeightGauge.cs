@@ -69,7 +69,7 @@ public class HeightGauge(ITcpClient tcpClient, IConfigService configService, ILo
         try
         {
             string command = $"MS,0{channel}";
-            var res = await tcpClient.SendAndReceiveAsync(command);
+            var res = await tcpClient.SendAndReceiveAsync(command,3000);
 
             // 返回格式形如 "MS,01,+2.03"，取 "MS,01," 之后的数值部分再转换
             var valueText = res?.Trim();

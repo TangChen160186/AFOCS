@@ -140,9 +140,9 @@ namespace AFOCS.App.ViewModels
 
                 //.. _akribisMotions,
                 //.. _opticalPowerMeters,
-                .. _cameras,
+                //.. _cameras,
                 //_opticalSwitch,
-                //_heightGauge,
+                _heightGauge,
                 _cameraLight,
                 _programmablePowerSupply,
             ];
