@@ -28,7 +28,10 @@ public class IspBoardDevice : IIspBoardDevice
     public WorkPos WorkPos => WorkPos.None;
 
     /// <inheritdoc/>
-    public event EventHandler<RspChannelData[]>? RspDataUpdated;
+    public event EventHandler<RspData[]>? RspDataUpdated;
+
+    /// <inheritdoc/>
+    public event EventHandler<MpdData[]>? MpdDataUpdated;
 
     /// <inheritdoc/>
     public event EventHandler<IpsnData>? IpsnDataUpdated;
@@ -251,6 +254,56 @@ public class IspBoardDevice : IIspBoardDevice
     }
 
     // ====================================================================
+    // 实时读取
+    // ====================================================================
+
+    public async Task<Result<RspData[]>> ReadRspAsync(WorkPos workPos, CancellationToken token = default)
+    {
+        if (!_initialized) return Result<RspData[]>.Fail("设备未初始化");
+
+        try
+        {
+            var config = await _configService.LoadAsync<IspBoardConfig>() ?? new IspBoardConfig();
+            var ws = workPos == WorkPos.Left ? config.Left : config.Right;
+
+            var channelLight = ws.ChannelLight ?? [];
+            int chCount = channelLight.Length;
+            if (chCount == 0)
+                return Result<RspData[]>.Success([]);
+
+            ushort dataOutCount = (ushort)(chCount * 2);
+            var dev = (uint)ws.DeviceId;
+            var slot = (byte)ws.DutSlot;
+            var ch = (byte)ws.DutChannel;
+
+            // 只读取 RxADC 一路，避免额外的 MPD_IN/MPD_OUT/IPSN 读取
+            var rxResult = await DutReadWriteAsync(dev, slot, ch,
+                config.RxAdcAppName, operation: 0, dataIn: null, dataOutCount: dataOutCount);
+            var rxOk = rxResult.IsSuccess && rxResult.Data.Length >= chCount * 2;
+
+            var rspArray = new RspData[chCount];
+            for (int i = 0; i < chCount; i++)
+            {
+                double rsp = 0;
+                if (rxOk)
+                {
+                    double rxAdc = CombineHighLow(rxResult.Data[i * 2], rxResult.Data[i * 2 + 1]);
+                    var calc = await FormularCalcAsync(config.RxAdcFormulaAppName, [rxAdc, channelLight[i]]);
+                    if (calc.IsSuccess) rsp = calc.Data;
+                }
+                rspArray[i] = new RspData(workPos, i, rsp);
+            }
+
+            return Result<RspData[]>.Success(rspArray);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "实时读取 RSP 异常");
+            return Result<RspData[]>.Fail(ex.Message, ex);
+        }
+    }
+
+    // ====================================================================
     // RSP 轮询
     // ====================================================================
 
@@ -271,9 +324,11 @@ public class IspBoardDevice : IIspBoardDevice
             {
                 try
                 {
-                    var (rspData, ipsnDatas) = await PollRspAsync(config!, ct);
+                    var (rspData, mpdData, ipsnDatas) = await PollRspAsync(config!, ct);
                     if (rspData.Length > 0)
                         RspDataUpdated?.Invoke(this, rspData);
+                    if (mpdData.Length > 0)
+                        MpdDataUpdated?.Invoke(this, mpdData);
                     foreach (var ipsn in ipsnDatas)
                         IpsnDataUpdated?.Invoke(this, ipsn);
                 }
@@ -317,13 +372,13 @@ public class IspBoardDevice : IIspBoardDevice
     }
 
     /// <summary>对单个工位执行一次完整的 RSP 数据读取</summary>
-    private async Task<(RspChannelData[] Channels, IpsnData Ipsn)> PollWorkstationAsync(
+    private async Task<(RspData[] Rsp, MpdData[] Mpd, IpsnData Ipsn)> PollWorkstationAsync(
         WorkPos workPos, WorkstationConfig ws, IspBoardConfig config, CancellationToken ct)
     {
         var channelLight = ws.ChannelLight ?? [];
         int chCount = channelLight.Length;
         if (chCount == 0)
-            return ([], new IpsnData(workPos, ""));
+            return ([], [], new IpsnData(workPos, ""));
 
         ushort dataOutCount = (ushort)(chCount * 2);
         var dev = (uint)ws.DeviceId;
@@ -352,10 +407,7 @@ public class IspBoardDevice : IIspBoardDevice
         var mpdOutOk = mpdOutResult.IsSuccess && mpdOutResult.Data.Length >= chCount * 2;
 
         // 每通道并行计算 RSP（FormularCalc）
-        static double CombineHighLow(ushort high, ushort low)
-            => ((byte)(high & 0xFF) << 8) | (byte)(low & 0xFF);
-
-        var calcTasks = new Task<RspChannelData>[chCount];
+        var calcTasks = new Task<(RspData Rsp, MpdData Mpd)>[chCount];
         for (int i = 0; i < chCount; i++)
         {
             int idx = i; // capture
@@ -375,10 +427,12 @@ public class IspBoardDevice : IIspBoardDevice
         _logger.Debug("ISP Board {pos} 轮询完成: Chs={chs}, RSP/MPD ok={rx}/{mi}/{mo}, IPSN=\"{ipsn}\"",
             workPos, chCount, rxOk, mpdInOk, mpdOutOk, ipsnText);
 
-        return (results, new IpsnData(workPos, ipsnText));
+        var rspArray = results.Select(r => r.Rsp).ToArray();
+        var mpdArray = results.Select(r => r.Mpd).ToArray();
+        return (rspArray, mpdArray, new IpsnData(workPos, ipsnText));
 
         // 单通道计算
-        async Task<RspChannelData> CalcChannelAsync(int i)
+        async Task<(RspData Rsp, MpdData Mpd)> CalcChannelAsync(int i)
         {
             ct.ThrowIfCancellationRequested();
 
@@ -393,12 +447,12 @@ public class IspBoardDevice : IIspBoardDevice
             double mpdIn = mpdInOk ? CombineHighLow(mpdInResult.Data[i * 2], mpdInResult.Data[i * 2 + 1]) : 0;
             double mpdOut = mpdOutOk ? CombineHighLow(mpdOutResult.Data[i * 2], mpdOutResult.Data[i * 2 + 1]) : 0;
 
-            return new RspChannelData(workPos, i, rsp ?? 0, mpdIn, mpdOut);
+            return (new RspData(workPos, i, rsp ?? 0), new MpdData(workPos, i, mpdIn, mpdOut));
         }
     }
 
     /// <summary>执行一次轮询：左右工位并行读取</summary>
-    private async Task<(RspChannelData[], IpsnData[])> PollRspAsync(IspBoardConfig config, CancellationToken ct)
+    private async Task<(RspData[], MpdData[], IpsnData[])> PollRspAsync(IspBoardConfig config, CancellationToken ct)
     {
         var leftTask = PollWorkstationAsync(WorkPos.Left, config.Left, config, ct);
         var rightTask = PollWorkstationAsync(WorkPos.Right, config.Right, config, ct);
@@ -408,11 +462,16 @@ public class IspBoardDevice : IIspBoardDevice
         var left = leftTask.Result;
         var right = rightTask.Result;
 
-        var allChannels = left.Channels.Concat(right.Channels).ToArray();
+        var allRsp = left.Rsp.Concat(right.Rsp).ToArray();
+        var allMpd = left.Mpd.Concat(right.Mpd).ToArray();
         var allIpsn = new[] { left.Ipsn, right.Ipsn };
 
-        return (allChannels, allIpsn);
+        return (allRsp, allMpd, allIpsn);
     }
+
+    /// <summary>合并高低字节为一个 16 位无符号值</summary>
+    private static double CombineHighLow(ushort high, ushort low)
+        => ((byte)(high & 0xFF) << 8) | (byte)(low & 0xFF);
 
     public void Dispose()
     {

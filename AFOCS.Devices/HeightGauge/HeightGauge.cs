@@ -70,8 +70,16 @@ public class HeightGauge(ITcpClient tcpClient, IConfigService configService, ILo
         {
             string command = $"MS,0{channel}";
             var res = await tcpClient.SendAndReceiveAsync(command);
-            if (double.TryParse(res, out var power))
+
+            // 返回格式形如 "MS,01,+2.03"，取 "MS,01," 之后的数值部分再转换
+            var valueText = res?.Trim();
+            var prefix = $"{command},";
+            if (valueText != null && valueText.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                valueText = valueText[prefix.Length..].Trim();
+
+            if (valueText != null && double.TryParse(valueText, out var power))
                 return Result<double>.Success(power);
+
             return Result<double>.Fail(ResultCode.Fail, $"未知返回数据:{res}");
         }
         catch (Exception e)

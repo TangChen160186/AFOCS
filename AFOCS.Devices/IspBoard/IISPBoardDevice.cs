@@ -14,9 +14,14 @@ public class IspInitResult
 }
 
 /// <summary>
-/// 单个通道的轮询数据
+/// 单个通道的 RSP 值
 /// </summary>
-public readonly record struct RspChannelData(WorkPos WorkPos, int Channel, double RspValue, double MpdInValue, double MpdOutValue);
+public readonly record struct RspData(WorkPos WorkPos, int Channel, double RspValue);
+
+/// <summary>
+/// 单个通道的 MPD 值
+/// </summary>
+public readonly record struct MpdData(WorkPos WorkPos, int Channel, double MpdInValue, double MpdOutValue);
 
 /// <summary>
 /// IPSN 轮询数据
@@ -53,9 +58,19 @@ public interface IIspBoardDevice : IDevice
         string appName, ushort[] dataIn, ushort mpdOutCount = 256, ushort mpdInCount = 256);
 
     /// <summary>
-    /// RSP 数据更新事件，每次轮询完成后触发，包含左右工位所有通道的 RSP/MPD_IN/MPD_OUT 计算值
+    /// 实时读取指定工位的最新 RSP 值（不经轮询缓存，直接读写 DUT 并计算）
     /// </summary>
-    event EventHandler<RspChannelData[]>? RspDataUpdated;
+    Task<Result<RspData[]>> ReadRspAsync(WorkPos workPos, CancellationToken token = default);
+
+    /// <summary>
+    /// RSP 数据更新事件，每次轮询完成后触发，包含左右工位所有通道的 RSP 计算值
+    /// </summary>
+    event EventHandler<RspData[]>? RspDataUpdated;
+
+    /// <summary>
+    /// MPD 数据更新事件，每次轮询完成后触发，包含左右工位所有通道的 MPD_IN/MPD_OUT 值
+    /// </summary>
+    event EventHandler<MpdData[]>? MpdDataUpdated;
 
     /// <summary>
     /// IPSN 数据更新事件

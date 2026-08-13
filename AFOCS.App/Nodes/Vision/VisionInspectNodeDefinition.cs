@@ -55,6 +55,14 @@ public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, I
     [ReadOnly(true)]
     [NodePort("PointDevY", "交点ΔY", NodePortType.Double, false)]
     public double PointDevY { get; set; }
+    [JsonIgnore]
+    [ReadOnly(true)]
+    [NodePort("PointX", "找点X", NodePortType.Double, false)]
+    public double PointX { get; set; }
+    [JsonIgnore]
+    [ReadOnly(true)]
+    [NodePort("PointY", "找点Y", NodePortType.Double, false)]
+    public double PointY { get; set; }
 
     // ========== 配置属性 ==========
 
@@ -114,6 +122,8 @@ public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, I
         Edge2AngleDev = result.Edge2AngleDev;
         PointDevX = result.PointDevX;
         PointDevY = result.PointDevY;
+        PointX = result.PointResultX;
+        PointY = result.PointResultY;
 
         return new Dictionary<string, object?>
         {
@@ -123,6 +133,8 @@ public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, I
             ["Edge2AngleDev"] = result.Edge2AngleDev,
             ["PointDevX"] = result.PointDevX,
             ["PointDevY"] = result.PointDevY,
+            ["PointX"] = result.PointResultX,
+            ["PointY"] = result.PointResultY,
         };
     }
 }

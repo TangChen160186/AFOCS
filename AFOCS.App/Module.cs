@@ -42,5 +42,9 @@ namespace AFOCS.App
         [Export]
         public static readonly MenuItemDefinition ViewGamepadControlMenuItem = new CommandMenuItemDefinition<ViewGamepadControlCommandDefinition>(
             MenuDefinitions.ViewToolsMenuGroup, 10);
+
+        [Export]
+        public static readonly MenuItemDefinition ViewFaPdCalibrationMenuItem = new CommandMenuItemDefinition<ViewFaPdCalibrationCommandDefinition>(
+            MenuDefinitions.ViewToolsMenuGroup, 11);
     }
 }
