@@ -336,6 +336,236 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
     #endregion
 
 
+    #region 耦合找光
+
+    /// <summary>
+    /// 单轴耦合（单轴找光）：沿指定轴扫描，返回各通道光功率数据与角度。
+    /// </summary>
+    public async Task<Result<AkribisCouplingResult>> SingleAxisCouplingAsync(SingleAxisCouplingArgs args, CancellationToken token = default)
+    {
+        if (!IsConnected) return Result<AkribisCouplingResult>.Fail(ResultCode.Fail, "未连接设备");
+
+        try
+        {
+            // 运动轴: AGenData[510] (0:A轴, 1:B轴, 2:C轴)
+            SetAGenData(510, args.Axis);
+            // 采样次数
+            SetAGenData(512, 2);
+            // 平坦区衰减梯度
+            SetAGenData(509, 0);
+            // 最优系数
+            SetAGenData(508, 0);
+            // 采样间距
+            SetAGenData(513, (int)args.SamplingInterval);
+            // 起始距离(相对当前位置)
+            SetAGenData(514, (int)args.StartDistance);
+            // 停止距离(相对当前位置)
+            SetAGenData(515, (int)args.StopDistance);
+            // 最大扫描速度
+            SetAGenData(517, (int)args.MaxScanSpeed);
+            // 最大回归速度
+            SetAGenData(518, (int)args.MaxReturnSpeed);
+            // 间距宽度(mm转脉冲): 20微米=4096脉冲
+            int spacingPulse = (int)(args.SpacingWidth * 1000.0 / 20.0 * 4096.0);
+            SetAGenData(506, spacingPulse);
+            // 采集通道
+            SetAGenData(511, args.AcquireChannel);
+            // 转角系数
+            SetAGenData(528, 0);
+            SetAGenData(531, 0);
+
+            // 启动单轴找光: AGenData[500]=5
+            SetAGenData(500, 5);
+
+            await WaitCouplingDoneAsync(token);
+
+            var result = new AkribisCouplingResult
+            {
+                ChannelPower = GetSingleAxisCouplingPowerData(),
+                Angle = ParseAGenDataDouble(817) / 1000.0,
+                SuccessCode = ParseAGenDataInt(650),
+            };
+
+            _logger.Information("[{Type}] 单轴耦合完成: 角度={Angle:F4}°, 成功码={Code}", GetType().Name, result.Angle, result.SuccessCode);
+            return Result<AkribisCouplingResult>.Success(result);
+        }
+        catch (OperationCanceledException)
+        {
+            StopCoupling();
+            return Result<AkribisCouplingResult>.Fail(ResultCode.Fail, "单轴耦合已取消");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "[{Type}] 单轴耦合异常", GetType().Name);
+            return Result<AkribisCouplingResult>.Fail(ResultCode.Fail, $"单轴耦合异常: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 螺旋耦合（螺旋找光）：双轴螺旋扫描，返回各通道光功率数据。
+    /// </summary>
+    public async Task<Result<AkribisCouplingResult>> SpiralCouplingAsync(SpiralCouplingArgs args, CancellationToken token = default)
+    {
+        if (!IsConnected) return Result<AkribisCouplingResult>.Fail(ResultCode.Fail, "未连接设备");
+
+        try
+        {
+            // 1#运动轴
+            SetAGenData(521, args.Axis1);
+            // 2#运动轴
+            SetAGenData(522, args.Axis2);
+            // 螺距
+            SetAGenData(526, (int)args.Pitch);
+            // 最大扫描半径
+            SetAGenData(534, (int)args.MaxScanRadius);
+            // 最大扫描速度
+            SetAGenData(529, (int)args.MaxScanSpeed);
+            // 最大回归速度
+            SetAGenData(530, (int)args.MaxReturnSpeed);
+            // 采集通道
+            SetAGenData(511, args.AcquireChannel);
+
+            // 启动螺旋找光: AGenData[500]=1
+            SetAGenData(500, 1);
+
+            // 轮询状态，最多 3000 次(300s)
+            bool done = false;
+            for (int i = 0; i < 3000; i++)
+            {
+                token.ThrowIfCancellationRequested();
+                await Task.Delay(100, token);
+                if (int.TryParse(GetAGenData(500), out int status) && status == 0)
+                {
+                    done = true;
+                    break;
+                }
+            }
+
+            if (!done)
+            {
+                StopCoupling();
+                return Result<AkribisCouplingResult>.Fail(ResultCode.Fail, "螺旋耦合超时");
+            }
+
+            var result = new AkribisCouplingResult
+            {
+                ChannelPower = GetSpiralCouplingPowerData(),
+                ErrorCode = ParseAGenDataInt(602),
+                SuccessCode = ParseAGenDataInt(650),
+            };
+
+            _logger.Information("[{Type}] 螺旋耦合完成: 报错码={Error}, 成功码={Code}", GetType().Name, result.ErrorCode, result.SuccessCode);
+            return Result<AkribisCouplingResult>.Success(result);
+        }
+        catch (OperationCanceledException)
+        {
+            StopCoupling();
+            return Result<AkribisCouplingResult>.Fail(ResultCode.Fail, "螺旋耦合已取消");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "[{Type}] 螺旋耦合异常", GetType().Name);
+            return Result<AkribisCouplingResult>.Fail(ResultCode.Fail, $"螺旋耦合异常: {ex.Message}");
+        }
+    }
+
+    // ========== AGenData 辅助 ==========
+
+    private void SetAGenData(int address, int value) => SendRawCommand($"AGenData[{address}]={value}");
+
+    private string GetAGenData(int address) => SendRawCommand($"AGenData[{address}]");
+
+    private int ParseAGenDataInt(int address) => int.TryParse(GetAGenData(address), out int v) ? v : 0;
+
+    private double ParseAGenDataDouble(int address) => double.TryParse(GetAGenData(address), out double v) ? v : 0;
+
+    private string SendRawCommand(string command)
+    {
+        string response = "";
+        _controller.SendCommandString(command, out response);
+        return response?.Trim() ?? "";
+    }
+
+    private async Task WaitCouplingDoneAsync(CancellationToken token)
+    {
+        while (true)
+        {
+            token.ThrowIfCancellationRequested();
+            await Task.Delay(100, token);
+            if (int.TryParse(GetAGenData(500), out int status) && status == 0)
+                return;
+        }
+    }
+
+    private void StopCoupling()
+    {
+        try { SendRawCommand("AGenData[500]=0"); } catch { /* 忽略停止异常 */ }
+    }
+
+    // ========== 数据采集 ==========
+
+    /// <summary>从控制器获取 AGenData 全部数据（16000 个值，逗号分隔）</summary>
+    private double[]? FetchAGenData()
+    {
+        try
+        {
+            string response = SendRawCommand("AGenDataUpload");
+            if (string.IsNullOrWhiteSpace(response)) return null;
+
+            var parts = response.Split(',');
+            var data = new double[parts.Length];
+            for (int i = 0; i < parts.Length; i++)
+                double.TryParse(parts[i].Trim(), out data[i]);
+            return data;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "[{Type}] 获取 AGenData 数据失败", GetType().Name);
+            return null;
+        }
+    }
+
+    /// <summary>单轴找光功率数据：CH1=[4000-6999], CH2=[7000-9999], CH3=[10000-12999], CH4=[13000-15999]</summary>
+    private Dictionary<int, List<double>>? GetSingleAxisCouplingPowerData()
+    {
+        var data = FetchAGenData();
+        if (data == null || data.Length < 16000) return null;
+
+        int validLength = (int)data[735];
+        if (validLength <= 0) validLength = 3000;
+        if (validLength > 3000) validLength = 3000;
+
+        return new Dictionary<int, List<double>>
+        {
+            { 1, data.Skip(4000).Take(validLength).ToList() },
+            { 2, data.Skip(7000).Take(validLength).ToList() },
+            { 3, data.Skip(10000).Take(validLength).ToList() },
+            { 4, data.Skip(13000).Take(validLength).ToList() },
+        };
+    }
+
+    /// <summary>螺旋找光功率数据：CH1=[6000-8499], CH2=[8500-10999], CH3=[11000-13499], CH4=[13500-15999]</summary>
+    private Dictionary<int, List<double>>? GetSpiralCouplingPowerData()
+    {
+        var data = FetchAGenData();
+        if (data == null || data.Length < 16000) return null;
+
+        int validLength = (int)data[735];
+        if (validLength <= 0) validLength = 2500;
+        if (validLength > 2500) validLength = 2500;
+
+        return new Dictionary<int, List<double>>
+        {
+            { 1, data.Skip(6000).Take(validLength).ToList() },
+            { 2, data.Skip(8500).Take(validLength).ToList() },
+            { 3, data.Skip(11000).Take(validLength).ToList() },
+            { 4, data.Skip(13500).Take(validLength).ToList() },
+        };
+    }
+
+    #endregion
+
+
     public void Dispose()
     {
         StopMonitoring();
