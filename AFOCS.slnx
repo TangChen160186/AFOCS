@@ -3,7 +3,6 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Folder Name="/Core/" />
   <Folder Name="/FrameWork/">
     <Project Path="AFOCS.Framework.Test/AFOCS.Framework.Test.csproj" Id="93f01b83-267d-4e8b-a587-ace81ec908c0">
       <Platform Project="x64" />
@@ -13,10 +12,6 @@
       <Platform Project="x64" />
       <Build Solution="Release|x64" Project="false" />
     </Project>
-  </Folder>
-  <Folder Name="/Nodes/" />
-  <Folder Name="/Test/">
-    <Project Path="VisionToolkit.Test/VisionToolkit.Test.csproj" Id="d1c9ca9f-4528-4c38-b1c6-01c63d2619f5" />
   </Folder>
   <Project Path="AFOCS.App/AFOCS.App.csproj">
     <Platform Project="x64" />
