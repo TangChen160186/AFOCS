@@ -181,7 +181,8 @@ where TConfig : PressureSensorConfig
         if (!result.IsSuccess)
             return Result<int>.Fail($"PDO 读取失败: {result.Message}");
 
-        return Result<int>.Success(result.Data);
+        // 压力值应为绝对值，读取后统一取绝对值
+        return Result<int>.Success(Math.Abs(result.Data));
     }
 
     public async Task<Result> ZeroAllAsync()

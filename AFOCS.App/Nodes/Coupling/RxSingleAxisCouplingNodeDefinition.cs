@@ -14,9 +14,10 @@ using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 namespace AFOCS.App.Nodes.Coupling;
 
 /// <summary>
-/// RX 调平耦合节点：扫描耦合 Y 轴，记录两个通道 RSP 峰值对应的 Y 位置，
-/// 以两峰值位置差为斜边、通道物理间隙为邻边，计算倾斜角度。
-///   hypotenuse = |y1 - y2| / PulsePerUm   (um)
+/// RX 单轴耦合节点：沿指定耦合直线轴扫描，每次移动后读取 ISP 板 RSP 值，
+/// 记录两个通道 RSP 峰值对应的位置，以两峰值位置差为斜边、通道物理间隙为邻边，
+/// 计算倾斜角度。由原来的「RX调平耦合」整合而来。
+///   hypotenuse = |pos1 - pos2| / PulsePerUm   (um)
 ///   angle      = arccos(GapUm / hypotenuse) × 180 / π   (度)
 /// 扫描范围：以当前位置为中心，负方向 NegativeLengthPulse、正方向 PositiveLengthPulse（均为脉冲）；
 /// 扫描结束（含异常）移回原位。
@@ -24,9 +25,9 @@ namespace AFOCS.App.Nodes.Coupling;
 [Export]
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
-[NodeDefinition("App.RxLevelingCoupling", "RX调平耦合", "耦合")]
+[NodeDefinition("App.RxSingleAxisCoupling", "RX单轴耦合", "耦合")]
 [method: ImportingConstructor]
-public class RxLevelingCouplingNodeDefinition(
+public class RxSingleAxisCouplingNodeDefinition(
     IIspBoardDevice ispBoard,
     ILogger logger,
     [ImportMany] IEnumerable<IAkribisMotion> akribisMotions)
@@ -48,7 +49,7 @@ public class RxLevelingCouplingNodeDefinition(
     // ========== 配置属性 ==========
 
     [DisplayName("轴")]
-    [ItemsSource(typeof(CouplingYAxisItemsSource))]
+    [ItemsSource(typeof(CouplingXYZAxisItemsSource))]
     public EAxis Axis
     {
         get;
@@ -112,10 +113,10 @@ public class RxLevelingCouplingNodeDefinition(
         if (!context.TryGetValue("WorkPos", out var workPosObj) || workPosObj is not WorkPos station)
             throw new InvalidOperationException("流程上下文缺少工位（WorkPos），请确认已连接入口节点并设置工位");
 
-        var (instanceName, akAxis) = Axis.ToAkribis(station);
-        if (akAxis != AkribisAxisId.Y)
-            throw new InvalidOperationException($"{Axis.GetDescription()}: RX调平耦合仅支持耦合 Y 轴");
+        if (!Axis.IsAkribisAxis())
+            throw new InvalidOperationException($"{Axis.GetDescription()}: RX单轴耦合仅支持雅克贝斯耦合直线轴");
 
+        var (instanceName, akAxis) = Axis.ToAkribis(station);
         var akribisInstances = akribisMotions.ToDictionary(m => m.GetType().Name);
         if (!akribisInstances.TryGetValue(instanceName, out var motion))
             throw new InvalidOperationException($"{Axis.GetDescription()}: 未找到控制器 {instanceName}");
@@ -129,7 +130,7 @@ public class RxLevelingCouplingNodeDefinition(
         if (GapUm <= 0)
             throw new InvalidOperationException("通道间隙必须大于 0");
 
-        int startPos = motion.PositionY;
+        int startPos = GetPosition(motion, akAxis);
         var samples = new List<(int Position, double Rsp1, double Rsp2)>();
 
         try
@@ -171,28 +172,24 @@ public class RxLevelingCouplingNodeDefinition(
         double hypotenuseUm = Math.Abs(peak1.Position - peak2.Position) / PulsePerUm;
         if (hypotenuseUm <= 0 || GapUm > hypotenuseUm)
             throw new InvalidOperationException(
-                $"RX调平耦合：通道间隙 {GapUm}um 大于斜边 {hypotenuseUm:F3}um（arccos 定义域错误），请检查扫描范围/步长/通道");
+                $"RX单轴耦合：通道间隙 {GapUm}um 大于斜边 {hypotenuseUm:F3}um（arccos 定义域错误），请检查扫描范围/步长/通道");
 
         // θ = arccos(邻边/斜边)
         double angleDeg = Math.Acos(GapUm / hypotenuseUm) * 180.0 / Math.PI;
 
         Angle = angleDeg;
         logger.Information(
-            "RX调平耦合：ch1峰值@{P1}, ch2峰值@{P2}, 斜边={H:F3}um, 角度={A:F4}°",
+            "RX单轴耦合：ch1峰值@{P1}, ch2峰值@{P2}, 斜边={H:F3}um, 角度={A:F4}°",
             peak1.Position, peak2.Position, hypotenuseUm, angleDeg);
 
         return new Dictionary<string, object?> { ["Angle"] = angleDeg };
     }
-}
 
-/// <summary>RX调平耦合可选择的轴（仅耦合 Y 轴）</summary>
-public class CouplingYAxisItemsSource : IItemsSource
-{
-    public ItemCollection GetValues()
+    private static int GetPosition(IAkribisMotion motion, AkribisAxisId axis) => axis switch
     {
-        var items = new ItemCollection();
-        foreach (var axis in new[] { EAxis.CouplingLY, EAxis.CouplingRY })
-            items.Add(axis, axis.GetDescription());
-        return items;
-    }
+        AkribisAxisId.X => motion.PositionX,
+        AkribisAxisId.Y => motion.PositionY,
+        AkribisAxisId.Z => motion.PositionZ,
+        _ => throw new ArgumentOutOfRangeException(nameof(axis))
+    };
 }
