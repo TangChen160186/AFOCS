@@ -1,6 +1,7 @@
 using AAMotion;
 using AFOCS.Infrastructure;
 using Serilog;
+using System.Diagnostics;
 
 namespace AFOCS.Devices.AkribrisMotion;
 
@@ -14,10 +15,48 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
     public bool IsConnected => _controller.IsConnected;
     public abstract WorkPos WorkPos { get; }
     public abstract AkribisMotionType AkribisMotionType { get; }
+    /// <summary>
+    /// Checks if AACommServer is running; if not, launches it from the PCSuite install path.
+    /// </summary>
+    static void EnsureAACommServerRunning()
+    {
+        const string serverProcessName = "AACommServer";
+        var existing = Process.GetProcessesByName(serverProcessName);
+        if (existing.Length > 0)
+        {
+            Console.WriteLine($"[AACommServer] Already running (PID {existing[0].Id})");
+            return;
+        }
 
+        Console.WriteLine("[AACommServer] Not running, launching...");
+        const string pcsSuitePath = @"C:\Program Files (x86)\Agito\PCSuite\AACommServer.exe";
+        if (!File.Exists(pcsSuitePath))
+        {
+            Console.WriteLine($"[AACommServer] Not found at {pcsSuitePath}");
+            return;
+        }
+
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = pcsSuitePath,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            Process.Start(startInfo);
+            Thread.Sleep(1500); // give the server time to start
+            Console.WriteLine("[AACommServer] Launched successfully");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AACommServer] Failed to launch: {ex.Message}");
+        }
+    }
 
     protected AkribisMotion(IConfigService configService, ILogger logger)
     {
+        EnsureAACommServerRunning();
         _configService = configService;
         _logger = logger;
         _controller = AAMotionAPI.Initialize(ControllerType.AGD301);
@@ -37,6 +76,7 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
             await _configService.SaveAsync(typeof(TConfig), _config); ;
         }
 
+       
         var connectTask = Task.Run(() => AAMotionAPI.Connect(_controller, _config.Ip, _config.Ark, _config.AutoReconnect), token);
         var success = await connectTask.ConfigureAwait(false);
         if (!success)

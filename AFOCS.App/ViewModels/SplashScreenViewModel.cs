@@ -138,9 +138,9 @@ namespace AFOCS.App.ViewModels
                 .. _pressureSensors,
                 .. _grippers,
 
-                //.. _akribisMotions,
+                .. _akribisMotions,
                 //.. _opticalPowerMeters,
-                //.. _cameras,
+                .. _cameras,
                 //_opticalSwitch,
                 _heightGauge,
                 _cameraLight,

@@ -6,6 +6,7 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
+    <PackageVersion Include="Agito.AAComm" Version="13.0.0" />
     <PackageVersion Include="Agito.AAMotion" Version="10.0.0" />
     <PackageVersion Include="Caliburn.Micro" Version="5.0.258" />
     <PackageVersion Include="Dirkster.AvalonDock.Themes.VS2013" Version="4.74.1" />
