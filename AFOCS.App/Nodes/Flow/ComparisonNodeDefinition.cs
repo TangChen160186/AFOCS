@@ -37,11 +37,13 @@ public enum ComparisonOperator
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.Compare", "值判断", "运算", HasExecutionInput = false, HasExecutionOutput = false)]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class ComparisonNodeDefinition(ILogger logger) : NodeDefinitionBase, IExecutableNode
 {
     [Browsable(false)]
     [NodePort("Value", "输入值", NodePortType.Double, true)]
+    [Category("输入")]
     public double Value
     {
         get;
@@ -50,6 +52,7 @@ public class ComparisonNodeDefinition(ILogger logger) : NodeDefinitionBase, IExe
 
     [DisplayName("比较方式")]
     [ItemsSource(typeof(ComparisonOperatorItemsSource))]
+    [Category("配置")]
     public ComparisonOperator Operator
     {
         get;
@@ -57,6 +60,7 @@ public class ComparisonNodeDefinition(ILogger logger) : NodeDefinitionBase, IExe
     } = ComparisonOperator.GreaterThan;
     [Browsable(false)]
     [NodePort("TargetValue", "目标值", NodePortType.Double, true)]
+    [Category("输入")]
     public double TargetValue
     {
         get;
@@ -65,6 +69,7 @@ public class ComparisonNodeDefinition(ILogger logger) : NodeDefinitionBase, IExe
 
     [Browsable(false)]
     [NodePort("Result", "结果", NodePortType.Bool, false)]
+    [Category("输出")]
     public bool Result
     {
         get;

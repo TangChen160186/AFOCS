@@ -23,6 +23,7 @@ namespace AFOCS.App.Nodes.Motion;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.MoveUntilPressure", "压力停止运动", "运动")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class MoveUntilPressureNodeDefinition(
     IBusAxisDevice busAxisDevice,
@@ -34,6 +35,7 @@ public class MoveUntilPressureNodeDefinition(
 {
     [DisplayName("轴")]
     [ItemsSource(typeof(AxisItemsSource))]
+    [Category("配置")]
     public EAxis Axis
     {
         get;
@@ -43,6 +45,7 @@ public class MoveUntilPressureNodeDefinition(
     [DisplayName("压力传感器")]
     [Description("选择要监测的压力传感器类型")]
     [ItemsSource(typeof(PressureSensorTypeItemsSource))]
+    [Category("配置")]
     public PressureSensorType SensorType
     {
         get;
@@ -52,6 +55,7 @@ public class MoveUntilPressureNodeDefinition(
     [DisplayName("传感器方向")]
     [Description("选择压力传感器的通道方向（X/Y/Z）")]
     [ItemsSource(typeof(PressureChannelItemsSource))]
+    [Category("配置")]
     public PressureChannel Channel
     {
         get;
@@ -61,6 +65,7 @@ public class MoveUntilPressureNodeDefinition(
     [DisplayName("目标压力值")]
     [Description("当压力传感器达到此值（≥）时停止运动")]
     [NodePort("TargetPressure", "目标压力值", NodePortType.Int, true)]
+    [Category("输入")]
     public int TargetPressure
     {
         get;
@@ -70,6 +75,7 @@ public class MoveUntilPressureNodeDefinition(
     [DisplayName("最大移动距离")]
     [Description("安全限制：轴移动的最大距离（脉冲值），正值正向、负值反向")]
     [NodePort("MaxDistance", "最大移动距离", NodePortType.Double, true)]
+    [Category("输入")]
     public double MaxDistance
     {
         get;
@@ -78,6 +84,7 @@ public class MoveUntilPressureNodeDefinition(
 
     [DisplayName("检测间隔(ms)")]
     [Description("压力传感器轮询间隔，默认 50ms")]
+    [Category("配置")]
     public int PollIntervalMs
     {
         get;
@@ -204,9 +211,9 @@ public class MoveUntilPressureNodeDefinition(
                 var pressure = ReadPressureChannel(sensor);
                 if (pressure >= TargetPressure)
                 {
-                    logger.Information("压力达到目标: 当前={Pressure}, 目标={TargetPressure}, 停止运动",
+                    logger.Information("压力达到目标: 当前={Pressure}, 目标={TargetPressure}, 紧急停止运动",
                         pressure, TargetPressure);
-                    await motion.StopAxisAsync(akAxis);
+                    await motion.EmergencyStopAsync(akAxis);
                     stopped = true;
                 }
             }
@@ -217,7 +224,7 @@ public class MoveUntilPressureNodeDefinition(
         finally
         {
             // 确保停止
-            await motion.StopAxisAsync(akAxis);
+            await motion.EmergencyStopAsync(akAxis);
             try { await moveTask; } catch { /* 预期的停止中断异常 */ }
         }
     }

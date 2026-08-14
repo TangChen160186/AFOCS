@@ -16,6 +16,7 @@ namespace AFOCS.App.Nodes.Gripper;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.GripperHome", "夹爪回零", "回零")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class GripperHomeNodeDefinition(
     ILogger logger,
@@ -23,6 +24,7 @@ public class GripperHomeNodeDefinition(
 {
     [DisplayName("耦合")]
     [ItemsSource(typeof(GripperCouplingItemsSource))]
+    [Category("配置")]
     public GripperCoupling Coupling
     {
         get;

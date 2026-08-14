@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.ComponentModel.Composition;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
+using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace AFOCS.FlowNodeEditor.Nodes;
 
@@ -9,12 +10,14 @@ namespace AFOCS.FlowNodeEditor.Nodes;
 /// 入口节点：流程执行的起点。工位由编辑器工具栏的全局选择器控制，不再在此节点单独设置。
 /// </summary>
 [NodeDefinition("Builtin.Entry", "入口", "流程", HasExecutionInput = false, HasExecutionOutput = true)]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [Export(typeof(INodeDefinition))]
 [Export]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 public class EntryNodeDefinition : NodeDefinitionBase, IExecutableNode
 {
     [DisplayName("优先级")]
+    [Category("配置")]
     public int Priority
     {
         get;

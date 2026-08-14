@@ -21,6 +21,7 @@ namespace AFOCS.App.Nodes.Coupling;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.TxSingleAxisCoupling", "TX单轴耦合", "耦合")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class TxSingleAxisCouplingNodeDefinition(
     ILogger logger,
@@ -32,12 +33,14 @@ public class TxSingleAxisCouplingNodeDefinition(
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("Angle", "角度", NodePortType.Double, false)]
+    [Category("输出")]
     public double Angle { get; set; }
 
     // ========== 配置属性 ==========
 
     [DisplayName("轴")]
     [ItemsSource(typeof(CouplingXYZAxisItemsSource))]
+    [Category("配置")]
     public EAxis Axis
     {
         get;
@@ -45,6 +48,7 @@ public class TxSingleAxisCouplingNodeDefinition(
     } = EAxis.CouplingLX;
 
     [DisplayName("采样间距(脉冲)")]
+    [Category("配置")]
     public double SamplingInterval
     {
         get;
@@ -52,6 +56,7 @@ public class TxSingleAxisCouplingNodeDefinition(
     } = 10;
 
     [DisplayName("起始距离(脉冲)")]
+    [Category("配置")]
     public double StartDistance
     {
         get;
@@ -59,6 +64,7 @@ public class TxSingleAxisCouplingNodeDefinition(
     } = -1024;
 
     [DisplayName("停止距离(脉冲)")]
+    [Category("配置")]
     public double StopDistance
     {
         get;
@@ -66,6 +72,7 @@ public class TxSingleAxisCouplingNodeDefinition(
     } = 1024;
 
     [DisplayName("最大扫描速度(脉冲/s)")]
+    [Category("配置")]
     public double MaxScanSpeed
     {
         get;
@@ -73,6 +80,7 @@ public class TxSingleAxisCouplingNodeDefinition(
     } = 204800;
 
     [DisplayName("最大回归速度(脉冲/s)")]
+    [Category("配置")]
     public double MaxReturnSpeed
     {
         get;
@@ -80,6 +88,7 @@ public class TxSingleAxisCouplingNodeDefinition(
     } = 20480;
 
     [DisplayName("间距宽度(mm)")]
+    [Category("配置")]
     public double SpacingWidth
     {
         get;
@@ -87,6 +96,7 @@ public class TxSingleAxisCouplingNodeDefinition(
     } = 0.02;
 
     [DisplayName("采集通道")]
+    [Category("配置")]
     public int AcquireChannel
     {
         get;

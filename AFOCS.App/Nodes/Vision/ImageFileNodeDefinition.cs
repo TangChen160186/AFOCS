@@ -16,18 +16,21 @@ namespace AFOCS.App.Nodes.Vision;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.ImageFile", "图片文件", "视觉")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 public class ImageFileNodeDefinition : NodeDefinitionBase, IExecutableNode
 {
     // ========== 输出端口 ==========
 
     [Browsable(false)]
     [NodePort("Image", "图像", NodePortType.Object, false)]
+    [Category("输出")]
     public PixelData? Image { get; set; }
 
     // ========== 配置属性 ==========
 
     [DisplayName("图片路径")]
     [Editor(typeof(ImageFileEditor), typeof(ImageFileEditor))]
+    [Category("配置")]
     public string ImagePath
     {
         get;

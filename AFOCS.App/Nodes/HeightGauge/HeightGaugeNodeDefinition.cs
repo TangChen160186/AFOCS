@@ -16,6 +16,7 @@ namespace AFOCS.App.Nodes.HeightGauge;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.HeightGauge", "测高仪读取", "设备")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class HeightGaugeNodeDefinition(IHeightGauge heightGauge, ILogger logger)
     : NodeDefinitionBase, IExecutableNode
@@ -25,12 +26,14 @@ public class HeightGaugeNodeDefinition(IHeightGauge heightGauge, ILogger logger)
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("Height", "高度值", NodePortType.Double, false)]
+    [Category("输出")]
     public double Height { get; set; }
 
     // ========== 配置属性 ==========
 
     [DisplayName("通道")]
     [ItemsSource(typeof(HeightGaugeChannelItemsSource))]
+    [Category("配置")]
     public int Channel
     {
         get;

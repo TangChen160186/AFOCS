@@ -26,6 +26,7 @@ namespace AFOCS.App.Nodes.Coupling;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.RxSingleAxisCoupling", "RX单轴耦合", "耦合")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class RxSingleAxisCouplingNodeDefinition(
     IIspBoardDevice ispBoard,
@@ -38,18 +39,21 @@ public class RxSingleAxisCouplingNodeDefinition(
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("Angle", "角度", NodePortType.Double, false)]
+    [Category("输出")]
     public double Angle { get; set; }
 
     // ========== 输入端口 ==========
 
     [DisplayName("通道间隙(um)")]
     [NodePort("GapUm", "通道间隙", NodePortType.Double, true)]
+    [Category("输入")]
     public double GapUm { get; set; }
 
     // ========== 配置属性 ==========
 
     [DisplayName("轴")]
     [ItemsSource(typeof(CouplingXYZAxisItemsSource))]
+    [Category("配置")]
     public EAxis Axis
     {
         get;
@@ -57,6 +61,7 @@ public class RxSingleAxisCouplingNodeDefinition(
     } = EAxis.CouplingLY;
 
     [DisplayName("通道1")]
+    [Category("配置")]
     public int Channel1
     {
         get;
@@ -64,6 +69,7 @@ public class RxSingleAxisCouplingNodeDefinition(
     }
 
     [DisplayName("通道2")]
+    [Category("配置")]
     public int Channel2
     {
         get;
@@ -71,6 +77,7 @@ public class RxSingleAxisCouplingNodeDefinition(
     } = 1;
 
     [DisplayName("负方向长度(脉冲)")]
+    [Category("配置")]
     public int NegativeLengthPulse
     {
         get;
@@ -78,6 +85,7 @@ public class RxSingleAxisCouplingNodeDefinition(
     } = 20480;
 
     [DisplayName("正方向长度(脉冲)")]
+    [Category("配置")]
     public int PositiveLengthPulse
     {
         get;
@@ -85,6 +93,7 @@ public class RxSingleAxisCouplingNodeDefinition(
     } = 20480;
 
     [DisplayName("步长(脉冲)")]
+    [Category("配置")]
     public int StepPulse
     {
         get;
@@ -92,6 +101,7 @@ public class RxSingleAxisCouplingNodeDefinition(
     } = 2048;
 
     [DisplayName("延时(ms)")]
+    [Category("配置")]
     public int DelayMs
     {
         get;
@@ -99,6 +109,7 @@ public class RxSingleAxisCouplingNodeDefinition(
     } = 50;
 
     [DisplayName("脉冲当量(脉冲/um)")]
+    [Category("配置")]
     public double PulsePerUm
     {
         get;

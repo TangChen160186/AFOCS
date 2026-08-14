@@ -15,6 +15,7 @@ namespace AFOCS.App.Nodes.Vision;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.PixelToPulse", "像素→脉冲", "视觉")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class PixelToPulseNodeDefinition(
     [ImportMany] IEnumerable<ICamera> cameras) : NodeDefinitionBase, IExecutableNode
@@ -22,12 +23,14 @@ public class PixelToPulseNodeDefinition(
     // ========== 输入端口 ==========
 
     [NodePort("PixelValue", "像素值", NodePortType.Double, true)]
+    [Category("输入")]
     public double PixelValue { get; set; }
 
     // ========== 输出端口 ==========
 
     [Browsable(false)]
     [NodePort("PulseValue", "脉冲值", NodePortType.Double, false)]
+    [Category("输出")]
     public double PulseValue { get; set; }
 
     // ========== 配置属性 ==========
@@ -37,6 +40,7 @@ public class PixelToPulseNodeDefinition(
 
     [DisplayName("相机")]
     [ItemsSource(typeof(CameraItemsSource))]
+    [Category("配置")]
     public string CameraName
     {
         get;
@@ -44,6 +48,7 @@ public class PixelToPulseNodeDefinition(
     } = string.Empty;
 
     [DisplayName("脉冲数/mm")]
+    [Category("配置")]
     public double PulsesPerMm
     {
         get;

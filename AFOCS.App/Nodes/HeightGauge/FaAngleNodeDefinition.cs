@@ -21,6 +21,7 @@ namespace AFOCS.App.Nodes.HeightGauge;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.FaAngle", "FA角度计算", "设备")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class FaAngleNodeDefinition(ILogger logger) : NodeDefinitionBase, IExecutableNode
 {
@@ -28,14 +29,17 @@ public class FaAngleNodeDefinition(ILogger logger) : NodeDefinitionBase, IExecut
 
     [DisplayName("测高值1")]
     [NodePort("Height1", "测高值1", NodePortType.Double, true)]
+    [Category("输入")]
     public double Height1 { get; set; }
 
     [DisplayName("测高值2")]
     [NodePort("Height2", "测高值2", NodePortType.Double, true)]
+    [Category("输入")]
     public double Height2 { get; set; }
 
     [DisplayName("示教点差值")]
     [NodePort("Distance", "示教点差值", NodePortType.Double, true)]
+    [Category("输入")]
     public double Distance { get; set; }
 
     // ========== 输出端口 ==========
@@ -43,6 +47,7 @@ public class FaAngleNodeDefinition(ILogger logger) : NodeDefinitionBase, IExecut
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("Angle", "角度", NodePortType.Double, false)]
+    [Category("输出")]
     public double Angle { get; set; }
 
     // ========== 执行 ==========

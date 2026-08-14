@@ -618,7 +618,21 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
 
     private async Task<Result> WaitForMotionDone(AxisRef ar, AkribisAxisId axis, int timeoutMs)
     {
-        int elapsed = 0, interval = 20;
+        const int interval = 20;
+
+        // 先等待运动真正启动（MotionStat 非 0），避免运动命令刚发送、尚未启动时被误判为“已完成”
+        const int startTimeoutMs = 1000;
+        int startElapsed = 0;
+        while (_controller.GetAxis(ar).MotionStat == 0)
+        {
+            if (startElapsed >= startTimeoutMs)
+                return Result.Fail($"轴 {axis} 运动启动超时 ({startTimeoutMs}ms)");
+            await Task.Delay(interval);
+            startElapsed += interval;
+        }
+
+        // 再等待运动完成
+        int elapsed = 0;
         while (true)
         {
             if (_controller.GetAxis(ar).MotionStat == 0) return Result.Success();
@@ -626,7 +640,6 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
             {
                 await StopAxisAsync(axis);
                 return Result.Fail($"轴 {axis} 运动超时 ({timeoutMs}ms)");
-
             }
             await Task.Delay(interval);
             elapsed += interval;

@@ -27,6 +27,7 @@ public enum GripperCoupling
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.Gripper", "控制夹爪", "运动")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class GripperNodeDefinition(
     ILogger logger,
@@ -34,6 +35,7 @@ public class GripperNodeDefinition(
 {
     [DisplayName("耦合")]
     [ItemsSource(typeof(GripperCouplingItemsSource))]
+    [Category("配置")]
     public GripperCoupling Coupling
     {
         get;
@@ -41,6 +43,7 @@ public class GripperNodeDefinition(
     } = GripperCoupling.L;
 
     [DisplayName("速度")]
+    [Category("配置")]
     public ushort Speed
     {
         get;
@@ -48,6 +51,7 @@ public class GripperNodeDefinition(
     } = 100;
 
     [DisplayName("位置(0.01mm)")]
+    [Category("配置")]
     public ushort Position
     {
         get;

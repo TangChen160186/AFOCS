@@ -3,6 +3,7 @@ using System.ComponentModel.Composition;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using Serilog;
+using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace AFOCS.App.Nodes.Flow;
 
@@ -15,11 +16,13 @@ namespace AFOCS.App.Nodes.Flow;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.If", "条件判断", "流程", HasExecutionOutput = false)]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class IfNodeDefinition(ILogger logger) : NodeDefinitionBase, IExecutableNode
 {
     [Browsable(false)]
     [NodePort("Condition", "条件", NodePortType.Bool, true)]
+    [Category("输入")]
     public bool Condition
     {
         get;
@@ -28,6 +31,7 @@ public class IfNodeDefinition(ILogger logger) : NodeDefinitionBase, IExecutableN
 
     [Browsable(false)]
     [NodePort(FlowExecutor.TrueBranchPortName, "真", NodePortType.Execution, false)]
+    [Category("输出")]
     public bool TruePort
     {
         get;
@@ -36,6 +40,7 @@ public class IfNodeDefinition(ILogger logger) : NodeDefinitionBase, IExecutableN
 
     [Browsable(false)]
     [NodePort(FlowExecutor.FalseBranchPortName, "假", NodePortType.Execution, false)]
+    [Category("输出")]
     public bool FalsePort
     {
         get;

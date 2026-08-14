@@ -22,6 +22,7 @@ namespace AFOCS.App.Nodes.Motion;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.MoveToTeachingPoint", "运动到示教点", "运动")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class MoveToTeachingPointNodeDefinition(IConfigService configService, IBusAxisDevice busAxisDevice,ILogger logger, [ImportMany]
     IEnumerable<IAkribisMotion> akdAkribisMotion)
@@ -29,6 +30,7 @@ public class MoveToTeachingPointNodeDefinition(IConfigService configService, IBu
 {
     [DisplayName("示教点")]
     [ItemsSource(typeof(TeachingPointItemsSource))]
+    [Category("配置")]
     public Guid PointId
     {
         get; 

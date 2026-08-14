@@ -23,6 +23,7 @@ namespace AFOCS.App.Nodes.HeightGauge;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.FaPdHeight", "FA下表面PD测高", "设备")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class FaPdHeightNodeDefinition(IConfigService configService, ILogger logger)
     : NodeDefinitionBase, IExecutableNode
@@ -31,14 +32,17 @@ public class FaPdHeightNodeDefinition(IConfigService configService, ILogger logg
 
     [DisplayName("轴位置")]
     [NodePort("AxisPos", "轴位置", NodePortType.Double, true)]
+    [Category("输入")]
     public double AxisPos { get; set; }
 
     [DisplayName("PD高度")]
     [NodePort("PdHeight", "PD高度", NodePortType.Double, true)]
+    [Category("输入")]
     public double PdHeight { get; set; }
 
     [DisplayName("像素Y")]
     [NodePort("PixelY", "像素Y", NodePortType.Double, true)]
+    [Category("输入")]
     public double PixelY { get; set; }
 
     // ========== 输出端口 ==========
@@ -46,6 +50,7 @@ public class FaPdHeightNodeDefinition(IConfigService configService, ILogger logg
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("Height", "高度", NodePortType.Double, false)]
+    [Category("输出")]
     public double Height { get; set; }
 
     // ========== 执行 ==========

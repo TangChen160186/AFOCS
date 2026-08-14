@@ -21,6 +21,7 @@ namespace AFOCS.App.Nodes.Motion;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.MoveAxisRelative", "轴相对运动", "运动")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class MoveAxisRelativeNodeDefinition(
     IBusAxisDevice busAxisDevice,
@@ -30,6 +31,7 @@ public class MoveAxisRelativeNodeDefinition(
 {
     [DisplayName("轴")]
     [ItemsSource(typeof(AxisItemsSource))]
+    [Category("配置")]
     public EAxis Axis
     {
         get;
@@ -38,6 +40,7 @@ public class MoveAxisRelativeNodeDefinition(
 
     [DisplayName("距离")]
     [NodePort("Distance", "距离", NodePortType.Double, true)]
+    [Category("输入")]
     public double Distance
     {
         get;

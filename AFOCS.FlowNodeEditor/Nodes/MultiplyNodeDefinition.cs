@@ -2,10 +2,12 @@ using System.ComponentModel;
 using System.ComponentModel.Composition;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
+using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace AFOCS.FlowNodeEditor.Nodes;
 
 [NodeDefinition("Builtin.Multiply", "乘法", "运算", HasExecutionInput = false, HasExecutionOutput = false)]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [Export(typeof(INodeDefinition))]
 [Export]
 [PartCreationPolicy(CreationPolicy.NonShared)]
@@ -13,6 +15,7 @@ public class MultiplyNodeDefinition : NodeDefinitionBase, IExecutableNode
 {
   
     [NodePort("A", "A", NodePortType.Double, true)]
+    [Category("输入")]
     public double A
     {
         get;
@@ -21,6 +24,7 @@ public class MultiplyNodeDefinition : NodeDefinitionBase, IExecutableNode
 
 
     [NodePort("B", "B", NodePortType.Double, true)]
+    [Category("输入")]
     public double B
     {
         get;
@@ -28,6 +32,7 @@ public class MultiplyNodeDefinition : NodeDefinitionBase, IExecutableNode
     }
     [Browsable(false)]
     [NodePort("Result", "结果", NodePortType.Double, false)]
+    [Category("输出")]
     public double Result
     {
         get;

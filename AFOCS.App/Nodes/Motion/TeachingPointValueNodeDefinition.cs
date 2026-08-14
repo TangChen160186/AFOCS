@@ -19,6 +19,7 @@ namespace AFOCS.App.Nodes.Motion;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.TeachingPointValue", "示教点坐标", "运动")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class TeachingPointValueNodeDefinition(IConfigService configService, ILogger logger)
     : NodeDefinitionBase, IExecutableNode
@@ -28,6 +29,7 @@ public class TeachingPointValueNodeDefinition(IConfigService configService, ILog
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("Value", "坐标值", NodePortType.Double, false)]
+    [Category("输出")]
     public double Value
     {
         get;
@@ -37,6 +39,7 @@ public class TeachingPointValueNodeDefinition(IConfigService configService, ILog
 
         [DisplayName("示教点")]
     [ItemsSource(typeof(TeachingPointItemsSource))]
+    [Category("配置")]
     public Guid PointId
     {
         get;
@@ -45,6 +48,7 @@ public class TeachingPointValueNodeDefinition(IConfigService configService, ILog
 
     [DisplayName("轴")]
     [ItemsSource(typeof(AxisItemsSource))]
+    [Category("配置")]
     public EAxis Axis
     {
         get;

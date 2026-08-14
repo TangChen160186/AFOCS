@@ -8,6 +8,7 @@ using AFOCS.Infrastructure;
 using AFOCS.VisionEditor.Models;
 using AFOCS.VisionEditor.Services;
 using Serilog;
+using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace AFOCS.App.Nodes.Vision;
 
@@ -19,6 +20,7 @@ namespace AFOCS.App.Nodes.Vision;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.VisionInspect", "视觉检测", "视觉")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, IExecutableNode
 {
@@ -27,6 +29,7 @@ public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, I
     /// <summary>输入图像（PixelData 灰度图，来自相机采集或图片文件节点）</summary>
     [JsonIgnore]
     [NodePort("Image", "图像", NodePortType.Object, true)]
+    [Category("输入")]
     public PixelData? Image { get; set; }
 
     // ========== 输出端口 ==========
@@ -34,40 +37,49 @@ public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, I
     [ReadOnly(true)]
 
     [NodePort("NccDx", "NCC ΔX", NodePortType.Double, false)]
+    [Category("输出")]
     public double NccDx { get; set; }
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("NccDy", "NCC ΔY", NodePortType.Double, false)]
+    [Category("输出")]
     public double NccDy { get; set; }
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("Edge1AngleDev", "边1角度偏差", NodePortType.Double, false)]
+    [Category("输出")]
     public double Edge1AngleDev { get; set; }
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("Edge2AngleDev", "边2角度偏差", NodePortType.Double, false)]
+    [Category("输出")]
     public double Edge2AngleDev { get; set; }
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("PointDevX", "交点ΔX", NodePortType.Double, false)]
+    [Category("输出")]
     public double PointDevX { get; set; }
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("PointDevY", "交点ΔY", NodePortType.Double, false)]
+    [Category("输出")]
     public double PointDevY { get; set; }
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("PointX", "找点X", NodePortType.Double, false)]
+    [Category("输出")]
     public double PointX { get; set; }
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("PointY", "找点Y", NodePortType.Double, false)]
+    [Category("输出")]
     public double PointY { get; set; }
 
     // ========== 配置属性 ==========
 
     [DisplayName("模板路径")]
     [Editor(typeof(VtemplateFileEditor), typeof(VtemplateFileEditor))]
+    [Category("配置")]
     public string TemplatePath
     {
         get;

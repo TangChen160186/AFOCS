@@ -16,6 +16,7 @@ namespace AFOCS.App.Nodes.PowerSupply;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.PowerSupply", "电源输出", "设备")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class PowerSupplyNodeDefinition(
     IProgrammablePowerSupply powerSupply,
@@ -24,6 +25,7 @@ public class PowerSupplyNodeDefinition(
 {
     [DisplayName("通道")]
     [ItemsSource(typeof(PowerChannelItemsSource))]
+    [Category("配置")]
     public int Channel
     {
         get;
@@ -31,6 +33,7 @@ public class PowerSupplyNodeDefinition(
     } = 1;
 
     [DisplayName("输出使能")]
+    [Category("配置")]
     public bool OutputEnabled
     {
         get;
@@ -38,6 +41,7 @@ public class PowerSupplyNodeDefinition(
     } = true;
 
     [DisplayName("电压(V)")]
+    [Category("配置")]
     public double Voltage
     {
         get;
@@ -45,6 +49,7 @@ public class PowerSupplyNodeDefinition(
     } = 3.0;
 
     [DisplayName("电流(A)")]
+    [Category("配置")]
     public double Current
     {
         get;

@@ -21,6 +21,7 @@ namespace AFOCS.App.Nodes.Coupling;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.TxSpiralCoupling", "TX螺旋耦合", "耦合")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class TxSpiralCouplingNodeDefinition(
     ILogger logger,
@@ -32,12 +33,14 @@ public class TxSpiralCouplingNodeDefinition(
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("MaxPower", "最大光功率", NodePortType.Double, false)]
+    [Category("输出")]
     public double MaxPower { get; set; }
 
     // ========== 配置属性 ==========
 
     [DisplayName("轴1")]
     [ItemsSource(typeof(CouplingXYAxisItemsSource))]
+    [Category("配置")]
     public EAxis Axis1
     {
         get;
@@ -46,6 +49,7 @@ public class TxSpiralCouplingNodeDefinition(
 
     [DisplayName("轴2")]
     [ItemsSource(typeof(CouplingXYAxisItemsSource))]
+    [Category("配置")]
     public EAxis Axis2
     {
         get;
@@ -53,6 +57,7 @@ public class TxSpiralCouplingNodeDefinition(
     } = EAxis.CouplingLY;
 
     [DisplayName("螺距")]
+    [Category("配置")]
     public double Pitch
     {
         get;
@@ -60,6 +65,7 @@ public class TxSpiralCouplingNodeDefinition(
     } = 1.0;
 
     [DisplayName("最大扫描半径(脉冲)")]
+    [Category("配置")]
     public double MaxScanRadius
     {
         get;
@@ -67,6 +73,7 @@ public class TxSpiralCouplingNodeDefinition(
     } = 500;
 
     [DisplayName("最大扫描速度(脉冲/s)")]
+    [Category("配置")]
     public double MaxScanSpeed
     {
         get;
@@ -74,6 +81,7 @@ public class TxSpiralCouplingNodeDefinition(
     } = 204800;
 
     [DisplayName("最大回归速度(脉冲/s)")]
+    [Category("配置")]
     public double MaxReturnSpeed
     {
         get;
@@ -81,6 +89,7 @@ public class TxSpiralCouplingNodeDefinition(
     } = 20480;
 
     [DisplayName("采集通道")]
+    [Category("配置")]
     public int AcquireChannel
     {
         get;

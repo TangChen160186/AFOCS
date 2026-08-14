@@ -20,6 +20,7 @@ namespace AFOCS.App.Nodes.Motion;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.MoveAxisHome", "轴回零", "回零")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class MoveAxisHomeNodeDefinition(
     IBusAxisDevice busAxisDevice,
@@ -29,6 +30,7 @@ public class MoveAxisHomeNodeDefinition(
 {
     [DisplayName("轴")]
     [ItemsSource(typeof(AxisItemsSource))]
+    [Category("配置")]
     public EAxis Axis
     {
         get;
@@ -36,6 +38,7 @@ public class MoveAxisHomeNodeDefinition(
     } = EAxis.CouplingLThetaX;
 
     [DisplayName("回零超时时间")]
+    [Category("配置")]
     public int HomeTimeout
     {
         get;

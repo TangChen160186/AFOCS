@@ -17,6 +17,7 @@ namespace AFOCS.App.Nodes.IO;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.IoState", "读取IO状态", "设备", HasExecutionInput = false, HasExecutionOutput = false)]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class IoStateNodeDefinition(
     IIoDevice ioDevice,
@@ -24,6 +25,7 @@ public class IoStateNodeDefinition(
 {
     [DisplayName("IO输入信号")]
     [ItemsSource(typeof(IoInputItemsSource))]
+    [Category("配置")]
     public AllInputs Signal
     {
         get;
@@ -32,6 +34,7 @@ public class IoStateNodeDefinition(
 
     [Browsable(false)]
     [NodePort("State", "状态", NodePortType.Bool, false)]
+    [Category("输出")]
     public bool State
     {
         get;

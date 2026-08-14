@@ -16,6 +16,7 @@ namespace AFOCS.App.Nodes.IO;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.IoOutput", "IO输出", "设备")]
+[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class IoOutputNodeDefinition(
     IIoDevice ioDevice,
@@ -24,6 +25,7 @@ public class IoOutputNodeDefinition(
 {
     [DisplayName("输出信号")]
     [ItemsSource(typeof(IoOutputItemsSource))]
+    [Category("配置")]
     public AllOutputs Signal
     {
         get;
@@ -31,6 +33,7 @@ public class IoOutputNodeDefinition(
     } = AllOutputs.TowerGreen;
 
     [DisplayName("输出状态")]
+    [Category("配置")]
     public bool OutputOn
     {
         get;
