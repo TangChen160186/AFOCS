@@ -1,9 +1,11 @@
+using System.ComponentModel;
+using System.ComponentModel.Composition;
 using AFOCS.Devices.Camera;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Infrastructure.Extensions;
-using System.ComponentModel;
-using System.ComponentModel.Composition;
+using Serilog;
+using Serilog.Core;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace AFOCS.App.Nodes.Vision;
@@ -33,24 +35,10 @@ public class PixelToPulseNodeDefinition : NodeDefinitionBase, IExecutableNode
     [Browsable(false)]
     [NodePort("PulseValue", "脉冲值", NodePortType.Double, false)]
     [Category("输出")]
+    [ReadOnly(true)]
     public double PulseValue { get; set; }
 
     // ========== 配置属性 ==========
-
-    private readonly Dictionary<string, ICamera> _cameraMap;
-
-    private static IEnumerable<string> _cameraNames = null!;
-    /// <summary>
-    /// 像素→脉冲转换节点：将视觉检测的像素偏差转为耦合轴脉冲值。
-    /// 选择相机后自动读取其精度(um/pixel)，脉冲 = 像素 × 精度 × 204.8。
-    /// </summary>
-    [method: ImportingConstructor]
-    public PixelToPulseNodeDefinition([ImportMany] IEnumerable<ICamera> cameras)
-    {
-        _cameraNames = cameras.Select(c => c.GetType().GetDescription());
-        _cameraMap = cameras
-            .ToDictionary(c => c.GetType().Name);
-    }
 
     [DisplayName("相机")]
     [ItemsSource(typeof(CameraItemsSource))]
@@ -63,7 +51,18 @@ public class PixelToPulseNodeDefinition : NodeDefinitionBase, IExecutableNode
 
     private const double PulsesPerUm = 204.8;
 
-    // ========== 执行 ==========
+
+    private readonly Dictionary<string, ICamera> _cameraMap;
+
+    private static IEnumerable<string> _cameraNames = null!;
+
+    [method: ImportingConstructor]
+    public PixelToPulseNodeDefinition([ImportMany] IEnumerable<ICamera> cameras)
+    {
+        _cameraNames = cameras.Select(c => c.GetType().GetDescription());
+        _cameraMap = cameras
+            .ToDictionary(c => c.GetType().Name);
+    }
 
     public Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
     {

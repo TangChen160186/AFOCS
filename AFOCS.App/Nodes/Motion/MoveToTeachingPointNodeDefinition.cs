@@ -7,7 +7,6 @@ using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Infrastructure;
 using AFOCS.Infrastructure.Extensions;
-using Caliburn.Micro;
 using Serilog;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
@@ -22,10 +21,13 @@ namespace AFOCS.App.Nodes.Motion;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.MoveToTeachingPoint", "运动到示教点", "运动")]
-[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
+[CategoryOrder("基础", 0), 
+ CategoryOrder("配置", 1), 
+ CategoryOrder("输入", 2), 
+ CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
-public class MoveToTeachingPointNodeDefinition(IConfigService configService, IBusAxisDevice busAxisDevice,ILogger logger, [ImportMany]
-    IEnumerable<IAkribisMotion> akdAkribisMotion)
+public class MoveToTeachingPointNodeDefinition(IConfigService configService, IBusAxisDevice busAxisDevice, 
+    [ImportMany] IEnumerable<IAkribisMotion> akdAkribisMotion)
     : NodeDefinitionBase, IExecutableNode
 {
     [DisplayName("示教点")]
@@ -62,9 +64,7 @@ public class MoveToTeachingPointNodeDefinition(IConfigService configService, IBu
 
         if (errors.Count > 0)
         {
-            var errInfo = $"运动失败: {string.Join("; ", errors)}";
-            logger.Error(errInfo);
-            throw new InvalidOperationException(errInfo);
+            throw new InvalidOperationException($"运动失败: {string.Join("; ", errors)}");
         }
         return new Dictionary<string, object?>();
     }
@@ -81,7 +81,6 @@ public class MoveToTeachingPointNodeDefinition(IConfigService configService, IBu
             if (axis.IsBusAxis())
             {
                 var busId = axis.ToBusAxisId(station);
-                // posiMode=1 表示绝对位置模式，targetPos 为目标绝对坐标
                 var moveResult = await busAxisDevice.MovePmoveAsync(busId, targetPos, posiMode: 1);
                 return moveResult.IsSuccess ? null : $"{axis.GetDescription()}: {moveResult.Message}";
             }
@@ -102,41 +101,5 @@ public class MoveToTeachingPointNodeDefinition(IConfigService configService, IBu
         {
             return $"{axis.GetDescription()}: {ex.Message}";
         }
-    }
-}
-
-public class TeachingPointItemsSource : IItemsSource
-{
-    public ItemCollection GetValues()
-    {
-        var items = new ItemCollection();
-        try
-        {
-            // 清除缓存以确保实时获取最新示教点配置
-            var config = LoadConfig();
-
-            if (config?.Points != null)
-            {
-                foreach (var point in config.Points)
-                {
-                    items.Add(point.Id, $"{point.Name}（{point.Station.GetDescription()}）");
-                }
-            }
-        }
-        catch
-        {
-            // 容器未初始化或加载失败时返回空列表
-        }
-        return items;
-    }
-
-    /// <summary>
-    /// 同步获取示教点配置。异步加载被包装在后台线程执行，
-    /// 避免在 UI 线程同步等待捕获了 SynchronizationContext 的异步方法导致死锁。
-    /// </summary>
-    private static TeachingPointsConfig? LoadConfig()
-    {
-        var configService = IoC.Get<IConfigService>();
-        return Task.Run(configService.LoadAsync<TeachingPointsConfig>).GetAwaiter().GetResult();
     }
 }

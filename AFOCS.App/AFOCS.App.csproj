@@ -80,6 +80,5 @@
     </ItemGroup>
     <ItemGroup>
       <Folder Include="Commands\" />
-      <Folder Include="Nodes\Motion\" />
     </ItemGroup>
 </Project>

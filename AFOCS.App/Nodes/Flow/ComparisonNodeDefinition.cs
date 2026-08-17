@@ -2,7 +2,6 @@ using System.ComponentModel;
 using System.ComponentModel.Composition;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
-using AFOCS.Infrastructure.Extensions;
 using Serilog;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
@@ -96,16 +95,5 @@ public class ComparisonNodeDefinition(ILogger logger) : NodeDefinitionBase, IExe
         {
             ["Result"] = Result,
         });
-    }
-}
-
-public class ComparisonOperatorItemsSource : IItemsSource
-{
-    public ItemCollection GetValues()
-    {
-        var items = new ItemCollection();
-        foreach (var op in Enum.GetValues<ComparisonOperator>())
-            items.Add(op, op.GetDescription());
-        return items;
     }
 }

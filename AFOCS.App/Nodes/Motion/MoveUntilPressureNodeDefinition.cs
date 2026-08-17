@@ -3,7 +3,6 @@ using System.ComponentModel.Composition;
 using AFOCS.App.Models;
 using AFOCS.Devices.AkribrisMotion;
 using AFOCS.Devices.BusAxisDevice;
-using AFOCS.Devices.MotionControlCard;
 using AFOCS.Devices.PressureSensor;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
@@ -30,9 +29,8 @@ namespace AFOCS.App.Nodes.Motion;
  CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class MoveUntilPressureNodeDefinition(
-    IBusAxisDevice busAxisDevice,
-    IMotionControlCard motionCard,
     ILogger logger,
+    IBusAxisDevice busAxisDevice,
     [ImportMany] IEnumerable<IAkribisMotion> akribisMotions,
     [ImportMany] IEnumerable<IPressureSensor> pressureSensors)
     : NodeDefinitionBase, IExecutableNode
@@ -44,7 +42,7 @@ public class MoveUntilPressureNodeDefinition(
     {
         get;
         set => Set(ref field, value);
-    } = EAxis.CouplingLThetaX;
+    } = EAxis.CouplingLThetaZ;
 
     [DisplayName("压力传感器")]
     [Description("选择要监测的压力传感器类型")]
@@ -96,15 +94,6 @@ public class MoveUntilPressureNodeDefinition(
         set => Set(ref field, value);
     } = 100.0;
 
-    [DisplayName("检测间隔(ms)")]
-    [Description("等待总线轴本步运动完成时的轮询间隔，默认 50ms")]
-    [Category("配置")]
-    public int PollIntervalMs
-    {
-        get;
-        set => Set(ref field, value);
-    } = 50;
-
     public async Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
     {
         if (!context.TryGetValue("WorkPos", out var workPosObj) || workPosObj is not WorkPos station)
@@ -115,8 +104,6 @@ public class MoveUntilPressureNodeDefinition(
             throw new InvalidOperationException(
                 $"未找到匹配的压力传感器: {SensorType.GetDescription()}, 工位={station}");
 
-        logger.Information("开始压力停止运动: 轴={Axis}, 传感器={SensorType}.{Channel}, 目标={Target}, 最大距离={Dist}",
-            Axis.GetDescription(), SensorType.GetDescription(), Channel, TargetPressure, MaxDistance);
 
         if (Axis.IsBusAxis())
         {
@@ -131,8 +118,6 @@ public class MoveUntilPressureNodeDefinition(
             throw new InvalidOperationException($"{Axis.GetDescription()}: 未知轴类型");
         }
 
-        logger.Information("压力停止运动完成: 轴={Axis}, 传感器={Type}.{Ch}",
-            Axis.GetDescription(), SensorType.GetDescription(), Channel);
         return new Dictionary<string, object?>();
     }
 
@@ -141,12 +126,6 @@ public class MoveUntilPressureNodeDefinition(
     private async Task MoveBusAxisUntilPressure(IPressureSensor sensor, WorkPos station)
     {
         var busId = Axis.ToBusAxisId(station);
-        var axisIndex = (ushort)busId;
-
-        // 确保轴已使能
-        var enableResult = await busAxisDevice.EnableAxisAsync(busId);
-        if (!enableResult.IsSuccess)
-            throw new InvalidOperationException($"轴使能失败: {enableResult.Message}");
 
         try
         {
@@ -163,13 +142,11 @@ public class MoveUntilPressureNodeDefinition(
                 // 每步距离 = min(步长, 剩余距离)，方向与最大距离一致
                 var step = Math.Min(stepAbs, totalAbs - moved) * direction;
 
-                // 启动定长运动（dmc_pmove_unit 启动后立即返回，运动在控制器后台执行）
-                var moveResult = await motionCard.PmoveUnitAsync(axisIndex, step, posiMode: 0);
+                // 定长运动：内部自动使能、按轴配置设置速度并等待本步完成（超时自动停轴）
+                var moveResult = await busAxisDevice.MovePmoveAsync(busId, step);
                 if (!moveResult.IsSuccess)
-                    throw new InvalidOperationException($"启动运动失败: {moveResult.Message}");
+                    throw new InvalidOperationException($"运动失败: {moveResult.Message}");
 
-                // 等待本步运动完成
-                await WaitBusAxisStepDoneAsync(axisIndex);
                 moved += Math.Abs(step);
 
                 // 本步完成后读取压力，达标则停止
@@ -195,22 +172,6 @@ public class MoveUntilPressureNodeDefinition(
             if (!finalStop.IsSuccess)
                 logger.Warning("最终停止轴失败: {Error}", finalStop.Message);
         }
-    }
-
-    /// <summary>等待总线轴本步定长运动完成（轮询 CheckDone）</summary>
-    private async Task WaitBusAxisStepDoneAsync(ushort axisIndex)
-    {
-        const int timeoutMs = 30000;
-        var elapsed = 0;
-        while (elapsed < timeoutMs)
-        {
-            await Task.Delay(PollIntervalMs);
-            elapsed += PollIntervalMs;
-            var doneResult = await motionCard.CheckDoneAsync(axisIndex);
-            if (doneResult.IsSuccess && doneResult.Data == 1)
-                return;
-        }
-        throw new InvalidOperationException($"等待轴运动完成超时 ({timeoutMs}ms)");
     }
 
     // ==================== 雅克贝斯轴：步进式相对运动 + 逐步读取压力 ====================
@@ -277,15 +238,8 @@ public class MoveUntilPressureNodeDefinition(
     private static IPressureSensor? FindSensor(
         IEnumerable<IPressureSensor> sensors, PressureSensorType sensorType, WorkPos workPos)
     {
-        foreach (var s in sensors)
-        {
-            if (s.SensorType != sensorType) continue;
 
-            var workPosProp = s.GetType().GetProperty("WorkPos");
-            if (workPosProp != null && workPosProp.GetValue(s) is WorkPos wp && wp == workPos)
-                return s;
-        }
-        return null;
+        return sensors.FirstOrDefault(e=>e.WorkPos == workPos && e.SensorType == sensorType);
     }
 }
 

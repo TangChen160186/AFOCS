@@ -36,11 +36,11 @@ public class GripperNodeDefinition(
     [DisplayName("耦合")]
     [ItemsSource(typeof(GripperCouplingItemsSource))]
     [Category("配置")]
-    public GripperCoupling Coupling
+    public GripperType Coupling
     {
         get;
         set => Set(ref field, value);
-    } = GripperCoupling.L;
+    } = GripperType.LeftCouplingGripper;
 
     [DisplayName("速度")]
     [Category("配置")]
@@ -60,16 +60,12 @@ public class GripperNodeDefinition(
 
     public async Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
     {
-        // 工位由入口节点传入，未提供时直接报错，避免夹取到错误工位的夹爪
         if (!context.TryGetValue("WorkPos", out var workPosObj) || workPosObj is not WorkPos station)
             throw new InvalidOperationException("流程上下文缺少工位（WorkPos），请确认已连接入口节点并设置工位");
 
-        var prefix = station == WorkPos.Left ? "Left" : "Right";
-        var instanceName = $"{prefix}Coupling{Coupling}Gripper";
-
-        var gripperInstances = grippers.ToDictionary(g => g.GetType().Name);
-        if (!gripperInstances.TryGetValue(instanceName, out var gripper))
-            throw new InvalidOperationException($"未找到夹爪 {instanceName}，请检查设备配置");
+        var gripper = grippers.FirstOrDefault(e=>e.WorkPos == station && e.GripperType == Coupling);
+        if(gripper==null)
+            throw new InvalidOperationException($"未找到工位 {station} 耦合 {Coupling} 的夹爪实例，请确认已配置夹爪实例");
 
         var result = await gripper.MoveAsync(Speed, Position);
         if (!result.IsSuccess)
@@ -78,20 +74,6 @@ public class GripperNodeDefinition(
             logger.Error(errInfo);
             throw new InvalidOperationException(errInfo);
         }
-
-        logger.Information("夹爪 {Gripper} 运动到位置 {Position}，速度 {Speed}",
-            instanceName, Position, Speed);
         return new Dictionary<string, object?>();
-    }
-}
-
-public class GripperCouplingItemsSource : IItemsSource
-{
-    public ItemCollection GetValues()
-    {
-        var items = new ItemCollection();
-        foreach (var coupling in Enum.GetValues<GripperCoupling>())
-            items.Add(coupling, coupling.GetDescription());
-        return items;
     }
 }

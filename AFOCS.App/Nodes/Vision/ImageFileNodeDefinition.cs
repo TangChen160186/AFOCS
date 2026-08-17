@@ -5,6 +5,7 @@ using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using AFOCS.VisionEditor.Models;
 using HalconDotNet;
+using Serilog.Core;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace AFOCS.App.Nodes.Vision;
@@ -16,7 +17,11 @@ namespace AFOCS.App.Nodes.Vision;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.ImageFile", "图片文件", "视觉")]
-[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
+[CategoryOrder("基础", 0),
+ CategoryOrder("配置", 1), 
+ CategoryOrder("输入", 2), 
+ CategoryOrder("输出", 3)]
+[method: ImportingConstructor]
 public class ImageFileNodeDefinition : NodeDefinitionBase, IExecutableNode
 {
     // ========== 输出端口 ==========
@@ -36,6 +41,7 @@ public class ImageFileNodeDefinition : NodeDefinitionBase, IExecutableNode
         get;
         set => Set(ref field, value);
     } = string.Empty;
+
 
     // ========== 执行 ==========
 
