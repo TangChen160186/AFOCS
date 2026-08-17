@@ -24,7 +24,10 @@ namespace AFOCS.App.Nodes.Motion;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.MoveUntilPressure", "压力停止运动", "运动")]
-[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
+[CategoryOrder("基础", 0),
+ CategoryOrder("配置", 1), 
+ CategoryOrder("输入", 2), 
+ CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class MoveUntilPressureNodeDefinition(
     IBusAxisDevice busAxisDevice,

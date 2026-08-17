@@ -16,7 +16,10 @@ namespace AFOCS.App.Nodes.PowerSupply;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.PowerSupply", "电源输出", "设备")]
-[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
+[CategoryOrder("基础", 0), 
+ CategoryOrder("配置", 1),
+ CategoryOrder("输入", 2), 
+ CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class PowerSupplyNodeDefinition(
     IProgrammablePowerSupply powerSupply,
@@ -46,7 +49,7 @@ public class PowerSupplyNodeDefinition(
     {
         get;
         set => Set(ref field, value);
-    } = 3.0;
+    } = 3.6;
 
     [DisplayName("电流(A)")]
     [Category("配置")]
@@ -69,7 +72,7 @@ public class PowerSupplyNodeDefinition(
         if (!statusResult.IsSuccess)
             throw LogError($"设置通道 {Channel} 输出状态失败: {statusResult.Message}");
 
-        logger.Information("电源通道 {Channel} 输出 {State}，电压 {Voltage}V，电流 {Current}A",
+        logger.Information("设置电源: 通道 {Channel} 输出 {State}，电压 {Voltage}V，电流 {Current}A",
             Channel, OutputEnabled ? "打开" : "关闭", Voltage, Current);
         return new Dictionary<string, object?>();
     }
@@ -85,9 +88,11 @@ public class PowerChannelItemsSource : IItemsSource
 {
     public ItemCollection GetValues()
     {
-        var items = new ItemCollection();
-        items.Add(1, "通道 1");
-        items.Add(2, "通道 2");
+        var items = new ItemCollection
+        {
+            { 1, "通道 1" },
+            { 2, "通道 2" }
+        };
         return items;
     }
 }

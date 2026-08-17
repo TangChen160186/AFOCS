@@ -238,14 +238,10 @@ namespace AFOCS.App.ViewModels.Settings
         public CameraLightChannel Channel { get; }
         public string Name { get; }
 
-        public uint Brightness
+        public byte Brightness
         {
             get;
-            set
-            {
-                field = Math.Clamp(value, 0u, 255u);
-                NotifyOfPropertyChange();
-            }
+            set => Set(ref field, value);
         } = 128;
 
         public uint AppliedBrightness

@@ -17,7 +17,10 @@ namespace AFOCS.App.Nodes.Vision;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.CameraCapture", "相机采集", "视觉")]
-[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
+[CategoryOrder("基础", 0), 
+ CategoryOrder("配置", 1),
+ CategoryOrder("输入", 2), 
+ CategoryOrder("输出", 3)]
 public class CameraCaptureNodeDefinition : NodeDefinitionBase, IExecutableNode
 {
     /// <summary>
