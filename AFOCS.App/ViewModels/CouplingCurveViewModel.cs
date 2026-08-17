@@ -13,14 +13,18 @@ public interface IRxCouplingCurveLeftTool : ITool;
 
 public interface IRxCouplingCurveRightTool : ITool;
 
+public interface ITxCouplingCurveLeftTool : ITool;
+
+public interface ITxCouplingCurveRightTool : ITool;
+
 /// <summary>
-/// 耦合曲线工具基类：订阅耦合采样消息（RX/TX 单轴、TX 螺旋节点均发布），
-/// 把各通道光功率曲线实时绘制到 ScottPlot。
-/// 子类通过构造函数参数固定工位（左/右），分别注册为两个独立工具面板。
+/// 耦合曲线工具基类：按工位 + 来源（RX/TX）订阅耦合采样消息，
+/// 把各通道数值曲线实时绘制到 ScottPlot。RX 值为 ISP 板 RSP，TX 值为雅克贝斯控制器光功率。
 /// </summary>
-public abstract class RxCouplingCurveViewModelBase : Tool, IHandle<CouplingSampleMessage>
+public abstract class CouplingCurveViewModelBase : Tool, IHandle<CouplingSampleMessage>
 {
     private readonly WorkPos _workPos;
+    private readonly CouplingSource _source;
     private readonly ILogger _logger;
 
     /// <summary>曲线图对象（View 加载时通过 WpfPlot.Reset 挂接）</summary>
@@ -29,17 +33,20 @@ public abstract class RxCouplingCurveViewModelBase : Tool, IHandle<CouplingSampl
     /// <summary>数据更新后触发，View 用于调用 Refresh</summary>
     public event System.Action? PlotUpdated;
 
-    // 每通道曲线数据（X=位置脉冲，Y=RSP）
+    // 每通道曲线数据（X=位置脉冲，Y=数值）
     private readonly Dictionary<int, List<double>> _xs = [];
     private readonly Dictionary<int, List<double>> _ys = [];
     private readonly Dictionary<int, ScottPlot.Plottables.Scatter> _series = [];
 
-    protected RxCouplingCurveViewModelBase(WorkPos workPos, ILogger logger, IEventAggregator events)
+    protected CouplingCurveViewModelBase(WorkPos workPos, CouplingSource source, ILogger logger, IEventAggregator events)
     {
         _workPos = workPos;
+        _source = source;
         _logger = logger;
 
-        Plot.Title(workPos == WorkPos.Left ? "左工位耦合曲线" : "右工位耦合曲线");
+        string posText = workPos == WorkPos.Left ? "左工位" : "右工位";
+        string srcText = source == CouplingSource.Rx ? "RX" : "TX";
+        Plot.Title($"{posText}{srcText}耦合曲线");
         Plot.Axes.Bottom.Label.Text = "位置 (脉冲)";
         Plot.Axes.Left.Label.Text = "数值";
         Plot.Font.Automatic();
@@ -50,7 +57,7 @@ public abstract class RxCouplingCurveViewModelBase : Tool, IHandle<CouplingSampl
 
     public Task HandleAsync(CouplingSampleMessage message, CancellationToken cancellationToken)
     {
-        if (message.WorkPos != _workPos)
+        if (message.WorkPos != _workPos || message.Source != _source)
             return Task.CompletedTask;
 
         switch (message.Type)
@@ -69,7 +76,8 @@ public abstract class RxCouplingCurveViewModelBase : Tool, IHandle<CouplingSampl
                 break;
 
             case CouplingSampleType.End:
-                _logger.Information("RX耦合曲线[{WorkPos}] 扫描结束，共 {Count} 点", _workPos, _xs.Values.FirstOrDefault()?.Count ?? 0);
+                _logger.Information("耦合曲线[{WorkPos}/{Source}] 扫描结束，共 {Count} 点",
+                    _workPos, _source, _xs.Values.FirstOrDefault()?.Count ?? 0);
                 break;
         }
 
@@ -108,12 +116,12 @@ public abstract class RxCouplingCurveViewModelBase : Tool, IHandle<CouplingSampl
 [PartCreationPolicy(CreationPolicy.Shared)]
 [method: ImportingConstructor]
 public class RxCouplingCurveLeftViewModel(ILogger logger, IEventAggregator events)
-    : RxCouplingCurveViewModelBase(WorkPos.Left, logger, events), IRxCouplingCurveLeftTool
+    : CouplingCurveViewModelBase(WorkPos.Left, CouplingSource.Rx, logger, events), IRxCouplingCurveLeftTool
 {
     public override PaneLocation PreferredLocation => PaneLocation.Right;
     public override double PreferredWidth => 500;
     public override double PreferredHeight => 300;
-    public override string DisplayName => "左工位耦合曲线";
+    public override string DisplayName => "左工位RX耦合曲线";
 }
 
 [Export]
@@ -121,10 +129,36 @@ public class RxCouplingCurveLeftViewModel(ILogger logger, IEventAggregator event
 [PartCreationPolicy(CreationPolicy.Shared)]
 [method: ImportingConstructor]
 public class RxCouplingCurveRightViewModel(ILogger logger, IEventAggregator events)
-    : RxCouplingCurveViewModelBase(WorkPos.Right, logger, events), IRxCouplingCurveRightTool
+    : CouplingCurveViewModelBase(WorkPos.Right, CouplingSource.Rx, logger, events), IRxCouplingCurveRightTool
 {
     public override PaneLocation PreferredLocation => PaneLocation.Right;
     public override double PreferredWidth => 500;
     public override double PreferredHeight => 300;
-    public override string DisplayName => "右工位耦合曲线";
+    public override string DisplayName => "右工位RX耦合曲线";
+}
+
+[Export]
+[Export(typeof(ITxCouplingCurveLeftTool))]
+[PartCreationPolicy(CreationPolicy.Shared)]
+[method: ImportingConstructor]
+public class TxCouplingCurveLeftViewModel(ILogger logger, IEventAggregator events)
+    : CouplingCurveViewModelBase(WorkPos.Left, CouplingSource.Tx, logger, events), ITxCouplingCurveLeftTool
+{
+    public override PaneLocation PreferredLocation => PaneLocation.Right;
+    public override double PreferredWidth => 500;
+    public override double PreferredHeight => 300;
+    public override string DisplayName => "左工位TX耦合曲线";
+}
+
+[Export]
+[Export(typeof(ITxCouplingCurveRightTool))]
+[PartCreationPolicy(CreationPolicy.Shared)]
+[method: ImportingConstructor]
+public class TxCouplingCurveRightViewModel(ILogger logger, IEventAggregator events)
+    : CouplingCurveViewModelBase(WorkPos.Right, CouplingSource.Tx, logger, events), ITxCouplingCurveRightTool
+{
+    public override PaneLocation PreferredLocation => PaneLocation.Right;
+    public override double PreferredWidth => 500;
+    public override double PreferredHeight => 300;
+    public override string DisplayName => "右工位TX耦合曲线";
 }

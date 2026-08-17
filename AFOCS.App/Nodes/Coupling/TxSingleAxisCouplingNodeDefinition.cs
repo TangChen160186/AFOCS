@@ -168,6 +168,7 @@ public class TxSingleAxisCouplingNodeDefinition(
         _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
         {
             WorkPos = station,
+            Source = CouplingSource.Tx,
             Type = CouplingSampleType.Start,
             ValueLabel = "功率",
         });
@@ -187,6 +188,7 @@ public class TxSingleAxisCouplingNodeDefinition(
                     _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
                     {
                         WorkPos = station,
+                        Source = CouplingSource.Tx,
                         Type = CouplingSampleType.Sample,
                         Position = (int)Math.Round(startPos + StartDistance + i * SamplingInterval),
                         ChannelValues = channels.ToDictionary(kv => kv.Key, kv => kv.Value[i]),
@@ -199,6 +201,7 @@ public class TxSingleAxisCouplingNodeDefinition(
             _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
             {
                 WorkPos = station,
+                Source = CouplingSource.Tx,
                 Type = CouplingSampleType.End,
             });
         }

@@ -15,6 +15,16 @@ public enum CouplingSampleType
     End,
 }
 
+/// <summary>耦合数据来源</summary>
+public enum CouplingSource
+{
+    /// <summary>ISP 板 RSP（RX 耦合）</summary>
+    Rx,
+
+    /// <summary>雅克贝斯控制器光功率（TX 耦合）</summary>
+    Tx,
+}
+
 /// <summary>
 /// 耦合扫描采样消息 —— 耦合节点执行期间通过 IEventAggregator 实时发布，供曲线图等 UI 订阅。
 /// 数值来源：RX 节点为 ISP 板 RSP，TX 节点为雅克贝斯控制器光功率。
@@ -23,6 +33,9 @@ public class CouplingSampleMessage
 {
     /// <summary>当前工位（左/右），UI 据此路由到对应工位的曲线面板</summary>
     public WorkPos WorkPos { get; init; }
+
+    /// <summary>数据来源（RX/TX），UI 据此路由到对应类型的曲线面板</summary>
+    public CouplingSource Source { get; init; }
 
     /// <summary>消息类型</summary>
     public CouplingSampleType Type { get; init; }

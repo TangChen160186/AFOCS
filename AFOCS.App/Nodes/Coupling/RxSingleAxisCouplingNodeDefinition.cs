@@ -166,6 +166,7 @@ public class RxSingleAxisCouplingNodeDefinition(
         _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
         {
             WorkPos = station,
+            Source = CouplingSource.Rx,
             Type = CouplingSampleType.Start,
             ValueLabel = "RSP",
         });
@@ -196,6 +197,7 @@ public class RxSingleAxisCouplingNodeDefinition(
                     _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
                     {
                         WorkPos = station,
+                        Source = CouplingSource.Rx,
                         Type = CouplingSampleType.Sample,
                         Position = pos,
                         ChannelValues = data
@@ -217,6 +219,7 @@ public class RxSingleAxisCouplingNodeDefinition(
             _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
             {
                 WorkPos = station,
+                Source = CouplingSource.Rx,
                 Type = CouplingSampleType.End,
             });
         }

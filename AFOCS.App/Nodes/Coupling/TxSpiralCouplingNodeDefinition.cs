@@ -169,6 +169,7 @@ public class TxSpiralCouplingNodeDefinition(
         _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
         {
             WorkPos = station,
+            Source = CouplingSource.Tx,
             Type = CouplingSampleType.Start,
             ValueLabel = "功率",
         });
@@ -188,6 +189,7 @@ public class TxSpiralCouplingNodeDefinition(
                     _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
                     {
                         WorkPos = station,
+                        Source = CouplingSource.Tx,
                         Type = CouplingSampleType.Sample,
                         Position = i,
                         ChannelValues = channels.ToDictionary(kv => kv.Key, kv => kv.Value[i]),
@@ -200,6 +202,7 @@ public class TxSpiralCouplingNodeDefinition(
             _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
             {
                 WorkPos = station,
+                Source = CouplingSource.Tx,
                 Type = CouplingSampleType.End,
             });
         }
