@@ -98,15 +98,6 @@ public class TxSpiralCouplingNodeDefinition(
         set => Set(ref field, value);
     } = 1;
 
-    [DisplayName("曲线通道数")]
-    [Description("实时发送到曲线图显示的通道数量（按通道号升序取前 N 个），默认 3")]
-    [Category("配置")]
-    public int CurveChannelCount
-    {
-        get;
-        set => Set(ref field, value);
-    } = 3;
-
     // ========== 执行 ==========
 
     public async Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
@@ -128,9 +119,6 @@ public class TxSpiralCouplingNodeDefinition(
         var instances = akribisMotions.ToDictionary(m => m.GetType().Name);
         if (!instances.TryGetValue(instance1, out var motion))
             throw new InvalidOperationException($"{Axis1.GetDescription()}: 未找到控制器 {instance1}");
-
-        if (CurveChannelCount <= 0)
-            throw new InvalidOperationException("曲线通道数必须大于 0");
 
         var args = new SpiralCouplingArgs
         {
@@ -178,7 +166,6 @@ public class TxSpiralCouplingNodeDefinition(
         {
             var channels = result.ChannelPower?
                 .OrderBy(kv => kv.Key)
-                .Take(CurveChannelCount)
                 .ToList();
 
             if (channels is { Count: > 0 })

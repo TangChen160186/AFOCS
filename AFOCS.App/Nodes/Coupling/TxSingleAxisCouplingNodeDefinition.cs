@@ -105,15 +105,6 @@ public class TxSingleAxisCouplingNodeDefinition(
         set => Set(ref field, value);
     } = 1;
 
-    [DisplayName("曲线通道数")]
-    [Description("实时发送到曲线图显示的通道数量（按通道号升序取前 N 个），默认 3")]
-    [Category("配置")]
-    public int CurveChannelCount
-    {
-        get;
-        set => Set(ref field, value);
-    } = 3;
-
     // ========== 执行 ==========
 
     public async Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
@@ -128,9 +119,6 @@ public class TxSingleAxisCouplingNodeDefinition(
         var instances = akribisMotions.ToDictionary(m => m.GetType().Name);
         if (!instances.TryGetValue(instanceName, out var motion))
             throw new InvalidOperationException($"{Axis.GetDescription()}: 未找到控制器 {instanceName}");
-
-        if (CurveChannelCount <= 0)
-            throw new InvalidOperationException("曲线通道数必须大于 0");
 
         // 记录扫描起点，用于还原各采样点的绝对位置
         int startPos = GetPosition(motion, akAxis);
@@ -177,7 +165,6 @@ public class TxSingleAxisCouplingNodeDefinition(
         {
             var channels = result.ChannelPower?
                 .OrderBy(kv => kv.Key)
-                .Take(CurveChannelCount)
                 .ToList();
 
             if (channels is { Count: > 0 })

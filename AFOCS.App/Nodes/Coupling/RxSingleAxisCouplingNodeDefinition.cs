@@ -123,15 +123,6 @@ public class RxSingleAxisCouplingNodeDefinition(
 
     private const double PulsePerUm = 204.8;
 
-    [DisplayName("曲线通道数")]
-    [Description("实时发送到曲线图显示的通道数量（按通道号升序取前 N 个），默认 3")]
-    [Category("配置")]
-    public int CurveChannelCount
-    {
-        get;
-        set => Set(ref field, value);
-    } = 3;
-
     // ========== 执行 ==========
 
     public async Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
@@ -156,8 +147,6 @@ public class RxSingleAxisCouplingNodeDefinition(
             throw new InvalidOperationException("通道1 与 通道2 不能相同");
         if (GapUm <= 0)
             throw new InvalidOperationException("相邻通道间隙必须大于 0");
-        if (CurveChannelCount <= 0)
-            throw new InvalidOperationException("曲线通道数必须大于 0");
 
         int startPos = GetPosition(motion, akAxis);
         var samples = new List<(int Position, double Rsp1, double Rsp2)>();
@@ -193,7 +182,7 @@ public class RxSingleAxisCouplingNodeDefinition(
                         else if (ch.Channel == Channel2) rsp2 = ch.RspValue;
                     }
 
-                    // 实时发送到曲线图：按通道号升序取前 CurveChannelCount 个通道
+                    // 实时发送到曲线图：全量发送所有通道，显示数量由曲线面板配置
                     _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
                     {
                         WorkPos = station,
@@ -202,7 +191,6 @@ public class RxSingleAxisCouplingNodeDefinition(
                         Position = pos,
                         ChannelValues = data
                             .OrderBy(d => d.Channel)
-                            .Take(CurveChannelCount)
                             .ToDictionary(d => d.Channel, d => d.RspValue),
                     });
                 }
