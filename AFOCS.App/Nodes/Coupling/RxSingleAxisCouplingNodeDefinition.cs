@@ -58,7 +58,7 @@ public class RxSingleAxisCouplingNodeDefinition(
 
     [DisplayName("相邻通道间隙(um)")]
     [Description("相邻两个通道之间的物理间距")]
-    [NodePort("GapUm", "相邻通道间隙", NodePortType.Double, true)]
+    [NodePort("GapUm", "相邻通道间隙", NodePortType.Double, false)]
     [Category("输入")]
     public double GapUm { get; set; } = 200;
 
