@@ -46,5 +46,13 @@ namespace AFOCS.App
         [Export]
         public static readonly MenuItemDefinition ViewFaPdCalibrationMenuItem = new CommandMenuItemDefinition<ViewFaPdCalibrationCommandDefinition>(
             MenuDefinitions.ViewToolsMenuGroup, 11);
+
+        [Export]
+        public static readonly MenuItemDefinition ViewRxCouplingCurveLeftMenuItem = new CommandMenuItemDefinition<ViewRxCouplingCurveLeftCommandDefinition>(
+            MenuDefinitions.ViewToolsMenuGroup, 12);
+
+        [Export]
+        public static readonly MenuItemDefinition ViewRxCouplingCurveRightMenuItem = new CommandMenuItemDefinition<ViewRxCouplingCurveRightCommandDefinition>(
+            MenuDefinitions.ViewToolsMenuGroup, 13);
     }
 }

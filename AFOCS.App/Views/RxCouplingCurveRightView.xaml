@@ -1,0 +1,10 @@
+<UserControl x:Class="AFOCS.App.Views.RxCouplingCurveRightView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sp="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
+             Loaded="OnLoaded"
+             Unloaded="OnUnloaded">
+    <Grid>
+        <sp:WpfPlot x:Name="PlotControl" />
+    </Grid>
+</UserControl>

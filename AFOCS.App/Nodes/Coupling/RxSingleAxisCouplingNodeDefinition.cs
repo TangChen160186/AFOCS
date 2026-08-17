@@ -8,6 +8,7 @@ using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Infrastructure;
 using AFOCS.Infrastructure.Extensions;
+using Caliburn.Micro;
 using Serilog;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
@@ -35,6 +36,7 @@ namespace AFOCS.App.Nodes.Coupling;
 public class RxSingleAxisCouplingNodeDefinition(
     IIspBoardDevice ispBoard,
     ILogger logger,
+    IEventAggregator eventAggregator,
     [ImportMany] IEnumerable<IAkribisMotion> akribisMotions)
     : NodeDefinitionBase, IExecutableNode
 {
@@ -58,7 +60,7 @@ public class RxSingleAxisCouplingNodeDefinition(
     [Description("相邻两个通道之间的物理间距")]
     [NodePort("GapUm", "相邻通道间隙", NodePortType.Double, true)]
     [Category("输入")]
-    public double GapUm { get; set; }
+    public double GapUm { get; set; } = 200;
 
     // ========== 配置属性 ==========
 
@@ -121,6 +123,15 @@ public class RxSingleAxisCouplingNodeDefinition(
 
     private const double PulsePerUm = 204.8;
 
+    [DisplayName("曲线通道数")]
+    [Description("实时发送到曲线图显示的通道数量（按通道号升序取前 N 个），默认 3")]
+    [Category("配置")]
+    public int CurveChannelCount
+    {
+        get;
+        set => Set(ref field, value);
+    } = 3;
+
     // ========== 执行 ==========
 
     public async Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
@@ -145,9 +156,18 @@ public class RxSingleAxisCouplingNodeDefinition(
             throw new InvalidOperationException("通道1 与 通道2 不能相同");
         if (GapUm <= 0)
             throw new InvalidOperationException("相邻通道间隙必须大于 0");
+        if (CurveChannelCount <= 0)
+            throw new InvalidOperationException("曲线通道数必须大于 0");
 
         int startPos = GetPosition(motion, akAxis);
         var samples = new List<(int Position, double Rsp1, double Rsp2)>();
+
+        // 通知曲线图：本次扫描开始（清空重绘）
+        _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
+        {
+            WorkPos = station,
+            Type = CouplingSampleType.Start,
+        });
 
         try
         {
@@ -163,13 +183,25 @@ public class RxSingleAxisCouplingNodeDefinition(
 
                 double rsp1 = 0, rsp2 = 0;
                 var readResult = await ispBoard.ReadRspAsync(station);
-                if (readResult.IsSuccess)
+                if (readResult.IsSuccess && readResult.Data is { } data)
                 {
-                    foreach (var ch in readResult.Data)
+                    foreach (var ch in data)
                     {
                         if (ch.Channel == Channel1) rsp1 = ch.RspValue;
                         else if (ch.Channel == Channel2) rsp2 = ch.RspValue;
                     }
+
+                    // 实时发送到曲线图：按通道号升序取前 CurveChannelCount 个通道
+                    _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
+                    {
+                        WorkPos = station,
+                        Type = CouplingSampleType.Sample,
+                        Position = pos,
+                        ChannelRsp = data
+                            .OrderBy(d => d.Channel)
+                            .Take(CurveChannelCount)
+                            .ToDictionary(d => d.Channel, d => d.RspValue),
+                    });
                 }
 
                 samples.Add((pos, rsp1, rsp2));
@@ -179,6 +211,13 @@ public class RxSingleAxisCouplingNodeDefinition(
         {
             // 扫描结束（含异常）移回原位
             await motion.MoveAbsAsync(akAxis, startPos);
+
+            // 通知曲线图：本次扫描结束
+            _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
+            {
+                WorkPos = station,
+                Type = CouplingSampleType.End,
+            });
         }
 
         var peak1 = samples.OrderByDescending(s => s.Rsp1).First();
