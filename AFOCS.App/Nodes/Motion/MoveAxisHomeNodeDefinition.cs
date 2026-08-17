@@ -20,11 +20,13 @@ namespace AFOCS.App.Nodes.Motion;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.MoveAxisHome", "轴回零", "回零")]
-[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
+[CategoryOrder("基础", 0),
+ CategoryOrder("配置", 1),
+ CategoryOrder("输入", 2), 
+ CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class MoveAxisHomeNodeDefinition(
     IBusAxisDevice busAxisDevice,
-    ILogger logger,
     [ImportMany] IEnumerable<IAkribisMotion> akribisMotions)
     : NodeDefinitionBase, IExecutableNode
 {
@@ -46,7 +48,6 @@ public class MoveAxisHomeNodeDefinition(
     } = 0;
     public async Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
     {
-        // 工位由入口节点传入，未提供时直接报错，避免对错误工位的轴回零
         if (!context.TryGetValue("WorkPos", out var workPosObj) || workPosObj is not WorkPos station)
             throw new InvalidOperationException("流程上下文缺少工位（WorkPos），请确认已连接入口节点并设置工位");
 
@@ -78,12 +79,8 @@ public class MoveAxisHomeNodeDefinition(
 
         if (error != null)
         {
-            var errInfo = $"回零失败: {error}";
-            logger.Error(errInfo);
-            throw new InvalidOperationException(errInfo);
+            throw new InvalidOperationException($"回零失败: {error}");
         }
-
-        logger.Information("轴 {Axis}（{Station}）回零完成", Axis.GetDescription(), station);
         return new Dictionary<string, object?>();
     }
 }

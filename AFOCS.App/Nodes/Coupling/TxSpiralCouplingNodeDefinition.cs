@@ -7,6 +7,7 @@ using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Infrastructure;
 using AFOCS.Infrastructure.Extensions;
+using Caliburn.Micro;
 using Serilog;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
@@ -25,6 +26,7 @@ namespace AFOCS.App.Nodes.Coupling;
 [method: ImportingConstructor]
 public class TxSpiralCouplingNodeDefinition(
     ILogger logger,
+    IEventAggregator eventAggregator,
     [ImportMany] IEnumerable<IAkribisMotion> akribisMotions)
     : NodeDefinitionBase, IExecutableNode
 {
@@ -133,6 +135,9 @@ public class TxSpiralCouplingNodeDefinition(
         if (!result.IsSuccess || result.Data == null)
             throw new InvalidOperationException($"{Axis1.GetDescription()}/{Axis2.GetDescription()}: {result.Message}");
 
+        // 螺旋为二维扫描，曲线 X 轴使用采样序号
+        PublishCurve(station, result.Data);
+
         double maxPower = 0;
         var channelPower = result.Data.ChannelPower;
         if (channelPower != null && channelPower.Count > 0)
@@ -143,6 +148,51 @@ public class TxSpiralCouplingNodeDefinition(
             Axis1.GetDescription(), Axis2.GetDescription(), MaxPower);
 
         return new Dictionary<string, object?> { ["MaxPower"] = MaxPower };
+    }
+
+    // ==================== 曲线发布 ====================
+
+    private void PublishCurve(WorkPos station, AkribisCouplingResult result)
+    {
+        _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
+        {
+            WorkPos = station,
+            Source = CouplingSource.Tx,
+            Type = CouplingSampleType.Start,
+            ValueLabel = "功率",
+        });
+
+        try
+        {
+            var channels = result.ChannelPower?
+                .OrderBy(kv => kv.Key)
+                .ToList();
+
+            if (channels is { Count: > 0 })
+            {
+                int count = channels[0].Value.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
+                    {
+                        WorkPos = station,
+                        Source = CouplingSource.Tx,
+                        Type = CouplingSampleType.Sample,
+                        Position = i,
+                        ChannelValues = channels.ToDictionary(kv => kv.Key, kv => kv.Value[i]),
+                    });
+                }
+            }
+        }
+        finally
+        {
+            _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
+            {
+                WorkPos = station,
+                Source = CouplingSource.Tx,
+                Type = CouplingSampleType.End,
+            });
+        }
     }
 }
 

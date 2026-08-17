@@ -3,7 +3,6 @@ using System.ComponentModel.Composition;
 using AFOCS.Devices.IO;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
-using AFOCS.Infrastructure.Extensions;
 using Serilog;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
@@ -50,16 +49,5 @@ public class IoStateNodeDefinition(
         {
             ["State"] = State,
         });
-    }
-}
-
-public class IoInputItemsSource : IItemsSource
-{
-    public ItemCollection GetValues()
-    {
-        var items = new ItemCollection();
-        foreach (var signal in Enum.GetValues<AllInputs>())
-            items.Add(signal, signal.GetDescription());
-        return items;
     }
 }

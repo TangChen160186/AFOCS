@@ -169,6 +169,20 @@ public class NodeEditorDocumentViewModel : PersistedDocument
     public ICommand ExecuteCommand { get; }
     public ICommand ExecuteFromSelectedNodeCommand { get; }
     public ICommand ExecuteSingleNodeCommand { get; }
+    public ICommand CopyNodesCommand { get; }
+    public ICommand PasteNodesCommand { get; }
+
+    // ========== 复制粘贴缓存 ==========
+
+    private sealed record CopiedNode(Guid InstanceId, string TypeId, string Serialized, double X, double Y);
+
+    private sealed record CopiedConnection(Guid SourceInstanceId, string SourcePortName,
+        Guid TargetInstanceId, string TargetPortName);
+
+    private sealed record CopyPasteData(List<CopiedNode> Nodes, List<CopiedConnection> Connections);
+
+    private CopyPasteData? _clipboard;
+    private double _pasteOffsetX, _pasteOffsetY;
 
     // ========== 执行状态 ==========
 
@@ -267,6 +281,87 @@ public class NodeEditorDocumentViewModel : PersistedDocument
         {
             _ = ExecuteSingleNodeAsync();
         });
+
+        // 复制选中节点（含选中节点之间的连接）
+        CopyNodesCommand = new RelayCommand(_ => CopyNodes());
+
+        // 粘贴复制的内容（生成新节点实例，自动错位摆放）
+        PasteNodesCommand = new RelayCommand(_ => PasteNodes());
+    }
+
+    // ========== 复制粘贴 ==========
+
+    /// <summary>复制选中节点及其内部连接</summary>
+    public void CopyNodes()
+    {
+        if (SelectedNodes.Count == 0) return;
+
+        var selectedIds = SelectedNodes.Select(n => n.InstanceId).ToHashSet();
+
+        var copiedNodes = SelectedNodes
+            .Select(n => new CopiedNode(
+                n.InstanceId,
+                NodeDefinitionHelper.GetTypeId(n.Definition),
+                JsonSerializer.Serialize(n.Definition, n.Definition.GetType()),
+                n.Location.X,
+                n.Location.Y))
+            .ToList();
+
+        // 只复制选中节点之间的连接，与外部节点的连接不复制
+        var copiedConns = Connections
+            .Where(c => selectedIds.Contains(c.Output.ParentInstanceId) &&
+                        selectedIds.Contains(c.Input.ParentInstanceId))
+            .Select(c => new CopiedConnection(
+                c.Output.ParentInstanceId, c.Output.Name,
+                c.Input.ParentInstanceId, c.Input.Name))
+            .ToList();
+
+        _clipboard = new CopyPasteData(copiedNodes, copiedConns);
+        _pasteOffsetX = _pasteOffsetY = 0;
+    }
+
+    /// <summary>粘贴复制的节点：创建新实例并恢复内部连接，选中粘贴出的节点</summary>
+    public void PasteNodes()
+    {
+        if (_clipboard == null || _clipboard.Nodes.Count == 0) return;
+
+        // 每次粘贴相对上次错位，避免多次粘贴完全重叠
+        _pasteOffsetX += 30;
+        _pasteOffsetY += 30;
+
+        ClearSelection();
+        var map = new Dictionary<Guid, NodeViewModel>();
+
+        foreach (var copied in _clipboard.Nodes)
+        {
+            var def = _nodeRegistry.CreateInstance(copied.TypeId);
+            if (def == null) continue;
+
+            // 还原属性（与 DoLoad 相同的还原方式）
+            NodeDefinitionHelper.ApplySerialized(def, copied.Serialized);
+
+            var vm = new NodeViewModel(def)
+            {
+                Location = new Point(copied.X + _pasteOffsetX, copied.Y + _pasteOffsetY)
+            };
+            Nodes.Add(vm);
+            map[copied.InstanceId] = vm;
+            SelectNode(vm);
+        }
+
+        foreach (var copied in _clipboard.Connections)
+        {
+            if (!map.TryGetValue(copied.SourceInstanceId, out var src) ||
+                !map.TryGetValue(copied.TargetInstanceId, out var tgt)) continue;
+
+            var srcPort = src.Outputs.FirstOrDefault(p => p.Name == copied.SourcePortName);
+            var tgtPort = tgt.Inputs.FirstOrDefault(p => p.Name == copied.TargetPortName);
+            if (srcPort == null || tgtPort == null) continue;
+
+            AddConnection(srcPort, tgtPort);
+        }
+
+        IsDirty = true;
     }
 
     // ========== 选中连接 ==========
@@ -344,11 +439,17 @@ public class NodeEditorDocumentViewModel : PersistedDocument
 
         if (source.IsInput) (source, target) = (target, source);
 
-        // 如果输入端口已经有连接，先断开旧连接
-        var existingConn = Connections.FirstOrDefault(c => c.Input == target);
-        if (existingConn != null)
+        // 数据输入端口只允许一条连接，已有连接时先断开旧连接；
+        // 执行输入端口允许多条连接（多个上游并行分支汇聚到同一节点）
+        if (target.PortType != NodePortType.Execution)
         {
-            Connections.Remove(existingConn);
+            var existingConn = Connections.FirstOrDefault(c => c.Input == target);
+            if (existingConn != null)
+            {
+                existingConn.Output.IsConnected = false;
+                existingConn.Input.IsConnected = false;
+                Connections.Remove(existingConn);
+            }
         }
 
         var conn = new ConnectionViewModel(source, target);

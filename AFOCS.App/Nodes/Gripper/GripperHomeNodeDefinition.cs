@@ -25,11 +25,11 @@ public class GripperHomeNodeDefinition(
     [DisplayName("耦合")]
     [ItemsSource(typeof(GripperCouplingItemsSource))]
     [Category("配置")]
-    public GripperCoupling Coupling
+    public GripperType Coupling
     {
         get;
         set => Set(ref field, value);
-    } = GripperCoupling.L;
+    } = GripperType.LeftCouplingGripper;
 
     public async Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
     {
@@ -37,12 +37,9 @@ public class GripperHomeNodeDefinition(
         if (!context.TryGetValue("WorkPos", out var workPosObj) || workPosObj is not WorkPos station)
             throw new InvalidOperationException("流程上下文缺少工位（WorkPos），请确认已连接入口节点并设置工位");
 
-        var prefix = station == WorkPos.Left ? "Left" : "Right";
-        var instanceName = $"{prefix}Coupling{Coupling}Gripper";
-
-        var gripperInstances = grippers.ToDictionary(g => g.GetType().Name);
-        if (!gripperInstances.TryGetValue(instanceName, out var gripper))
-            throw new InvalidOperationException($"未找到夹爪 {instanceName}，请检查设备配置");
+        var gripper = grippers.FirstOrDefault(e => e.WorkPos == station && e.GripperType == Coupling);
+        if (gripper == null)
+            throw new InvalidOperationException($"未找到工位 {station} 耦合 {Coupling} 的夹爪实例，请确认已配置夹爪实例");
 
         var result = await gripper.HomeAsync();
         if (!result.IsSuccess)
@@ -52,7 +49,6 @@ public class GripperHomeNodeDefinition(
             throw new InvalidOperationException(errInfo);
         }
 
-        logger.Information("夹爪 {Gripper} 回零完成", instanceName);
         return new Dictionary<string, object?>();
     }
 }

@@ -17,23 +17,24 @@ namespace AFOCS.App.Nodes.Vision;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.CameraCapture", "相机采集", "视觉")]
-[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
+[CategoryOrder("基础", 0), 
+ CategoryOrder("配置", 1),
+ CategoryOrder("输入", 2), 
+ CategoryOrder("输出", 3)]
 public class CameraCaptureNodeDefinition : NodeDefinitionBase, IExecutableNode
 {
     /// <summary>
     /// 所有已注册相机的描述名称。
     /// PropertyGrid 通过无参构造创建 ItemsSource，故用静态字段共享 MEF 注入的相机列表。
     /// </summary>
-    private static string[] _cameraNames = [];
+    private static IEnumerable<string> _cameraNames = null!;
 
     private readonly Dictionary<string, ICamera> _cameraMap;
 
     [ImportingConstructor]
-    public CameraCaptureNodeDefinition(
-        ILogger logger,
-        [ImportMany] IEnumerable<ICamera> cameras) : base()
+    public CameraCaptureNodeDefinition([ImportMany] IEnumerable<ICamera> cameras)
     {
-        _cameraNames = cameras.Select(c => c.GetType().GetDescription()).ToArray();
+        _cameraNames = cameras.Select(c => c.GetType().GetDescription());
         _cameraMap = cameras.ToDictionary(c => c.GetType().GetDescription());
     }
 
@@ -94,6 +95,7 @@ public class CameraCaptureNodeDefinition : NodeDefinitionBase, IExecutableNode
         }
 
         Image = new PixelData(pixelData, w, h, channels);
+        
         return new Dictionary<string, object?> { ["Image"] = Image };
     }
 

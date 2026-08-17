@@ -62,12 +62,10 @@ public class CameraLight(ISerialPortClient serialPortClient, IConfigService conf
     }
 
 
-    public async Task<Result> SetLightBrightnessAsync(CameraLightChannel channel, uint brightness)
+    public async Task<Result> SetLightBrightnessAsync(CameraLightChannel channel, byte brightness)
     {
         if (!IsConnected)
             return Result.Fail(ResultCode.Fail, "未连接设备");
-        if (brightness >= 255)
-            brightness = 255;
             
         try
         {

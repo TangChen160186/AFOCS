@@ -40,6 +40,8 @@
         <PackageReference Include="MahApps.Metro" />
         <PackageReference Include="Serilog" />
         <PackageReference Include="Serilog.Sinks.Console" />
+        <PackageReference Include="ScottPlot" />
+        <PackageReference Include="ScottPlot.WPF" />
 
         <Page Include="App.xaml" />
     </ItemGroup>
@@ -80,6 +82,5 @@
     </ItemGroup>
     <ItemGroup>
       <Folder Include="Commands\" />
-      <Folder Include="Nodes\Motion\" />
     </ItemGroup>
 </Project>

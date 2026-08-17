@@ -15,7 +15,7 @@ public class HeightGauge(ITcpClient tcpClient, IConfigService configService, ILo
 {
     private HeightGaugeConfig _config = new();
     public bool IsConnected => tcpClient.IsConnected;
-    public WorkPos WorkPos { get; }
+    public WorkPos WorkPos => WorkPos.None;
 
     public HeightGaugeConfig GetConfig() => _config.Clone();
 
@@ -77,8 +77,8 @@ public class HeightGauge(ITcpClient tcpClient, IConfigService configService, ILo
             if (valueText != null && valueText.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                 valueText = valueText[prefix.Length..].Trim();
 
-            if (valueText != null && double.TryParse(valueText, out var power))
-                return Result<double>.Success(power);
+            if (valueText != null && double.TryParse(valueText, out var result))
+                return Result<double>.Success(result * 1000); // 转换为um
 
             return Result<double>.Fail(ResultCode.Fail, $"未知返回数据:{res}");
         }

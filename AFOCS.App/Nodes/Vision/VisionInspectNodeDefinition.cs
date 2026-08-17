@@ -20,7 +20,10 @@ namespace AFOCS.App.Nodes.Vision;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.VisionInspect", "视觉检测", "视觉")]
-[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
+[CategoryOrder("基础", 0), 
+ CategoryOrder("配置", 1), 
+ CategoryOrder("输入", 2),
+ CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, IExecutableNode
 {
@@ -35,40 +38,46 @@ public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, I
     // ========== 输出端口 ==========
     [JsonIgnore]
     [ReadOnly(true)]
-
     [NodePort("NccDx", "NCC ΔX", NodePortType.Double, false)]
     [Category("输出")]
     public double NccDx { get; set; }
+
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("NccDy", "NCC ΔY", NodePortType.Double, false)]
     [Category("输出")]
     public double NccDy { get; set; }
+
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("Edge1AngleDev", "边1角度偏差", NodePortType.Double, false)]
     [Category("输出")]
     public double Edge1AngleDev { get; set; }
+
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("Edge2AngleDev", "边2角度偏差", NodePortType.Double, false)]
     [Category("输出")]
     public double Edge2AngleDev { get; set; }
+
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("PointDevX", "交点ΔX", NodePortType.Double, false)]
     [Category("输出")]
     public double PointDevX { get; set; }
+
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("PointDevY", "交点ΔY", NodePortType.Double, false)]
     [Category("输出")]
     public double PointDevY { get; set; }
+
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("PointX", "找点X", NodePortType.Double, false)]
     [Category("输出")]
     public double PointX { get; set; }
+
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("PointY", "找点Y", NodePortType.Double, false)]
@@ -99,7 +108,7 @@ public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, I
         if (pixelData == null || pixelData.Data.Length == 0)
             throw new InvalidOperationException("视觉检测节点：输入图像为空，请连接相机节点");
 
-        var json = File.ReadAllText(TemplatePath);
+        var json = await File.ReadAllTextAsync(TemplatePath);
         var template = JsonHelper.Deserialize<VisionTemplate>(json);
         if (template == null)
             throw new InvalidOperationException($"视觉检测节点：模板解析失败 \"{TemplatePath}\"");
@@ -137,6 +146,7 @@ public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, I
         PointX = result.PointResultX;
         PointY = result.PointResultY;
 
+        logger.Information($"视觉检测完成,结果: NccDx={result.Dx}, NccDy={result.Dy}, Edge1AngleDev={result.Edge1AngleDev}, Edge2AngleDev={result.Edge2AngleDev}, PointDevX={result.PointDevX}, PointDevY={result.PointDevY}, PointX={result.PointResultX}, PointY={result.PointResultY}");
         return new Dictionary<string, object?>
         {
             ["NccDx"] = result.Dx,

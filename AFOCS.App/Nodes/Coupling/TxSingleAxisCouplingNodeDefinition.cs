@@ -7,6 +7,7 @@ using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Infrastructure;
 using AFOCS.Infrastructure.Extensions;
+using Caliburn.Micro;
 using Serilog;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
@@ -25,6 +26,7 @@ namespace AFOCS.App.Nodes.Coupling;
 [method: ImportingConstructor]
 public class TxSingleAxisCouplingNodeDefinition(
     ILogger logger,
+    IEventAggregator eventAggregator,
     [ImportMany] IEnumerable<IAkribisMotion> akribisMotions)
     : NodeDefinitionBase, IExecutableNode
 {
@@ -118,6 +120,9 @@ public class TxSingleAxisCouplingNodeDefinition(
         if (!instances.TryGetValue(instanceName, out var motion))
             throw new InvalidOperationException($"{Axis.GetDescription()}: 未找到控制器 {instanceName}");
 
+        // 记录扫描起点，用于还原各采样点的绝对位置
+        int startPos = GetPosition(motion, akAxis);
+
         var args = new SingleAxisCouplingArgs
         {
             // AkribisAxisId.X/Y/Z -> 0/1/2 -> 控制器 A/B/C 轴
@@ -135,11 +140,67 @@ public class TxSingleAxisCouplingNodeDefinition(
         if (!result.IsSuccess || result.Data == null)
             throw new InvalidOperationException($"{Axis.GetDescription()}: {result.Message}");
 
+        // 扫描完成后把各通道光功率曲线发布给曲线面板
+        PublishCurve(station, startPos, result.Data);
+
         Angle = result.Data.Angle;
         logger.Information("TX单轴耦合：{Axis} 角度={Angle:F4}°", Axis.GetDescription(), Angle);
 
         return new Dictionary<string, object?> { ["Angle"] = Angle };
     }
+
+    // ==================== 曲线发布 ====================
+
+    private void PublishCurve(WorkPos station, int startPos, AkribisCouplingResult result)
+    {
+        _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
+        {
+            WorkPos = station,
+            Source = CouplingSource.Tx,
+            Type = CouplingSampleType.Start,
+            ValueLabel = "功率",
+        });
+
+        try
+        {
+            var channels = result.ChannelPower?
+                .OrderBy(kv => kv.Key)
+                .ToList();
+
+            if (channels is { Count: > 0 })
+            {
+                int count = channels[0].Value.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
+                    {
+                        WorkPos = station,
+                        Source = CouplingSource.Tx,
+                        Type = CouplingSampleType.Sample,
+                        Position = (int)Math.Round(startPos + StartDistance + i * SamplingInterval),
+                        ChannelValues = channels.ToDictionary(kv => kv.Key, kv => kv.Value[i]),
+                    });
+                }
+            }
+        }
+        finally
+        {
+            _ = eventAggregator.PublishOnUIThreadAsync(new CouplingSampleMessage
+            {
+                WorkPos = station,
+                Source = CouplingSource.Tx,
+                Type = CouplingSampleType.End,
+            });
+        }
+    }
+
+    private static int GetPosition(IAkribisMotion motion, AkribisAxisId axis) => axis switch
+    {
+        AkribisAxisId.X => motion.PositionX,
+        AkribisAxisId.Y => motion.PositionY,
+        AkribisAxisId.Z => motion.PositionZ,
+        _ => throw new ArgumentOutOfRangeException(nameof(axis))
+    };
 }
 
 /// <summary>TX单轴耦合可选择的轴（耦合直线 X/Y/Z）</summary>

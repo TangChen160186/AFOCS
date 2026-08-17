@@ -147,7 +147,7 @@ namespace AFOCS.App.ViewModels
                 _programmablePowerSupply,
             ];
             //添加 ISP Board
-            devices.Add(_ispBoard);
+            //devices.Add(_ispBoard);
 
             return devices;
         }

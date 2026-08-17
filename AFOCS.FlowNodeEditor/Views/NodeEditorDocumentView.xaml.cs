@@ -89,7 +89,19 @@ namespace AFOCS.FlowNodeEditor.Views
             _editor.PreviewKeyDown += (_, e2) =>
             {
                 if (_viewModel == null) return;
-                if (e2.Key == Key.Delete || e2.Key == Key.Back)
+
+                // 复制/粘贴（Ctrl+C / Ctrl+V）
+                if (e2.Key == Key.C && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+                {
+                    _viewModel.CopyNodes();
+                    e2.Handled = true;
+                }
+                else if (e2.Key == Key.V && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+                {
+                    _viewModel.PasteNodes();
+                    e2.Handled = true;
+                }
+                else if (e2.Key == Key.Delete || e2.Key == Key.Back)
                 {
                     if (_viewModel.SelectedNode != null)
                         _viewModel.DeleteSelectedNodeCommand.Execute(null);

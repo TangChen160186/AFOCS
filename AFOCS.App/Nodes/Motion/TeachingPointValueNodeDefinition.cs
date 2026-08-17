@@ -35,9 +35,9 @@ public class TeachingPointValueNodeDefinition(IConfigService configService, ILog
         get;
         set => Set(ref field, value);
     }
-// ========== 配置属性 ==========
+    // ========== 配置属性 ==========
 
-        [DisplayName("示教点")]
+    [DisplayName("示教点")]
     [ItemsSource(typeof(TeachingPointItemsSource))]
     [Category("配置")]
     public Guid PointId

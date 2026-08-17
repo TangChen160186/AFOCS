@@ -86,7 +86,7 @@
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                <Label Width="90" Content="精度(mm/px):" VerticalAlignment="Center" />
+                <Label Width="90" Content="精度(um/px):" VerticalAlignment="Center" />
                 <TextBox Width="120" Text="{Binding Precision, UpdateSourceTrigger=PropertyChanged}" />
             </StackPanel>
 

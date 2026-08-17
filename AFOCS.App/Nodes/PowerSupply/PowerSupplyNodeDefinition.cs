@@ -1,9 +1,10 @@
-using System.ComponentModel;
-using System.ComponentModel.Composition;
 using AFOCS.Devices.ProgrammablePowerSupply;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
+using Caliburn.Micro;
 using Serilog;
+using System.ComponentModel;
+using System.ComponentModel.Composition;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace AFOCS.App.Nodes.PowerSupply;
@@ -16,11 +17,12 @@ namespace AFOCS.App.Nodes.PowerSupply;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.PowerSupply", "电源输出", "设备")]
-[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
+[CategoryOrder("基础", 0), 
+ CategoryOrder("配置", 1),
+ CategoryOrder("输入", 2), 
+ CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
-public class PowerSupplyNodeDefinition(
-    IProgrammablePowerSupply powerSupply,
-    ILogger logger)
+public class PowerSupplyNodeDefinition(IProgrammablePowerSupply powerSupply)
     : NodeDefinitionBase, IExecutableNode
 {
     [DisplayName("通道")]
@@ -46,7 +48,7 @@ public class PowerSupplyNodeDefinition(
     {
         get;
         set => Set(ref field, value);
-    } = 3.0;
+    } = 3.6;
 
     [DisplayName("电流(A)")]
     [Category("配置")]
@@ -63,31 +65,25 @@ public class PowerSupplyNodeDefinition(
 
         var setResult = await powerSupply.SetVoltageAndCurrentAsync(Channel, Voltage, Current);
         if (!setResult.IsSuccess)
-            throw LogError($"设置通道 {Channel} 电压/电流失败: {setResult.Message}");
+            throw new InvalidOperationException($"设置通道 {Channel} 电压/电流失败: {setResult.Message}");
 
         var statusResult = await powerSupply.SetChannelStatusAsync(Channel, OutputEnabled);
         if (!statusResult.IsSuccess)
-            throw LogError($"设置通道 {Channel} 输出状态失败: {statusResult.Message}");
-
-        logger.Information("电源通道 {Channel} 输出 {State}，电压 {Voltage}V，电流 {Current}A",
-            Channel, OutputEnabled ? "打开" : "关闭", Voltage, Current);
+            throw new InvalidOperationException($"设置通道 {Channel} 输出状态失败: {statusResult.Message}");
         return new Dictionary<string, object?>();
     }
 
-    private InvalidOperationException LogError(string message)
-    {
-        logger.Error(message);
-        return new InvalidOperationException(message);
-    }
 }
 
 public class PowerChannelItemsSource : IItemsSource
 {
     public ItemCollection GetValues()
     {
-        var items = new ItemCollection();
-        items.Add(1, "通道 1");
-        items.Add(2, "通道 2");
+        var items = new ItemCollection
+        {
+            { 1, "通道 1" },
+            { 2, "通道 2" }
+        };
         return items;
     }
 }

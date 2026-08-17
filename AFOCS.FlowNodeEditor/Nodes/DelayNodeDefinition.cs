@@ -11,7 +11,7 @@ namespace AFOCS.FlowNodeEditor.Nodes;
 [Export(typeof(INodeDefinition))]
 [Export]
 [PartCreationPolicy(CreationPolicy.NonShared)]
-public class DelayNodeDefinition : NodeDefinitionBase, IExecutableNode
+public class DelayNodeDefinition : NodeDefinitionBase, ICancellableExecutableNode
 {
     [DisplayName("延时(ms)")]
     [Category("配置")]
@@ -21,9 +21,12 @@ public class DelayNodeDefinition : NodeDefinitionBase, IExecutableNode
         set => Set(ref field, value);
     }
 
-    public async Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
+    public async Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context, CancellationToken cancellationToken)
     {
-        await Task.Delay(DelayMs);
+        await Task.Delay(DelayMs, cancellationToken);
         return new Dictionary<string, object?>();
     }
+
+    Task<Dictionary<string, object?>> IExecutableNode.ExecuteAsync(Dictionary<string, object?> context)
+        => ExecuteAsync(context, CancellationToken.None);
 }

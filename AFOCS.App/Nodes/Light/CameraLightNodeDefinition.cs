@@ -16,7 +16,10 @@ namespace AFOCS.App.Nodes.Light;
 [Export(typeof(INodeDefinition))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
 [NodeDefinition("App.CameraLight", "设置光源亮度", "设备")]
-[CategoryOrder("基础", 0), CategoryOrder("配置", 1), CategoryOrder("输入", 2), CategoryOrder("输出", 3)]
+[CategoryOrder("基础", 0), 
+ CategoryOrder("配置", 1), 
+ CategoryOrder("输入", 2), 
+ CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
 public class CameraLightNodeDefinition(
     ICameraLight cameraLight,
@@ -34,7 +37,7 @@ public class CameraLightNodeDefinition(
     [DisplayName("亮度(0-255)")]
     [Range(0, 255)]
     [Category("配置")]
-    public uint Brightness
+    public byte Brightness
     {
         get;
         set => Set(ref field, value);

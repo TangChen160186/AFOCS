@@ -3,7 +3,6 @@ using System.ComponentModel.Composition;
 using AFOCS.Devices.IO;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
-using AFOCS.Infrastructure.Extensions;
 using Serilog;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
@@ -55,16 +54,5 @@ public class IoOutputNodeDefinition(
 
         logger.Information("IO 输出 {Signal} → {State}", Signal, OutputOn ? "打开" : "关闭");
         return new Dictionary<string, object?>();
-    }
-}
-
-public class IoOutputItemsSource : IItemsSource
-{
-    public ItemCollection GetValues()
-    {
-        var items = new ItemCollection();
-        foreach (var signal in Enum.GetValues<AllOutputs>())
-            items.Add(signal, signal.GetDescription());
-        return items;
     }
 }

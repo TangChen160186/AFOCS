@@ -13,5 +13,5 @@ public interface ICameraLight:IDevice
 {
     CameraLightConfig GetConfig();
     Task SaveConfigAsync(CameraLightConfig config);
-    Task<Result> SetLightBrightnessAsync(CameraLightChannel channel, uint brightness);
+    Task<Result> SetLightBrightnessAsync(CameraLightChannel channel, byte brightness);
 }
