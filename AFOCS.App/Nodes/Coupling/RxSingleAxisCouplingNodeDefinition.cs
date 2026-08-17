@@ -167,6 +167,7 @@ public class RxSingleAxisCouplingNodeDefinition(
         {
             WorkPos = station,
             Type = CouplingSampleType.Start,
+            ValueLabel = "RSP",
         });
 
         try
@@ -197,7 +198,7 @@ public class RxSingleAxisCouplingNodeDefinition(
                         WorkPos = station,
                         Type = CouplingSampleType.Sample,
                         Position = pos,
-                        ChannelRsp = data
+                        ChannelValues = data
                             .OrderBy(d => d.Channel)
                             .Take(CurveChannelCount)
                             .ToDictionary(d => d.Channel, d => d.RspValue),

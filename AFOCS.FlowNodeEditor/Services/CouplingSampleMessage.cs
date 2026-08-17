@@ -17,6 +17,7 @@ public enum CouplingSampleType
 
 /// <summary>
 /// 耦合扫描采样消息 —— 耦合节点执行期间通过 IEventAggregator 实时发布，供曲线图等 UI 订阅。
+/// 数值来源：RX 节点为 ISP 板 RSP，TX 节点为雅克贝斯控制器光功率。
 /// </summary>
 public class CouplingSampleMessage
 {
@@ -29,6 +30,9 @@ public class CouplingSampleMessage
     /// <summary>位置（脉冲），仅 Sample 有效</summary>
     public int Position { get; init; }
 
-    /// <summary>通道号 → RSP 值（按通道号升序取前 N 个），仅 Sample 有效</summary>
-    public IReadOnlyDictionary<int, double> ChannelRsp { get; init; } = new Dictionary<int, double>();
+    /// <summary>纵轴单位/含义（RSP 或 功率），面板据此设置 Y 轴标签，仅 Start 有效</summary>
+    public string ValueLabel { get; init; } = string.Empty;
+
+    /// <summary>通道号 → 数值（RX=ISP板RSP，TX=雅克贝斯控制器功率），按通道号升序取前 N 个，仅 Sample 有效</summary>
+    public IReadOnlyDictionary<int, double> ChannelValues { get; init; } = new Dictionary<int, double>();
 }

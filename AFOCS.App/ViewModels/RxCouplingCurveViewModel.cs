@@ -14,7 +14,8 @@ public interface IRxCouplingCurveLeftTool : ITool;
 public interface IRxCouplingCurveRightTool : ITool;
 
 /// <summary>
-/// RX 耦合曲线工具基类：订阅耦合采样消息，把各通道 RSP 曲线实时绘制到 ScottPlot。
+/// 耦合曲线工具基类：订阅耦合采样消息（RX/TX 单轴、TX 螺旋节点均发布），
+/// 把各通道光功率曲线实时绘制到 ScottPlot。
 /// 子类通过构造函数参数固定工位（左/右），分别注册为两个独立工具面板。
 /// </summary>
 public abstract class RxCouplingCurveViewModelBase : Tool, IHandle<CouplingSampleMessage>
@@ -38,9 +39,9 @@ public abstract class RxCouplingCurveViewModelBase : Tool, IHandle<CouplingSampl
         _workPos = workPos;
         _logger = logger;
 
-        Plot.Title(workPos == WorkPos.Left ? "左工位 RX 耦合曲线" : "右工位 RX 耦合曲线");
+        Plot.Title(workPos == WorkPos.Left ? "左工位耦合曲线" : "右工位耦合曲线");
         Plot.Axes.Bottom.Label.Text = "位置 (脉冲)";
-        Plot.Axes.Left.Label.Text = "RSP";
+        Plot.Axes.Left.Label.Text = "数值";
         Plot.Font.Automatic();
         Plot.Legend.IsVisible = true;
 
@@ -59,6 +60,8 @@ public abstract class RxCouplingCurveViewModelBase : Tool, IHandle<CouplingSampl
                 _ys.Clear();
                 _series.Clear();
                 Plot.Clear();
+                if (!string.IsNullOrEmpty(message.ValueLabel))
+                    Plot.Axes.Left.Label.Text = message.ValueLabel;
                 break;
 
             case CouplingSampleType.Sample:
@@ -76,7 +79,7 @@ public abstract class RxCouplingCurveViewModelBase : Tool, IHandle<CouplingSampl
 
     private void AppendSample(CouplingSampleMessage message)
     {
-        foreach (var (channel, rsp) in message.ChannelRsp)
+        foreach (var (channel, value) in message.ChannelValues)
         {
             if (!_xs.TryGetValue(channel, out var xs))
             {
@@ -85,7 +88,7 @@ public abstract class RxCouplingCurveViewModelBase : Tool, IHandle<CouplingSampl
                 _ys[channel] = [];
             }
             xs.Add(message.Position);
-            _ys[channel].Add(rsp);
+            _ys[channel].Add(value);
 
             // Scatter.Data 只读，数据量小（每通道约 21 点），每次重建曲线更新
             if (_series.Remove(channel, out var old))
