@@ -34,6 +34,9 @@ public abstract class CouplingCurveViewModelBase : Tool, IHandle<CouplingSampleM
     /// <summary>数据更新后触发，View 用于调用 Refresh</summary>
     public event System.Action? PlotUpdated;
 
+    /// <summary>曲线已整合进工位总览窗口，不再作为独立工具在启动时重新打开</summary>
+    public override bool ShouldReopenOnStart => false;
+
     /// <summary>各通道显示开关（固定数量：RX 4 个、TX 8 个）</summary>
     public ObservableCollection<ChannelToggleItem> ChannelToggles { get; } = [];
 
@@ -53,10 +56,16 @@ public abstract class CouplingCurveViewModelBase : Tool, IHandle<CouplingSampleM
         string posText = workPos == WorkPos.Left ? "左工位" : "右工位";
         string srcText = source == CouplingSource.Rx ? "RX" : "TX";
         Plot.Title($"{posText}{srcText}耦合曲线");
+        Plot.Axes.Title.Label.FontSize = 12;
         Plot.Axes.Bottom.Label.Text = "位置 (脉冲)";
+        Plot.Axes.Bottom.Label.FontSize = 11;
         Plot.Axes.Left.Label.Text = "数值";
+        Plot.Axes.Left.Label.FontSize = 11;
+        Plot.Axes.Bottom.TickLabelStyle.FontSize = 9;
+        Plot.Axes.Left.TickLabelStyle.FontSize = 9;
         Plot.Font.Automatic();
         Plot.Legend.IsVisible = true;
+        Plot.Legend.FontSize = 10;
 
         // 固定生成通道显示开关（RX 4 个 0~3，TX 8 个 1~8），打开面板即可勾选
         for (int i = 0; i < channelCount; i++)

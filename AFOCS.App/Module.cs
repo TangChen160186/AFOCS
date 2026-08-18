@@ -47,58 +47,14 @@ namespace AFOCS.App
         public static readonly MenuItemDefinition ViewFaPdCalibrationMenuItem = new CommandMenuItemDefinition<ViewFaPdCalibrationCommandDefinition>(
             MenuDefinitions.ViewToolsMenuGroup, 11);
 
+        // ===== 工位总览窗口 =====
+
         [Export]
-        public static readonly MenuItemDefinition ViewRxCouplingCurveLeftMenuItem = new CommandMenuItemDefinition<ViewRxCouplingCurveLeftCommandDefinition>(
+        public static readonly MenuItemDefinition ViewLeftStationOverviewMenuItem = new CommandMenuItemDefinition<ViewLeftStationOverviewCommandDefinition>(
             MenuDefinitions.ViewToolsMenuGroup, 12);
 
         [Export]
-        public static readonly MenuItemDefinition ViewRxCouplingCurveRightMenuItem = new CommandMenuItemDefinition<ViewRxCouplingCurveRightCommandDefinition>(
+        public static readonly MenuItemDefinition ViewRightStationOverviewMenuItem = new CommandMenuItemDefinition<ViewRightStationOverviewCommandDefinition>(
             MenuDefinitions.ViewToolsMenuGroup, 13);
-
-        [Export]
-        public static readonly MenuItemDefinition ViewTxCouplingCurveLeftMenuItem = new CommandMenuItemDefinition<ViewTxCouplingCurveLeftCommandDefinition>(
-            MenuDefinitions.ViewToolsMenuGroup, 14);
-
-        [Export]
-        public static readonly MenuItemDefinition ViewTxCouplingCurveRightMenuItem = new CommandMenuItemDefinition<ViewTxCouplingCurveRightCommandDefinition>(
-            MenuDefinitions.ViewToolsMenuGroup, 15);
-
-        // ===== 相机实时监控 =====
-
-        [Export]
-        public static readonly MenuItemDefinition ViewLeftUpCameraMenuItem = new CommandMenuItemDefinition<ViewLeftUpCameraCommandDefinition>(
-            MenuDefinitions.ViewToolsMenuGroup, 16);
-
-        [Export]
-        public static readonly MenuItemDefinition ViewLeftDownCameraMenuItem = new CommandMenuItemDefinition<ViewLeftDownCameraCommandDefinition>(
-            MenuDefinitions.ViewToolsMenuGroup, 17);
-
-        [Export]
-        public static readonly MenuItemDefinition ViewRightUpCameraMenuItem = new CommandMenuItemDefinition<ViewRightUpCameraCommandDefinition>(
-            MenuDefinitions.ViewToolsMenuGroup, 18);
-
-        [Export]
-        public static readonly MenuItemDefinition ViewRightDownCameraMenuItem = new CommandMenuItemDefinition<ViewRightDownCameraCommandDefinition>(
-            MenuDefinitions.ViewToolsMenuGroup, 19);
-
-        // ===== 工位 RSP/MPD 监控 =====
-
-        [Export]
-        public static readonly MenuItemDefinition ViewLeftStationMonitorMenuItem = new CommandMenuItemDefinition<ViewLeftStationMonitorCommandDefinition>(
-            MenuDefinitions.ViewToolsMenuGroup, 20);
-
-        [Export]
-        public static readonly MenuItemDefinition ViewRightStationMonitorMenuItem = new CommandMenuItemDefinition<ViewRightStationMonitorCommandDefinition>(
-            MenuDefinitions.ViewToolsMenuGroup, 21);
-
-        // ===== 工位流程执行监控 =====
-
-        [Export]
-        public static readonly MenuItemDefinition ViewLeftFlowMonitorMenuItem = new CommandMenuItemDefinition<ViewLeftFlowMonitorCommandDefinition>(
-            MenuDefinitions.ViewToolsMenuGroup, 22);
-
-        [Export]
-        public static readonly MenuItemDefinition ViewRightFlowMonitorMenuItem = new CommandMenuItemDefinition<ViewRightFlowMonitorCommandDefinition>(
-            MenuDefinitions.ViewToolsMenuGroup, 23);
     }
 }

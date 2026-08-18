@@ -39,7 +39,6 @@ public abstract class CameraToolViewModelBase : Tool, IHandle<VisionInspectionMe
     private HSmartWindowControlWPF? _halconControl;
     private HWindow? _halconWindow;
     private HImage? _displayImage;
-    private bool _viewActive;
     private int _displayedW = -1, _displayedH = -1;
     private bool _rendering;
 
@@ -101,21 +100,6 @@ public abstract class CameraToolViewModelBase : Tool, IHandle<VisionInspectionMe
         _halconControl = null;
     }
 
-    // ==================== Screen 生命周期 ====================
-
-    /// <summary>Tool 激活时才渲染；未激活（关闭/切换）时不渲染</summary>
-    protected override Task OnActivateAsync(CancellationToken cancellationToken)
-    {
-        _viewActive = true;
-        return base.OnActivateAsync(cancellationToken);
-    }
-
-    protected override Task OnDeactivateAsync(bool close, CancellationToken cancellationToken)
-    {
-        _viewActive = false;
-        return base.OnDeactivateAsync(close, cancellationToken);
-    }
-
     // ==================== 实时图像 ====================
 
     /// <summary>
@@ -148,7 +132,7 @@ public abstract class CameraToolViewModelBase : Tool, IHandle<VisionInspectionMe
     /// <summary>UI 定时器节流渲染：有新帧才取帧显示，断流超过 2s 标记未连接</summary>
     private void RenderFrame()
     {
-        if (!_viewActive || _halconWindow == null || _rendering)
+        if (_halconWindow == null || _rendering)
             return;
 
         byte[] data;

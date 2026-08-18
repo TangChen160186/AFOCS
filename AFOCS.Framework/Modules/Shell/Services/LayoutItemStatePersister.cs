@@ -167,7 +167,7 @@ namespace AFOCS.Framework.Modules.Shell.Services
                         {
                             var contentInstance = IoC.GetInstance(contentType, null) as ILayoutItem;
 
-                            if (contentInstance != null)
+                            if (contentInstance != null && contentInstance.ShouldReopenOnStart)
                             {
                                 layoutItems.Add(contentId, contentInstance);
 
