@@ -3,6 +3,15 @@ using AFOCS.Infrastructure;
 namespace AFOCS.FlowNodeEditor.Services;
 
 /// <summary>
+/// 流程执行开始消息 —— 通过 IEventAggregator 发布，供订阅方清空上一轮记录
+/// </summary>
+public class FlowExecutionStartedMessage
+{
+    /// <summary>当前工位</summary>
+    public WorkPos WorkPos { get; init; }
+}
+
+/// <summary>
 /// 节点执行结果消息 —— 通过 IEventAggregator 发布，供外部订阅
 /// </summary>
 public class NodeExecutionMessage
@@ -12,6 +21,9 @@ public class NodeExecutionMessage
 
     /// <summary>节点标题（DisplayName）</summary>
     public string NodeTitle { get; init; } = string.Empty;
+
+    /// <summary>节点描述（可能为空）</summary>
+    public string NodeDescription { get; init; } = string.Empty;
 
     /// <summary>节点 TypeId</summary>
     public string NodeTypeId { get; init; } = string.Empty;

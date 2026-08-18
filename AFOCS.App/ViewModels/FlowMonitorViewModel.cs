@@ -13,10 +13,10 @@ public interface ILeftFlowMonitorTool : ITool;
 
 public interface IRightFlowMonitorTool : ITool;
 
-/// <summary>节点执行记录：节点名称、完成状态、执行耗时</summary>
+/// <summary>节点执行记录：显示名（描述优先）、完成状态、执行耗时</summary>
 public class NodeExecutionItem : PropertyChangedBase
 {
-    public string NodeTitle { get; }
+    public string DisplayName { get; }
 
     public bool IsSuccess { get; }
 
@@ -27,7 +27,8 @@ public class NodeExecutionItem : PropertyChangedBase
 
     public NodeExecutionItem(NodeExecutionMessage msg)
     {
-        NodeTitle = msg.NodeTitle;
+        // 有描述优先显示描述，否则显示节点名称
+        DisplayName = string.IsNullOrWhiteSpace(msg.NodeDescription) ? msg.NodeTitle : msg.NodeDescription;
         IsSuccess = msg.IsSuccess;
         ElapsedText = $"{msg.ElapsedMs} ms";
         TimeText = DateTime.Now.ToString("HH:mm:ss");
@@ -38,7 +39,7 @@ public class NodeExecutionItem : PropertyChangedBase
 /// 工位流程监控面板基类：订阅 <see cref="NodeExecutionMessage"/>，
 /// 按工位过滤后以"最新在上"的列表显示节点执行结果（名称、状态圆圈、耗时）。
 /// </summary>
-public abstract class FlowMonitorViewModelBase : Tool, IHandle<NodeExecutionMessage>
+public abstract class FlowMonitorViewModelBase : Tool, IHandle<NodeExecutionMessage>, IHandle<FlowExecutionStartedMessage>
 {
     private const int MaxItems = 200;
 
@@ -54,6 +55,15 @@ public abstract class FlowMonitorViewModelBase : Tool, IHandle<NodeExecutionMess
         DisplayName = displayName;
 
         events.SubscribeOnUIThread(this);
+    }
+
+    /// <summary>新一轮流程开始：清空上一轮记录</summary>
+    public Task HandleAsync(FlowExecutionStartedMessage message, CancellationToken cancellationToken)
+    {
+        if (message.WorkPos == _workPos)
+            Items.Clear();
+
+        return Task.CompletedTask;
     }
 
     public Task HandleAsync(NodeExecutionMessage message, CancellationToken cancellationToken)

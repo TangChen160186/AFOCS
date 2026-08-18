@@ -85,6 +85,9 @@ public class FlowExecutor
     {
         _currentWorkPos = workPos;
         _nodeTimers.Clear();
+
+        // 通知订阅方：新一轮流程开始，可据此清空上一轮记录
+        _ = _eventAggregator.PublishOnUIThreadAsync(new FlowExecutionStartedMessage { WorkPos = workPos });
     }
 
     public async Task<Dictionary<Guid, Dictionary<string, object?>>> ExecuteAsync(
@@ -92,8 +95,7 @@ public class FlowExecutor
         IReadOnlyList<ConnectionViewModel> connections,
         WorkPos workPos)
     {
-        _currentWorkPos = workPos;
-        _nodeTimers.Clear();
+        SetWorkPos(workPos);
 
         var entryNodes = nodes.Where(n =>
             n.Outputs.Any(o => o.PortType == NodePortType.Execution) &&
@@ -519,6 +521,8 @@ public class FlowExecutor
         {
             WorkPos = _currentWorkPos,
             NodeTitle = node.Title,
+            NodeDescription = node.Definition.GetType()
+                .GetProperty("Description")?.GetValue(node.Definition) as string ?? string.Empty,
             NodeTypeId = NodeDefinitionHelper.GetTypeId(node.Definition) ?? "Unknown",
             IsSuccess = isSuccess,
             ElapsedMs = elapsedMs,

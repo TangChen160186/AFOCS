@@ -75,7 +75,7 @@
                                 </Path>
                             </Grid>
 
-                            <TextBlock Grid.Column="1" Text="{Binding NodeTitle}"
+                            <TextBlock Grid.Column="1" Text="{Binding DisplayName}"
                                        VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                             <TextBlock Grid.Column="2" Text="{Binding ElapsedText}"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#666" />
