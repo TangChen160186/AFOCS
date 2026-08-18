@@ -619,10 +619,6 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
     private async Task<Result> WaitForMotionDone(AxisRef ar, AkribisAxisId axis, int timeoutMs)
     {
         const int interval = 20;
-
-     
-
-
         // 再等待运动完成
         int elapsed = 0;
         while (true)

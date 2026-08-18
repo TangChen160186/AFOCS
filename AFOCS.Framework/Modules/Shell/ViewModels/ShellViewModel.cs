@@ -141,14 +141,73 @@ namespace AFOCS.Framework.Modules.Shell.ViewModels
 
         public void ShowTool(ITool model)
         {
+            #region debug-point D/E:show-tool
+            try
+            {
+                var dbgJson = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    sessionId = "camera-tool-open-fail",
+                    runId = "pre",
+                    hypothesisId = "D",
+                    location = "ShellViewModel.ShowTool",
+                    msg = "[DEBUG] ShowTool 被调用",
+                    data = new { toolType = model.GetType().FullName, isActive = model.IsActive, isVisible = model.IsVisible },
+                });
+                _ = new System.Net.Http.HttpClient().PostAsync("http://127.0.0.1:7777/event", new System.Net.Http.StringContent(dbgJson, System.Text.Encoding.UTF8, "application/json"));
+            }
+            catch { }
+            #endregion
+
             RegisterTool(model);
 
             if (!model.IsActive)
-                model.ActivateAsync(CancellationToken.None).Wait();
+            {
+                #region debug-point D/E:activate
+                try
+                {
+                    model.ActivateAsync(CancellationToken.None).Wait();
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        var dbgJson = System.Text.Json.JsonSerializer.Serialize(new
+                        {
+                            sessionId = "camera-tool-open-fail",
+                            runId = "pre",
+                            hypothesisId = "D",
+                            location = "ShellViewModel.ShowTool",
+                            msg = "[DEBUG] ActivateAsync 异常",
+                            data = new { toolType = model.GetType().FullName, error = ex.ToString() },
+                        });
+                        _ = new System.Net.Http.HttpClient().PostAsync("http://127.0.0.1:7777/event", new System.Net.Http.StringContent(dbgJson, System.Text.Encoding.UTF8, "application/json"));
+                    }
+                    catch { }
+                    throw;
+                }
+                #endregion
+            }
 
             model.IsVisible = true;
             model.IsSelected = true;
             ActiveLayoutItem = model;
+
+            #region debug-point E:after-show
+            try
+            {
+                var dbgJson = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    sessionId = "camera-tool-open-fail",
+                    runId = "pre",
+                    hypothesisId = "E",
+                    location = "ShellViewModel.ShowTool",
+                    msg = "[DEBUG] ShowTool 完成",
+                    data = new { toolType = model.GetType().FullName, isActive = model.IsActive, isVisible = model.IsVisible, activeLayout = ActiveLayoutItem?.GetType().FullName },
+                });
+                _ = new System.Net.Http.HttpClient().PostAsync("http://127.0.0.1:7777/event", new System.Net.Http.StringContent(dbgJson, System.Text.Encoding.UTF8, "application/json"));
+            }
+            catch { }
+            #endregion
         }
 
         public Task OpenDocumentAsync(IDocument model) => ActivateItemAsync(model, CancellationToken.None);

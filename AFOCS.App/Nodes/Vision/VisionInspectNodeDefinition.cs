@@ -2,11 +2,13 @@ using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Text.Json.Serialization;
+using AFOCS.App.Services;
 using AFOCS.FlowNodeEditor.Models;
 using AFOCS.FlowNodeEditor.Services;
 using AFOCS.Infrastructure;
 using AFOCS.VisionEditor.Models;
 using AFOCS.VisionEditor.Services;
+using Caliburn.Micro;
 using Serilog;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
@@ -25,7 +27,7 @@ namespace AFOCS.App.Nodes.Vision;
  CategoryOrder("输入", 2),
  CategoryOrder("输出", 3)]
 [method: ImportingConstructor]
-public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, IExecutableNode
+public class VisionInspectNodeDefinition(ILogger logger, IEventAggregator eventAggregator) : NodeDefinitionBase, IExecutableNode
 {
     // ========== 输入端口 ==========
 
@@ -95,6 +97,16 @@ public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, I
         set => Set(ref field, value);
     } = string.Empty;
 
+    [DisplayName("相机")]
+    [Description("检测结果绘制到该相机的监控面板；留空则自动跟随上游相机采集节点")]
+    [ItemsSource(typeof(CameraCaptureNodeDefinition.CameraItemsSource))]
+    [Category("配置")]
+    public string CameraName
+    {
+        get;
+        set => Set(ref field, value);
+    } = string.Empty;
+
     // ========== 执行 ==========
 
     public async Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
@@ -147,6 +159,9 @@ public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, I
         PointY = result.PointResultY;
 
         logger.Information($"视觉检测完成,结果: NccDx={result.Dx}, NccDy={result.Dy}, Edge1AngleDev={result.Edge1AngleDev}, Edge2AngleDev={result.Edge2AngleDev}, PointDevX={result.PointDevX}, PointDevY={result.PointDevY}, PointX={result.PointResultX}, PointY={result.PointResultY}");
+
+        PublishInspectionResult(context, result, template);
+
         return new Dictionary<string, object?>
         {
             ["NccDx"] = result.Dx,
@@ -158,5 +173,35 @@ public class VisionInspectNodeDefinition(ILogger logger) : NodeDefinitionBase, I
             ["PointX"] = result.PointResultX,
             ["PointY"] = result.PointResultY,
         };
+    }
+
+    /// <summary>
+    /// 发布视觉检测结果消息，供对应相机的监控面板叠加绘制。
+    /// 相机名解析优先级：节点配置的相机 > 上游相机采集节点写入上下文的相机。
+    /// </summary>
+    private void PublishInspectionResult(
+        Dictionary<string, object?> context, VisionInspectionResult result, VisionTemplate template)
+    {
+        var cameraName = CameraName;
+        if (string.IsNullOrWhiteSpace(cameraName)
+            && context.TryGetValue("CameraName", out var ctxCamera) && ctxCamera is string s)
+        {
+            cameraName = s;
+        }
+
+        if (string.IsNullOrWhiteSpace(cameraName))
+            return;
+
+        var workPos = context.TryGetValue(FlowExecutor.WorkPosKey, out var wp) && wp is WorkPos pos
+            ? pos
+            : WorkPos.None;
+
+        _ = eventAggregator.PublishOnUIThreadAsync(new VisionInspectionMessage
+        {
+            CameraName = cameraName,
+            WorkPos = workPos,
+            Result = result,
+            ModelPath = template.Ncc.ModelPath ?? string.Empty,
+        });
     }
 }

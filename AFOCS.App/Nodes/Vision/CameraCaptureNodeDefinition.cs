@@ -23,18 +23,12 @@ namespace AFOCS.App.Nodes.Vision;
  CategoryOrder("输出", 3)]
 public class CameraCaptureNodeDefinition : NodeDefinitionBase, IExecutableNode
 {
-    /// <summary>
-    /// 所有已注册相机的描述名称。
-    /// PropertyGrid 通过无参构造创建 ItemsSource，故用静态字段共享 MEF 注入的相机列表。
-    /// </summary>
-    private static IEnumerable<string> _cameraNames = null!;
-
     private readonly Dictionary<string, ICamera> _cameraMap;
 
     [ImportingConstructor]
     public CameraCaptureNodeDefinition([ImportMany] IEnumerable<ICamera> cameras)
     {
-        _cameraNames = cameras.Select(c => c.GetType().GetDescription());
+        CameraNameRegistry.Register(cameras.Select(c => c.GetType().GetDescription()));
         _cameraMap = cameras.ToDictionary(c => c.GetType().GetDescription());
     }
 
@@ -95,7 +89,10 @@ public class CameraCaptureNodeDefinition : NodeDefinitionBase, IExecutableNode
         }
 
         Image = new PixelData(pixelData, w, h, channels);
-        
+
+        // 把相机名写入共享上下文，供下游视觉检测节点发布绘制消息时自动关联相机
+        context["CameraName"] = CameraName;
+
         return new Dictionary<string, object?> { ["Image"] = Image };
     }
 
@@ -105,9 +102,32 @@ public class CameraCaptureNodeDefinition : NodeDefinitionBase, IExecutableNode
         {
             var items = new ItemCollection();
 
-            foreach (var name in _cameraNames)
+            foreach (var name in CameraNameRegistry.Names)
                 items.Add(name, name);
             return items;
+        }
+    }
+}
+
+/// <summary>
+/// 共享相机名称注册表：相机节点实例化时填充，供 PropertyGrid ItemsSource（无参构造）与
+/// 视觉检测节点跨节点共享相机列表。
+/// </summary>
+public static class CameraNameRegistry
+{
+    private static readonly List<string> _names = [];
+
+    public static IReadOnlyList<string> Names
+    {
+        get { lock (_names) return _names.ToList(); }
+    }
+
+    public static void Register(IEnumerable<string> names)
+    {
+        lock (_names)
+        {
+            _names.Clear();
+            _names.AddRange(names);
         }
     }
 }
