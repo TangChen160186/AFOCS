@@ -12,6 +12,22 @@ public class FlowExecutionStartedMessage
 }
 
 /// <summary>
+/// 流程执行完成消息 —— 整条流程执行结束（成功或失败）时由 IFlowExecutionService 通过 IEventAggregator 发布，
+/// 供总览窗口等订阅方统计良品 / 不良个数。
+/// </summary>
+public class FlowExecutionCompletedMessage
+{
+    /// <summary>当前工位</summary>
+    public WorkPos WorkPos { get; init; }
+
+    /// <summary>整条流程是否执行成功（无异常）</summary>
+    public bool Success { get; init; }
+
+    /// <summary>错误信息（失败时有值）</summary>
+    public string? ErrorMessage { get; init; }
+}
+
+/// <summary>
 /// 节点执行结果消息 —— 通过 IEventAggregator 发布，供外部订阅
 /// </summary>
 public class NodeExecutionMessage

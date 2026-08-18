@@ -1,0 +1,110 @@
+<UserControl x:Class="AFOCS.App.Views.Settings.ProductionInfoSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:cal="http://www.caliburnproject.org"
+             xmlns:settings="clr-namespace:AFOCS.App.ViewModels.Settings"
+             mc:Ignorable="d"
+             d:DesignHeight="420" d:DesignWidth="540"
+             d:DataContext="{d:DesignInstance settings:ProductionInfoSettingsViewModel}"
+             IsTabStop="False">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="SectionBg" Color="#FFF3F4F6" />
+        <SolidColorBrush x:Key="LabelFg" Color="#FF6B7280" />
+        <Style x:Key="FieldTextBox" TargetType="TextBox">
+            <Setter Property="Height" Value="24" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{StaticResource LabelFg}" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+        <Style x:Key="BrowseButton" TargetType="Button">
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="Margin" Value="4,0,0,0" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="0,5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 左工位 -->
+            <Border Grid.Column="0" Background="{StaticResource SectionBg}" CornerRadius="4" Padding="10,8">
+                <StackPanel>
+                    <TextBlock Text="左工位" FontWeight="Bold" Margin="0,0,0,8" />
+
+                    <TextBlock Text="逻辑流程地址" Style="{StaticResource FieldLabel}" />
+                    <DockPanel Margin="0,0,0,10">
+                        <Button DockPanel.Dock="Right" Content="浏览" Style="{StaticResource BrowseButton}"
+                                cal:Message.Attach="BrowseLeftLogicFlow" />
+                        <TextBox Text="{Binding Left.LogicFlowPath, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource FieldTextBox}" />
+                    </DockPanel>
+
+                    <TextBlock Text="安全位置流程地址" Style="{StaticResource FieldLabel}" />
+                    <DockPanel Margin="0,0,0,10">
+                        <Button DockPanel.Dock="Right" Content="浏览" Style="{StaticResource BrowseButton}"
+                                cal:Message.Attach="BrowseLeftSafePositionFlow" />
+                        <TextBox Text="{Binding Left.SafePositionFlowPath, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource FieldTextBox}" />
+                    </DockPanel>
+
+                    <TextBlock Text="回零流程地址" Style="{StaticResource FieldLabel}" />
+                    <DockPanel Margin="0,0,0,10">
+                        <Button DockPanel.Dock="Right" Content="浏览" Style="{StaticResource BrowseButton}"
+                                cal:Message.Attach="BrowseLeftHomeFlow" />
+                        <TextBox Text="{Binding Left.HomeFlowPath, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource FieldTextBox}" />
+                    </DockPanel>
+
+                    <TextBlock Text="胶水 SN" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding Left.GlueSn, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource FieldTextBox}" />
+                </StackPanel>
+            </Border>
+
+            <!-- 右工位 -->
+            <Border Grid.Column="2" Background="{StaticResource SectionBg}" CornerRadius="4" Padding="10,8">
+                <StackPanel>
+                    <TextBlock Text="右工位" FontWeight="Bold" Margin="0,0,0,8" />
+
+                    <TextBlock Text="逻辑流程地址" Style="{StaticResource FieldLabel}" />
+                    <DockPanel Margin="0,0,0,10">
+                        <Button DockPanel.Dock="Right" Content="浏览" Style="{StaticResource BrowseButton}"
+                                cal:Message.Attach="BrowseRightLogicFlow" />
+                        <TextBox Text="{Binding Right.LogicFlowPath, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource FieldTextBox}" />
+                    </DockPanel>
+
+                    <TextBlock Text="安全位置流程地址" Style="{StaticResource FieldLabel}" />
+                    <DockPanel Margin="0,0,0,10">
+                        <Button DockPanel.Dock="Right" Content="浏览" Style="{StaticResource BrowseButton}"
+                                cal:Message.Attach="BrowseRightSafePositionFlow" />
+                        <TextBox Text="{Binding Right.SafePositionFlowPath, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource FieldTextBox}" />
+                    </DockPanel>
+
+                    <TextBlock Text="回零流程地址" Style="{StaticResource FieldLabel}" />
+                    <DockPanel Margin="0,0,0,10">
+                        <Button DockPanel.Dock="Right" Content="浏览" Style="{StaticResource BrowseButton}"
+                                cal:Message.Attach="BrowseRightHomeFlow" />
+                        <TextBox Text="{Binding Right.HomeFlowPath, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource FieldTextBox}" />
+                    </DockPanel>
+
+                    <TextBlock Text="胶水 SN" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding Right.GlueSn, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource FieldTextBox}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

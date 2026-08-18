@@ -10,8 +10,8 @@ namespace AFOCS.FlowNodeEditor.Services;
 
 public interface IFlowExecutionService
 {
-    Task<FlowExecutionResult> ExecuteFlowAsync(string filePath, WorkPos workPos = WorkPos.Left);
-    Task<FlowExecutionResult> ExecuteFlowAsync(FlowGraph graph, WorkPos workPos = WorkPos.Left);
+    Task<FlowExecutionResult> ExecuteFlowAsync(string filePath, WorkPos workPos = WorkPos.Left, bool reportResult = true);
+    Task<FlowExecutionResult> ExecuteFlowAsync(FlowGraph graph, WorkPos workPos = WorkPos.Left, bool reportResult = true);
     Task<FlowExecutionResult> ExecuteFromNodeAsync(string filePath, Guid nodeInstanceId, WorkPos workPos = WorkPos.Left);
     Task<FlowExecutionResult> ExecuteSingleNodeAsync(string filePath, Guid nodeInstanceId, WorkPos workPos = WorkPos.Left);
 }
@@ -29,14 +29,16 @@ public class FlowExecutionResult
 public class FlowExecutionService : IFlowExecutionService
 {
     private readonly INodeRegistry _nodeRegistry;
+    private readonly IEventAggregator _eventAggregator;
 
     [ImportingConstructor]
-    public FlowExecutionService(INodeRegistry nodeRegistry)
+    public FlowExecutionService(INodeRegistry nodeRegistry, IEventAggregator eventAggregator)
     {
         _nodeRegistry = nodeRegistry;
+        _eventAggregator = eventAggregator;
     }
 
-    public async Task<FlowExecutionResult> ExecuteFlowAsync(string filePath, WorkPos workPos = WorkPos.Left)
+    public async Task<FlowExecutionResult> ExecuteFlowAsync(string filePath, WorkPos workPos = WorkPos.Left, bool reportResult = true)
     {
         try
         {
@@ -51,7 +53,7 @@ public class FlowExecutionService : IFlowExecutionService
                 };
             }
 
-            return await ExecuteFlowAsync(graph, workPos);
+            return await ExecuteFlowAsync(graph, workPos, reportResult);
         }
         catch (FileNotFoundException)
         {
@@ -71,7 +73,7 @@ public class FlowExecutionService : IFlowExecutionService
         }
     }
 
-    public async Task<FlowExecutionResult> ExecuteFlowAsync(FlowGraph graph, WorkPos workPos = WorkPos.Left)
+    public async Task<FlowExecutionResult> ExecuteFlowAsync(FlowGraph graph, WorkPos workPos = WorkPos.Left, bool reportResult = true)
     {
         var result = new FlowExecutionResult();
 
@@ -102,6 +104,16 @@ public class FlowExecutionService : IFlowExecutionService
             result.Success = false;
             result.ErrorMessage = GetErrorMessage(ex);
             result.ExecutionLog.Add($"执行失败: {GetErrorMessage(ex)}");
+        }
+
+        if (reportResult)
+        {
+            _ = _eventAggregator.PublishOnUIThreadAsync(new FlowExecutionCompletedMessage
+            {
+                WorkPos = workPos,
+                Success = result.Success,
+                ErrorMessage = result.ErrorMessage,
+            });
         }
 
         return result;

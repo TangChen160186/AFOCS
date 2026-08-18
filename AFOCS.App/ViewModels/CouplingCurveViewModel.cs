@@ -53,18 +53,14 @@ public abstract class CouplingCurveViewModelBase : Tool, IHandle<CouplingSampleM
         _source = source;
         _logger = logger;
 
-        string posText = workPos == WorkPos.Left ? "左工位" : "右工位";
-        string srcText = source == CouplingSource.Rx ? "RX" : "TX";
-        Plot.Title($"{posText}{srcText}耦合曲线");
-        Plot.Axes.Title.Label.FontSize = 12;
-        Plot.Axes.Bottom.Label.Text = "位置 (脉冲)";
-        Plot.Axes.Bottom.Label.FontSize = 11;
-        Plot.Axes.Left.Label.Text = "数值";
-        Plot.Axes.Left.Label.FontSize = 11;
+        Plot.Axes.Bottom.Label.Text = "pos (pulse)";
+        Plot.Axes.Bottom.Label.FontSize = 9;
+        Plot.Axes.Left.Label.Text = source == CouplingSource.Rx ? "RSP" : "Power";
+        Plot.Axes.Left.Label.FontSize = 9;
         Plot.Axes.Bottom.TickLabelStyle.FontSize = 9;
         Plot.Axes.Left.TickLabelStyle.FontSize = 9;
         Plot.Font.Automatic();
-        Plot.Legend.IsVisible = true;
+        Plot.Legend.IsVisible = false;
         Plot.Legend.FontSize = 10;
 
         // 固定生成通道显示开关（RX 4 个 0~3，TX 8 个 1~8），打开面板即可勾选
@@ -86,8 +82,6 @@ public abstract class CouplingCurveViewModelBase : Tool, IHandle<CouplingSampleM
                 _ys.Clear();
                 _series.Clear();
                 Plot.Clear();
-                if (!string.IsNullOrEmpty(message.ValueLabel))
-                    Plot.Axes.Left.Label.Text = message.ValueLabel;
                 break;
 
             case CouplingSampleType.Sample:

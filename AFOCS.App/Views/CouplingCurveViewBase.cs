@@ -25,6 +25,9 @@ public abstract class CouplingCurveViewBase : UserControl
             _plot = plot;
             plot.Reset(vm.Plot);
             vm.PlotUpdated += OnPlotUpdated;
+
+            // 延迟到布局完成后刷新，确保轴标签首次加载即显示、无需交互
+            Dispatcher.BeginInvoke(new System.Action(() => plot.Refresh()), System.Windows.Threading.DispatcherPriority.Loaded);
         }
     }
 

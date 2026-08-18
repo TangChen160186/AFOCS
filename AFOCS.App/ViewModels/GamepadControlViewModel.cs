@@ -32,7 +32,7 @@ public class GamepadControlViewModel(
     private readonly Dictionary<(WorkPos, PressureSensorType), IPressureSensor> _pressureSensors = [];
 
     public override PaneLocation PreferredLocation => PaneLocation.Right;
-    public override double PreferredWidth => 390;
+    public override double PreferredWidth => 720;
     public override double PreferredHeight => 600;
 
     public override string DisplayName => "手柄控制";
@@ -122,24 +122,34 @@ public class GamepadControlViewModel(
     // ========== 位置显示字段 ==========
 
     private double _camX, _camY, _camZ, _camSide;
-    public string CameraPosText => $"X:{_camX:F1}  Y:{_camY:F1}  Z:{_camZ:F1}";
-    public string CameraSidePosText => $"侧Y: {_camSide:F1}";
+    public string CameraPosXText => $"X: {_camX:F1}";
+    public string CameraPosYText => $"Y: {_camY:F1}";
+    public string CameraPosZText => $"Z: {_camZ:F1}";
+    public string CameraSidePosText => $"侧: {_camSide:F1}";
     public bool HasCameraPos => !double.IsNaN(_camX);
 
     private double _lrx, _lry, _lrz;
-    public string LeftRotPosText => $"θX:{_lrx:F1}  θY:{_lry:F1}  θZ:{_lrz:F1}";
+    public string LeftRotPosXText => $"θX: {_lrx:F1}";
+    public string LeftRotPosYText => $"θY: {_lry:F1}";
+    public string LeftRotPosZText => $"θZ: {_lrz:F1}";
     public bool HasLeftRotPos => !double.IsNaN(_lrx);
 
     private double _rrx, _rry, _rrz;
-    public string RightRotPosText => $"θX:{_rrx:F1}  θY:{_rry:F1}  θZ:{_rrz:F1}";
+    public string RightRotPosXText => $"θX: {_rrx:F1}";
+    public string RightRotPosYText => $"θY: {_rry:F1}";
+    public string RightRotPosZText => $"θZ: {_rrz:F1}";
     public bool HasRightRotPos => !double.IsNaN(_rrx);
 
     private int _alx, _aly, _alz;
-    public string AkribisLPosText => $"X:{_alx}  Y:{_aly}  Z:{_alz}";
+    public string AkribisLPosXText => $"X: {_alx}";
+    public string AkribisLPosYText => $"Y: {_aly}";
+    public string AkribisLPosZText => $"Z: {_alz}";
     public bool HasAkribisLPos => _akribisInstances.ContainsKey(AkribisLName);
 
     private int _arx, _ary, _arz;
-    public string AkribisRPosText => $"X:{_arx}  Y:{_ary}  Z:{_arz}";
+    public string AkribisRPosXText => $"X: {_arx}";
+    public string AkribisRPosYText => $"Y: {_ary}";
+    public string AkribisRPosZText => $"Z: {_arz}";
     public bool HasAkribisRPos => _akribisInstances.ContainsKey(AkribisRName);
 
     private int _glpos, _grpos;
@@ -342,16 +352,26 @@ public class GamepadControlViewModel(
 
     private Task RefreshAllDisplay()
     {
-        NotifyOfPropertyChange(nameof(CameraPosText));
+        NotifyOfPropertyChange(nameof(CameraPosXText));
+        NotifyOfPropertyChange(nameof(CameraPosYText));
+        NotifyOfPropertyChange(nameof(CameraPosZText));
         NotifyOfPropertyChange(nameof(CameraSidePosText));
         NotifyOfPropertyChange(nameof(HasCameraPos));
-        NotifyOfPropertyChange(nameof(LeftRotPosText));
+        NotifyOfPropertyChange(nameof(LeftRotPosXText));
+        NotifyOfPropertyChange(nameof(LeftRotPosYText));
+        NotifyOfPropertyChange(nameof(LeftRotPosZText));
         NotifyOfPropertyChange(nameof(HasLeftRotPos));
-        NotifyOfPropertyChange(nameof(RightRotPosText));
+        NotifyOfPropertyChange(nameof(RightRotPosXText));
+        NotifyOfPropertyChange(nameof(RightRotPosYText));
+        NotifyOfPropertyChange(nameof(RightRotPosZText));
         NotifyOfPropertyChange(nameof(HasRightRotPos));
-        NotifyOfPropertyChange(nameof(AkribisLPosText));
+        NotifyOfPropertyChange(nameof(AkribisLPosXText));
+        NotifyOfPropertyChange(nameof(AkribisLPosYText));
+        NotifyOfPropertyChange(nameof(AkribisLPosZText));
         NotifyOfPropertyChange(nameof(HasAkribisLPos));
-        NotifyOfPropertyChange(nameof(AkribisRPosText));
+        NotifyOfPropertyChange(nameof(AkribisRPosXText));
+        NotifyOfPropertyChange(nameof(AkribisRPosYText));
+        NotifyOfPropertyChange(nameof(AkribisRPosZText));
         NotifyOfPropertyChange(nameof(HasAkribisRPos));
         NotifyOfPropertyChange(nameof(GripperLPosText));
         NotifyOfPropertyChange(nameof(GripperRPosText));

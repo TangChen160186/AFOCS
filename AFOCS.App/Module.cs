@@ -47,14 +47,18 @@ namespace AFOCS.App
         public static readonly MenuItemDefinition ViewFaPdCalibrationMenuItem = new CommandMenuItemDefinition<ViewFaPdCalibrationCommandDefinition>(
             MenuDefinitions.ViewToolsMenuGroup, 11);
 
-        // ===== 工位总览窗口 =====
+        // ===== 工位总览窗口（Window 菜单下） =====
+
+        [Export]
+        public static readonly MenuItemGroupDefinition WindowOverviewMenuGroup = new MenuItemGroupDefinition(
+            MenuDefinitions.WindowMenu, 0);
 
         [Export]
         public static readonly MenuItemDefinition ViewLeftStationOverviewMenuItem = new CommandMenuItemDefinition<ViewLeftStationOverviewCommandDefinition>(
-            MenuDefinitions.ViewToolsMenuGroup, 12);
+            WindowOverviewMenuGroup, 0);
 
         [Export]
         public static readonly MenuItemDefinition ViewRightStationOverviewMenuItem = new CommandMenuItemDefinition<ViewRightStationOverviewCommandDefinition>(
-            MenuDefinitions.ViewToolsMenuGroup, 13);
+            WindowOverviewMenuGroup, 1);
     }
 }

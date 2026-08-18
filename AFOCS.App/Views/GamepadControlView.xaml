@@ -25,12 +25,12 @@
 
         <!-- ===== D-Pad 方向按钮 ===== -->
         <Style x:Key="DPadBtn" TargetType="Button">
-            <Setter Property="Width" Value="28"/>
-            <Setter Property="Height" Value="26"/>
-            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Padding" Value="0"/>
-            <Setter Property="Margin" Value="1"/>
+            <Setter Property="Margin" Value="2"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -38,7 +38,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
-                                CornerRadius="3" Padding="0">
+                                CornerRadius="5" Padding="0">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -49,6 +49,15 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <!-- ===== 当前位置（竖排）文本 ===== -->
+        <Style x:Key="PosText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
         </Style>
 
         <!-- ===== 次要按钮（刷新用） ===== -->
@@ -164,9 +173,9 @@
                         </ListBox.ItemsPanel>
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
-                                <Setter Property="Width" Value="72"/>
-                                <Setter Property="Height" Value="28"/>
-                                <Setter Property="FontSize" Value="13"/>
+                                <Setter Property="Width" Value="88"/>
+                                <Setter Property="Height" Value="32"/>
+                                <Setter Property="FontSize" Value="14"/>
                                 <Setter Property="FontWeight" Value="SemiBold"/>
                                 <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
                                 <Setter Property="Background" Value="{StaticResource CardBorder}"/>
@@ -204,28 +213,28 @@
                     BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
                     CornerRadius="8" Padding="10,6" Margin="0,0,0,6">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="相机:" FontSize="11" Foreground="{StaticResource TextSecondary}"
+                    <TextBlock Text="相机:" FontSize="12" Foreground="{StaticResource TextSecondary}"
                                VerticalAlignment="Center" Margin="0,0,4,0"/>
                     <TextBox Text="{Binding CameraJogStep, UpdateSourceTrigger=PropertyChanged}"
-                             Width="80" Height="24" FontSize="11"
+                             Width="80" Height="28" FontSize="12"
                              VerticalContentAlignment="Center" HorizontalContentAlignment="Right"
                              Margin="0,0,12,0" BorderBrush="#D0D0D0"/>
-                    <TextBlock Text="旋转:" FontSize="11" Foreground="{StaticResource TextSecondary}"
+                    <TextBlock Text="旋转:" FontSize="12" Foreground="{StaticResource TextSecondary}"
                                VerticalAlignment="Center" Margin="0,0,4,0"/>
                     <TextBox Text="{Binding RotationJogStep, UpdateSourceTrigger=PropertyChanged}"
-                             Width="42" Height="24" FontSize="11"
+                             Width="42" Height="28" FontSize="12"
                              VerticalContentAlignment="Center" HorizontalContentAlignment="Right"
                              Margin="0,0,12,0" BorderBrush="#D0D0D0"/>
-                    <TextBlock Text="Ak:" FontSize="11" Foreground="{StaticResource TextSecondary}"
+                    <TextBlock Text="Ak:" FontSize="12" Foreground="{StaticResource TextSecondary}"
                                VerticalAlignment="Center" Margin="0,0,4,0"/>
                     <TextBox Text="{Binding AkribisJogStep, UpdateSourceTrigger=PropertyChanged}"
-                             Width="100" Height="24" FontSize="11"
+                             Width="100" Height="28" FontSize="12"
                              VerticalContentAlignment="Center" HorizontalContentAlignment="Right"
                              Margin="0,0,12,0" BorderBrush="#D0D0D0"/>
-                    <TextBlock Text="夹爪:" FontSize="11" Foreground="{StaticResource TextSecondary}"
+                    <TextBlock Text="夹爪:" FontSize="12" Foreground="{StaticResource TextSecondary}"
                                VerticalAlignment="Center" Margin="0,0,4,0"/>
                     <TextBox Text="{Binding GripperStep, UpdateSourceTrigger=PropertyChanged}"
-                             Width="40" Height="24" FontSize="11"
+                             Width="40" Height="28" FontSize="12"
                              VerticalContentAlignment="Center" HorizontalContentAlignment="Right"
                              BorderBrush="#D0D0D0"/>
                 </StackPanel>
@@ -245,95 +254,131 @@
                     <!-- 1. 相机 D-Pad -->
                     <Border Background="{StaticResource CardBg}"
                             BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
-                            CornerRadius="8" Padding="10,8" Margin="0,0,0,6">
+                            CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
                         <StackPanel>
                             <TextBlock Text="相机轴（总线）" FontSize="12" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,2"/>
-                            <TextBlock Text="{Binding CameraPosText}" FontSize="10"
-                                       Foreground="{StaticResource TextMuted}" Margin="0,0,0,6"
-                                       Visibility="{Binding HasCameraPos, Converter={StaticResource BoolToVis}}"/>
+                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,6"/>
 
                             <Grid HorizontalAlignment="Center">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="28"/>
-                                    <ColumnDefinition Width="28"/>
-                                    <ColumnDefinition Width="28"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <Button Grid.Row="0" Grid.Column="1" cal:Message.Attach="JogBusCamera('Y', 1)"
-                                        Content="▲" Style="{StaticResource DPadBtn}" Background="#3498DB"/>
-                                <Button Grid.Row="1" Grid.Column="0" cal:Message.Attach="JogBusCamera('X', -1)"
-                                        Content="◀" Style="{StaticResource DPadBtn}" Background="#E74C3C"/>
-                                <Button Grid.Row="1" Grid.Column="1"
-                                        Content="●" Style="{StaticResource DPadBtn}" Background="#BDC3C7" IsEnabled="False"/>
-                                <Button Grid.Row="1" Grid.Column="2" cal:Message.Attach="JogBusCamera('X', 1)"
-                                        Content="▶" Style="{StaticResource DPadBtn}" Background="#27AE60"/>
-                                <Button Grid.Row="2" Grid.Column="1" cal:Message.Attach="JogBusCamera('Y', -1)"
-                                        Content="▼" Style="{StaticResource DPadBtn}" Background="#E67E22"/>
-                                <Button Grid.Row="3" Grid.Column="0" cal:Message.Attach="JogBusCamera('Z', -1)"
-                                        Content="Z−" Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
-                                <Button Grid.Row="3" Grid.Column="2" cal:Message.Attach="JogBusCamera('Z', 1)"
-                                        Content="Z+" Style="{StaticResource DPadBtn}" Background="#2ECC71"/>
-                            </Grid>
+                                <!-- XY 十字方向 -->
+                                <Grid Grid.Column="0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
 
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
-                                <TextBlock Text="{Binding CameraSidePosText}" FontSize="10"
-                                           Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"
-                                           Margin="0,0,6,0"
-                                           Visibility="{Binding HasCameraPos, Converter={StaticResource BoolToVis}}"/>
-                                <Button cal:Message.Attach="JogBusCameraSide(-1)" Content="◀"
-                                        Style="{StaticResource DPadBtn}" Background="#E74C3C"/>
-                                <Button cal:Message.Attach="JogBusCameraSide(1)" Content="▶"
-                                        Style="{StaticResource DPadBtn}" Background="#27AE60"/>
-                            </StackPanel>
+                                    <Button Grid.Row="0" Grid.Column="1" cal:Message.Attach="JogBusCamera('Y', 1)"
+                                            Content="▲" Style="{StaticResource DPadBtn}" Background="#3498DB"/>
+                                    <Button Grid.Row="1" Grid.Column="0" cal:Message.Attach="JogBusCamera('X', -1)"
+                                            Content="◀" Style="{StaticResource DPadBtn}" Background="#E74C3C"/>
+                                    <Button Grid.Row="1" Grid.Column="1"
+                                            Content="●" Style="{StaticResource DPadBtn}" Background="#BDC3C7" IsEnabled="False"/>
+                                    <Button Grid.Row="1" Grid.Column="2" cal:Message.Attach="JogBusCamera('X', 1)"
+                                            Content="▶" Style="{StaticResource DPadBtn}" Background="#27AE60"/>
+                                    <Button Grid.Row="2" Grid.Column="1" cal:Message.Attach="JogBusCamera('Y', -1)"
+                                            Content="▼" Style="{StaticResource DPadBtn}" Background="#E67E22"/>
+                                </Grid>
+
+                                <!-- Z 轴列 -->
+                                <StackPanel Grid.Column="1" Margin="8,2,0,0">
+                                    <Button cal:Message.Attach="JogBusCamera('Z', -1)" Content="Z−"
+                                            Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
+                                    <Button cal:Message.Attach="JogBusCamera('Z', 1)" Content="Z+"
+                                            Style="{StaticResource DPadBtn}" Background="#2ECC71"/>
+                                </StackPanel>
+
+                                <!-- 侧向机列 -->
+                                <StackPanel Grid.Column="2" Margin="8,2,0,0">
+                                    <Button cal:Message.Attach="JogBusCameraSide(-1)" Content="侧−"
+                                            Style="{StaticResource DPadBtn}" Background="#8E44AD"/>
+                                    <Button cal:Message.Attach="JogBusCameraSide(1)" Content="侧+"
+                                            Style="{StaticResource DPadBtn}" Background="#8E44AD"/>
+                                </StackPanel>
+
+                                <!-- 当前位置（竖排，占右侧横向空间） -->
+                                <StackPanel Grid.Column="3" Margin="14,0,0,0" VerticalAlignment="Center"
+                                            Visibility="{Binding HasCameraPos, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="位置" FontSize="10" Foreground="{StaticResource TextSecondary}"
+                                               Margin="0,0,0,2"/>
+                                    <TextBlock Text="{Binding CameraPosXText}" Style="{StaticResource PosText}"/>
+                                    <TextBlock Text="{Binding CameraPosYText}" Style="{StaticResource PosText}"/>
+                                    <TextBlock Text="{Binding CameraPosZText}" Style="{StaticResource PosText}"/>
+                                    <TextBlock Text="{Binding CameraSidePosText}" Style="{StaticResource PosText}"/>
+                                </StackPanel>
+                            </Grid>
                         </StackPanel>
                     </Border>
 
                     <!-- 2. 左旋转 D-Pad -->
                     <Border Background="{StaticResource CardBg}"
                             BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
-                            CornerRadius="8" Padding="10,8" Margin="0,0,0,6">
+                            CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
                         <StackPanel>
                             <TextBlock Text="左耦合旋转轴（总线）" FontSize="12" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,2"/>
-                            <TextBlock Text="{Binding LeftRotPosText}" FontSize="10"
-                                       Foreground="{StaticResource TextMuted}" Margin="0,0,0,6"
-                                       Visibility="{Binding HasLeftRotPos, Converter={StaticResource BoolToVis}}"/>
+                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,6"/>
 
                             <Grid HorizontalAlignment="Center">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition Height="26"/>
-                                </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="28"/>
-                                    <ColumnDefinition Width="28"/>
-                                    <ColumnDefinition Width="28"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <Button Grid.Row="0" Grid.Column="1" cal:Message.Attach="JogBusLeftRot('Y', 1)"
-                                        Content="▲" Style="{StaticResource DPadBtn}" Background="#3498DB"/>
-                                <Button Grid.Row="1" Grid.Column="0" cal:Message.Attach="JogBusLeftRot('X', -1)"
-                                        Content="◀" Style="{StaticResource DPadBtn}" Background="#E74C3C"/>
-                                <Button Grid.Row="1" Grid.Column="1"
-                                        Content="●" Style="{StaticResource DPadBtn}" Background="#BDC3C7" IsEnabled="False"/>
-                                <Button Grid.Row="1" Grid.Column="2" cal:Message.Attach="JogBusLeftRot('X', 1)"
-                                        Content="▶" Style="{StaticResource DPadBtn}" Background="#27AE60"/>
-                                <Button Grid.Row="2" Grid.Column="1" cal:Message.Attach="JogBusLeftRot('Y', -1)"
-                                        Content="▼" Style="{StaticResource DPadBtn}" Background="#E67E22"/>
-                                <Button Grid.Row="3" Grid.Column="0" cal:Message.Attach="JogBusLeftRot('Z', -1)"
-                                        Content="Z−" Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
-                                <Button Grid.Row="3" Grid.Column="2" cal:Message.Attach="JogBusLeftRot('Z', 1)"
-                                        Content="Z+" Style="{StaticResource DPadBtn}" Background="#2ECC71"/>
+                                <!-- XY 十字方向 -->
+                                <Grid Grid.Column="0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button Grid.Row="0" Grid.Column="1" cal:Message.Attach="JogBusLeftRot('Y', 1)"
+                                            Content="▲" Style="{StaticResource DPadBtn}" Background="#3498DB"/>
+                                    <Button Grid.Row="1" Grid.Column="0" cal:Message.Attach="JogBusLeftRot('X', -1)"
+                                            Content="◀" Style="{StaticResource DPadBtn}" Background="#E74C3C"/>
+                                    <Button Grid.Row="1" Grid.Column="1"
+                                            Content="●" Style="{StaticResource DPadBtn}" Background="#BDC3C7" IsEnabled="False"/>
+                                    <Button Grid.Row="1" Grid.Column="2" cal:Message.Attach="JogBusLeftRot('X', 1)"
+                                            Content="▶" Style="{StaticResource DPadBtn}" Background="#27AE60"/>
+                                    <Button Grid.Row="2" Grid.Column="1" cal:Message.Attach="JogBusLeftRot('Y', -1)"
+                                            Content="▼" Style="{StaticResource DPadBtn}" Background="#E67E22"/>
+                                </Grid>
+
+                                <!-- Z 轴列 -->
+                                <StackPanel Grid.Column="1" Margin="8,2,0,0">
+                                    <Button cal:Message.Attach="JogBusLeftRot('Z', -1)" Content="Z−"
+                                            Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
+                                    <Button cal:Message.Attach="JogBusLeftRot('Z', 1)" Content="Z+"
+                                            Style="{StaticResource DPadBtn}" Background="#2ECC71"/>
+                                </StackPanel>
+
+                                <!-- 当前位置（竖排，占右侧横向空间） -->
+                                <StackPanel Grid.Column="2" Margin="14,0,0,0" VerticalAlignment="Center"
+                                            Visibility="{Binding HasLeftRotPos, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="位置" FontSize="10" Foreground="{StaticResource TextSecondary}"
+                                               Margin="0,0,0,2"/>
+                                    <TextBlock Text="{Binding LeftRotPosXText}" Style="{StaticResource PosText}"/>
+                                    <TextBlock Text="{Binding LeftRotPosYText}" Style="{StaticResource PosText}"/>
+                                    <TextBlock Text="{Binding LeftRotPosZText}" Style="{StaticResource PosText}"/>
+                                </StackPanel>
                             </Grid>
                         </StackPanel>
                     </Border>
@@ -341,41 +386,60 @@
                     <!-- 3. 右旋转 D-Pad -->
                     <Border Background="{StaticResource CardBg}"
                             BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
-                            CornerRadius="8" Padding="10,8" Margin="0,0,0,6">
+                            CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
                         <StackPanel>
                             <TextBlock Text="右耦合旋转轴（总线）" FontSize="12" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,2"/>
-                            <TextBlock Text="{Binding RightRotPosText}" FontSize="10"
-                                       Foreground="{StaticResource TextMuted}" Margin="0,0,0,6"
-                                       Visibility="{Binding HasRightRotPos, Converter={StaticResource BoolToVis}}"/>
+                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,6"/>
 
                             <Grid HorizontalAlignment="Center">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition Height="26"/>
-                                </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="28"/>
-                                    <ColumnDefinition Width="28"/>
-                                    <ColumnDefinition Width="28"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <Button Grid.Row="0" Grid.Column="1" cal:Message.Attach="JogBusRightRot('Y', 1)"
-                                        Content="▲" Style="{StaticResource DPadBtn}" Background="#3498DB"/>
-                                <Button Grid.Row="1" Grid.Column="0" cal:Message.Attach="JogBusRightRot('X', -1)"
-                                        Content="◀" Style="{StaticResource DPadBtn}" Background="#E74C3C"/>
-                                <Button Grid.Row="1" Grid.Column="1"
-                                        Content="●" Style="{StaticResource DPadBtn}" Background="#BDC3C7" IsEnabled="False"/>
-                                <Button Grid.Row="1" Grid.Column="2" cal:Message.Attach="JogBusRightRot('X', 1)"
-                                        Content="▶" Style="{StaticResource DPadBtn}" Background="#27AE60"/>
-                                <Button Grid.Row="2" Grid.Column="1" cal:Message.Attach="JogBusRightRot('Y', -1)"
-                                        Content="▼" Style="{StaticResource DPadBtn}" Background="#E67E22"/>
-                                <Button Grid.Row="3" Grid.Column="0" cal:Message.Attach="JogBusRightRot('Z', -1)"
-                                        Content="Z−" Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
-                                <Button Grid.Row="3" Grid.Column="2" cal:Message.Attach="JogBusRightRot('Z', 1)"
-                                        Content="Z+" Style="{StaticResource DPadBtn}" Background="#2ECC71"/>
+                                <!-- XY 十字方向 -->
+                                <Grid Grid.Column="0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button Grid.Row="0" Grid.Column="1" cal:Message.Attach="JogBusRightRot('Y', 1)"
+                                            Content="▲" Style="{StaticResource DPadBtn}" Background="#3498DB"/>
+                                    <Button Grid.Row="1" Grid.Column="0" cal:Message.Attach="JogBusRightRot('X', -1)"
+                                            Content="◀" Style="{StaticResource DPadBtn}" Background="#E74C3C"/>
+                                    <Button Grid.Row="1" Grid.Column="1"
+                                            Content="●" Style="{StaticResource DPadBtn}" Background="#BDC3C7" IsEnabled="False"/>
+                                    <Button Grid.Row="1" Grid.Column="2" cal:Message.Attach="JogBusRightRot('X', 1)"
+                                            Content="▶" Style="{StaticResource DPadBtn}" Background="#27AE60"/>
+                                    <Button Grid.Row="2" Grid.Column="1" cal:Message.Attach="JogBusRightRot('Y', -1)"
+                                            Content="▼" Style="{StaticResource DPadBtn}" Background="#E67E22"/>
+                                </Grid>
+
+                                <!-- Z 轴列 -->
+                                <StackPanel Grid.Column="1" Margin="8,2,0,0">
+                                    <Button cal:Message.Attach="JogBusRightRot('Z', -1)" Content="Z−"
+                                            Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
+                                    <Button cal:Message.Attach="JogBusRightRot('Z', 1)" Content="Z+"
+                                            Style="{StaticResource DPadBtn}" Background="#2ECC71"/>
+                                </StackPanel>
+
+                                <!-- 当前位置（竖排，占右侧横向空间） -->
+                                <StackPanel Grid.Column="2" Margin="14,0,0,0" VerticalAlignment="Center"
+                                            Visibility="{Binding HasRightRotPos, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="位置" FontSize="10" Foreground="{StaticResource TextSecondary}"
+                                               Margin="0,0,0,2"/>
+                                    <TextBlock Text="{Binding RightRotPosXText}" Style="{StaticResource PosText}"/>
+                                    <TextBlock Text="{Binding RightRotPosYText}" Style="{StaticResource PosText}"/>
+                                    <TextBlock Text="{Binding RightRotPosZText}" Style="{StaticResource PosText}"/>
+                                </StackPanel>
                             </Grid>
                         </StackPanel>
                     </Border>
@@ -388,41 +452,60 @@
                     <!-- 4. 雅克贝斯 L D-Pad -->
                     <Border Background="{StaticResource CardBg}"
                             BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
-                            CornerRadius="8" Padding="10,8" Margin="0,0,0,6">
+                            CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
                         <StackPanel>
                             <TextBlock Text="{Binding AkribisLDisplay}" FontSize="12" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,2"/>
-                            <TextBlock Text="{Binding AkribisLPosText}" FontSize="10"
-                                       Foreground="{StaticResource TextMuted}" Margin="0,0,0,6"
-                                       Visibility="{Binding HasAkribisLPos, Converter={StaticResource BoolToVis}}"/>
+                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,6"/>
 
                             <Grid HorizontalAlignment="Center">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition Height="26"/>
-                                </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="28"/>
-                                    <ColumnDefinition Width="28"/>
-                                    <ColumnDefinition Width="28"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <Button Grid.Row="0" Grid.Column="1" cal:Message.Attach="JogAkribisL('Y', 1)"
-                                        Content="▲" Style="{StaticResource DPadBtn}" Background="#3498DB"/>
-                                <Button Grid.Row="1" Grid.Column="0" cal:Message.Attach="JogAkribisL('X', -1)"
-                                        Content="◀" Style="{StaticResource DPadBtn}" Background="#E74C3C"/>
-                                <Button Grid.Row="1" Grid.Column="1"
-                                        Content="●" Style="{StaticResource DPadBtn}" Background="#BDC3C7" IsEnabled="False"/>
-                                <Button Grid.Row="1" Grid.Column="2" cal:Message.Attach="JogAkribisL('X', 1)"
-                                        Content="▶" Style="{StaticResource DPadBtn}" Background="#27AE60"/>
-                                <Button Grid.Row="2" Grid.Column="1" cal:Message.Attach="JogAkribisL('Y', -1)"
-                                        Content="▼" Style="{StaticResource DPadBtn}" Background="#E67E22"/>
-                                <Button Grid.Row="3" Grid.Column="0" cal:Message.Attach="JogAkribisL('Z', -1)"
-                                        Content="Z−" Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
-                                <Button Grid.Row="3" Grid.Column="2" cal:Message.Attach="JogAkribisL('Z', 1)"
-                                        Content="Z+" Style="{StaticResource DPadBtn}" Background="#2ECC71"/>
+                                <!-- XY 十字方向 -->
+                                <Grid Grid.Column="0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button Grid.Row="0" Grid.Column="1" cal:Message.Attach="JogAkribisL('Y', 1)"
+                                            Content="▲" Style="{StaticResource DPadBtn}" Background="#3498DB"/>
+                                    <Button Grid.Row="1" Grid.Column="0" cal:Message.Attach="JogAkribisL('X', -1)"
+                                            Content="◀" Style="{StaticResource DPadBtn}" Background="#E74C3C"/>
+                                    <Button Grid.Row="1" Grid.Column="1"
+                                            Content="●" Style="{StaticResource DPadBtn}" Background="#BDC3C7" IsEnabled="False"/>
+                                    <Button Grid.Row="1" Grid.Column="2" cal:Message.Attach="JogAkribisL('X', 1)"
+                                            Content="▶" Style="{StaticResource DPadBtn}" Background="#27AE60"/>
+                                    <Button Grid.Row="2" Grid.Column="1" cal:Message.Attach="JogAkribisL('Y', -1)"
+                                            Content="▼" Style="{StaticResource DPadBtn}" Background="#E67E22"/>
+                                </Grid>
+
+                                <!-- Z 轴列 -->
+                                <StackPanel Grid.Column="1" Margin="8,2,0,0">
+                                    <Button cal:Message.Attach="JogAkribisL('Z', -1)" Content="Z−"
+                                            Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
+                                    <Button cal:Message.Attach="JogAkribisL('Z', 1)" Content="Z+"
+                                            Style="{StaticResource DPadBtn}" Background="#2ECC71"/>
+                                </StackPanel>
+
+                                <!-- 当前位置（竖排，占右侧横向空间） -->
+                                <StackPanel Grid.Column="2" Margin="14,0,0,0" VerticalAlignment="Center"
+                                            Visibility="{Binding HasAkribisLPos, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="位置" FontSize="10" Foreground="{StaticResource TextSecondary}"
+                                               Margin="0,0,0,2"/>
+                                    <TextBlock Text="{Binding AkribisLPosXText}" Style="{StaticResource PosText}"/>
+                                    <TextBlock Text="{Binding AkribisLPosYText}" Style="{StaticResource PosText}"/>
+                                    <TextBlock Text="{Binding AkribisLPosZText}" Style="{StaticResource PosText}"/>
+                                </StackPanel>
                             </Grid>
                         </StackPanel>
                     </Border>
@@ -430,41 +513,60 @@
                     <!-- 5. 雅克贝斯 R D-Pad -->
                     <Border Background="{StaticResource CardBg}"
                             BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
-                            CornerRadius="8" Padding="10,8" Margin="0,0,0,6">
+                            CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
                         <StackPanel>
                             <TextBlock Text="{Binding AkribisRDisplay}" FontSize="12" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,2"/>
-                            <TextBlock Text="{Binding AkribisRPosText}" FontSize="10"
-                                       Foreground="{StaticResource TextMuted}" Margin="0,0,0,6"
-                                       Visibility="{Binding HasAkribisRPos, Converter={StaticResource BoolToVis}}"/>
+                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,6"/>
 
                             <Grid HorizontalAlignment="Center">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition Height="26"/>
-                                </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="28"/>
-                                    <ColumnDefinition Width="28"/>
-                                    <ColumnDefinition Width="28"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <Button Grid.Row="0" Grid.Column="1" cal:Message.Attach="JogAkribisR('Y', 1)"
-                                        Content="▲" Style="{StaticResource DPadBtn}" Background="#3498DB"/>
-                                <Button Grid.Row="1" Grid.Column="0" cal:Message.Attach="JogAkribisR('X', -1)"
-                                        Content="◀" Style="{StaticResource DPadBtn}" Background="#E74C3C"/>
-                                <Button Grid.Row="1" Grid.Column="1"
-                                        Content="●" Style="{StaticResource DPadBtn}" Background="#BDC3C7" IsEnabled="False"/>
-                                <Button Grid.Row="1" Grid.Column="2" cal:Message.Attach="JogAkribisR('X', 1)"
-                                        Content="▶" Style="{StaticResource DPadBtn}" Background="#27AE60"/>
-                                <Button Grid.Row="2" Grid.Column="1" cal:Message.Attach="JogAkribisR('Y', -1)"
-                                        Content="▼" Style="{StaticResource DPadBtn}" Background="#E67E22"/>
-                                <Button Grid.Row="3" Grid.Column="0" cal:Message.Attach="JogAkribisR('Z', -1)"
-                                        Content="Z−" Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
-                                <Button Grid.Row="3" Grid.Column="2" cal:Message.Attach="JogAkribisR('Z', 1)"
-                                        Content="Z+" Style="{StaticResource DPadBtn}" Background="#2ECC71"/>
+                                <!-- XY 十字方向 -->
+                                <Grid Grid.Column="0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button Grid.Row="0" Grid.Column="1" cal:Message.Attach="JogAkribisR('Y', 1)"
+                                            Content="▲" Style="{StaticResource DPadBtn}" Background="#3498DB"/>
+                                    <Button Grid.Row="1" Grid.Column="0" cal:Message.Attach="JogAkribisR('X', -1)"
+                                            Content="◀" Style="{StaticResource DPadBtn}" Background="#E74C3C"/>
+                                    <Button Grid.Row="1" Grid.Column="1"
+                                            Content="●" Style="{StaticResource DPadBtn}" Background="#BDC3C7" IsEnabled="False"/>
+                                    <Button Grid.Row="1" Grid.Column="2" cal:Message.Attach="JogAkribisR('X', 1)"
+                                            Content="▶" Style="{StaticResource DPadBtn}" Background="#27AE60"/>
+                                    <Button Grid.Row="2" Grid.Column="1" cal:Message.Attach="JogAkribisR('Y', -1)"
+                                            Content="▼" Style="{StaticResource DPadBtn}" Background="#E67E22"/>
+                                </Grid>
+
+                                <!-- Z 轴列 -->
+                                <StackPanel Grid.Column="1" Margin="8,2,0,0">
+                                    <Button cal:Message.Attach="JogAkribisR('Z', -1)" Content="Z−"
+                                            Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
+                                    <Button cal:Message.Attach="JogAkribisR('Z', 1)" Content="Z+"
+                                            Style="{StaticResource DPadBtn}" Background="#2ECC71"/>
+                                </StackPanel>
+
+                                <!-- 当前位置（竖排，占右侧横向空间） -->
+                                <StackPanel Grid.Column="2" Margin="14,0,0,0" VerticalAlignment="Center"
+                                            Visibility="{Binding HasAkribisRPos, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="位置" FontSize="10" Foreground="{StaticResource TextSecondary}"
+                                               Margin="0,0,0,2"/>
+                                    <TextBlock Text="{Binding AkribisRPosXText}" Style="{StaticResource PosText}"/>
+                                    <TextBlock Text="{Binding AkribisRPosYText}" Style="{StaticResource PosText}"/>
+                                    <TextBlock Text="{Binding AkribisRPosZText}" Style="{StaticResource PosText}"/>
+                                </StackPanel>
                             </Grid>
                         </StackPanel>
                     </Border>
@@ -488,10 +590,10 @@
                                                Visibility="{Binding HasGripperL, Converter={StaticResource BoolToVis}}"/>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                         <Button cal:Message.Attach="JogGripperL(-1)" Content="◀ 关闭"
-                                                Style="{StaticResource DPadBtn}" Width="44"
+                                                Style="{StaticResource DPadBtn}" Width="68"
                                                 Background="#E74C3C"/>
                                         <Button cal:Message.Attach="JogGripperL(1)" Content="打开 ▶"
-                                                Style="{StaticResource DPadBtn}" Width="44"
+                                                Style="{StaticResource DPadBtn}" Width="68"
                                                 Background="#27AE60"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -508,10 +610,10 @@
                                                Visibility="{Binding HasGripperR, Converter={StaticResource BoolToVis}}"/>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                         <Button cal:Message.Attach="JogGripperR(-1)" Content="◀ 关闭"
-                                                Style="{StaticResource DPadBtn}" Width="44"
+                                                Style="{StaticResource DPadBtn}" Width="68"
                                                 Background="#E74C3C"/>
                                         <Button cal:Message.Attach="JogGripperR(1)" Content="打开 ▶"
-                                                Style="{StaticResource DPadBtn}" Width="44"
+                                                Style="{StaticResource DPadBtn}" Width="68"
                                                 Background="#27AE60"/>
                                     </StackPanel>
                                 </StackPanel>

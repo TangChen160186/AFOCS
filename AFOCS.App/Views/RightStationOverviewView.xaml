@@ -3,8 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:cal="http://www.caliburnproject.org"
         Title="右工位总览"
-        Width="1280" Height="900" MinWidth="960" MinHeight="640"
-        WindowState="Minimized"
+        Width="100" Height="800" MinWidth="1000" MinHeight="800"
         Background="{DynamicResource EnvironmentWindowBackground}">
     <Window.Resources>
         <!-- 现代化扁平卡片：圆角 + 细边框 + 顶部标题 -->
@@ -33,6 +32,37 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- 现代化扁平按钮：细边框 + 圆角 + 悬浮反馈 -->
+        <Style x:Key="FlatButton" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource MenuPopupDefaultBackground}" />
+            <Setter Property="Foreground" Value="{DynamicResource EnvironmentWindowText}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource MenuPopupDefaultBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.7" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.5" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid Margin="8">
@@ -49,9 +79,65 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- 第1行：流程节点监视（左）/ 预留（右） -->
+        <!-- 第1行：流程节点监视（左）/ 生产信息（右） -->
         <GroupBox Grid.Row="0" Grid.Column="0" Margin="4" Style="{StaticResource FlatCard}" Header="流程监视">
             <ContentControl cal:View.Model="{Binding FlowMonitor}" />
+        </GroupBox>
+        <GroupBox Grid.Row="0" Grid.Column="2" Margin="4" Style="{StaticResource FlatCard}" Header="生产信息">
+            <Grid Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- 第一行：良品 / 不良个数 -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="良品" Foreground="#888" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock Text="{Binding GoodCount}" FontSize="26" FontWeight="Bold" Foreground="#2E9E5B" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="不良" Foreground="#888" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock Text="{Binding BadCount}" FontSize="26" FontWeight="Bold" Foreground="#D9534F" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- 第二行：SN / 胶水 SN -->
+                <Grid Grid.Row="1" Margin="0,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                        <TextBlock Text="SN" Foreground="#888" FontSize="10" />
+                        <TextBlock Text="{Binding Ipsn}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="胶水SN" Foreground="#888" FontSize="10" />
+                        <TextBlock Text="{Binding GlueSn}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- 第三行：启动 / 回零 / 安全位 -->
+                <Grid Grid.Row="2" Margin="0,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Content="启动" Margin="0,0,4,0"
+                            Style="{StaticResource FlatButton}" cal:Message.Attach="Start" />
+                    <Button Grid.Column="1" Content="回零" Margin="2,0,2,0"
+                            Style="{StaticResource FlatButton}" cal:Message.Attach="Home" />
+                    <Button Grid.Column="2" Content="安全位" Margin="4,0,0,0"
+                            Style="{StaticResource FlatButton}" cal:Message.Attach="SafePosition" />
+                </Grid>
+            </Grid>
         </GroupBox>
 
         <!-- 第2行：相机左右排列（左）/ RSP、MPD 监控（右） -->

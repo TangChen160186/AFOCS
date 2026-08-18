@@ -139,12 +139,12 @@ namespace AFOCS.App.ViewModels
                 .. _grippers,
 
                 .. _akribisMotions,
-                .. _opticalPowerMeters,
+                //.. _opticalPowerMeters,
                 .. _cameras,
-                _opticalSwitch,
-                _heightGauge,
-                _cameraLight,
-                _programmablePowerSupply,
+                //_opticalSwitch,
+                //_heightGauge,
+                //_cameraLight,
+                //_programmablePowerSupply,
             ];
             //添加 ISP Board
             //devices.Add(_ispBoard);
