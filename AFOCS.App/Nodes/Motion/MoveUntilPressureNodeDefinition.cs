@@ -84,6 +84,16 @@ public class MoveUntilPressureNodeDefinition(
         set => Set(ref field, value);
     } = 10000.0;
 
+    [DisplayName("采样间隔(ms)")]
+    [Description("运动期间读取压力的时间间隔，单位毫秒")]
+    [NodePort("IntervalMs", "采样间隔", NodePortType.Int, true)]
+    [Category("输入")]
+    public int IntervalMs
+    {
+        get;
+        set => Set(ref field, value);
+    } = 20;
+
     public async Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
     {
         if (!context.TryGetValue("WorkPos", out var workPosObj) || workPosObj is not WorkPos station)
@@ -136,7 +146,7 @@ public class MoveUntilPressureNodeDefinition(
                     await busAxisDevice.StopAxisAsync(busId);
                     break;
                 }
-                await Task.Delay(20);
+                await Task.Delay(IntervalMs);
             }
         }
         finally
@@ -189,7 +199,7 @@ public class MoveUntilPressureNodeDefinition(
                     await motion.StopAxisAsync(akAxis);
                     break;
                 }
-                await Task.Delay(20);
+                await Task.Delay(IntervalMs);
             }
         }
         finally
