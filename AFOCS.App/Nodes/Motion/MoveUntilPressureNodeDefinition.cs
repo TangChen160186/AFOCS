@@ -14,10 +14,10 @@ using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 namespace AFOCS.App.Nodes.Motion;
 
 /// <summary>
-/// 压力停止运动节点：选择轴和压力传感器方向，轴向指定方向连续运动，
-/// 同时并行读取压力，一旦压力达到目标值立即停止运动。
+/// 压力停止运动节点：选择轴和压力传感器方向，轴按指定步长逐步运动，
+/// 每走完一步读取一次压力，达到目标值后停止，未达标则继续走下一步。
 /// 工位由入口节点传入（context["WorkPos"]），总线轴使用定长运动，雅克贝斯轴使用相对运动。
-/// 最大移动距离作为安全限制，运动到此距离仍未达标则停止。
+/// 最大移动距离作为安全限制，防止无限运动。
 /// </summary>
 [Export]
 [Export(typeof(INodeDefinition))]
@@ -84,9 +84,19 @@ public class MoveUntilPressureNodeDefinition(
         set => Set(ref field, value);
     } = 10000.0;
 
-    [DisplayName("采样间隔(ms)")]
-    [Description("运动期间读取压力的时间间隔，单位毫秒")]
-    [NodePort("IntervalMs", "采样间隔", NodePortType.Int, true)]
+    [DisplayName("步长")]
+    [Description("每次运动的脉冲数（正数），方向由最大移动距离的符号决定")]
+    [NodePort("StepDistance", "步长", NodePortType.Double, true)]
+    [Category("输入")]
+    public double StepDistance
+    {
+        get;
+        set => Set(ref field, value);
+    } = 100.0;
+
+    [DisplayName("步间延迟(ms)")]
+    [Description("每步运动完成后、读取压力前等待的时间，用于压力传感器稳定")]
+    [NodePort("IntervalMs", "步间延迟", NodePortType.Int, true)]
     [Category("输入")]
     public int IntervalMs
     {
@@ -121,56 +131,61 @@ public class MoveUntilPressureNodeDefinition(
         return new Dictionary<string, object?>();
     }
 
-    // ==================== 总线轴：连续运动 + 并行读取压力，达标即停 ====================
+    // ==================== 总线轴：步进式定长运动 + 逐步读取压力 ====================
 
     private async Task MoveBusAxisUntilPressure(IPressureSensor sensor, WorkPos station)
     {
         var busId = Axis.ToBusAxisId(station);
 
-        if (Math.Sign(MaxDistance) == 0) return;
+        var direction = Math.Sign(MaxDistance);
+        if (direction == 0) return;
 
-        // 启动连续运动（内部按轴配置设置速度并等待到位，运动期间可被 StopAxisAsync 打断）
-        var moveTask = busAxisDevice.MovePmoveAsync(busId, MaxDistance);
+        var stepAbs = Math.Abs(StepDistance);
+        if (stepAbs <= 0) throw new InvalidOperationException("步长必须大于 0");
 
-        var reached = false;
+        var totalAbs = Math.Abs(MaxDistance);
+        var moved = 0.0;
         try
         {
-            while (!moveTask.IsCompleted)
+            while (moved < totalAbs)
             {
+                // 每步距离 = min(步长, 剩余距离)，方向与最大距离一致
+                var step = Math.Min(stepAbs, totalAbs - moved) * direction;
+
+                var moveResult = await busAxisDevice.MovePmoveAsync(busId, step);
+                if (!moveResult.IsSuccess)
+                    throw new InvalidOperationException($"运动失败: {moveResult.Message}");
+
+                moved += Math.Abs(step);
+
+                // 等待压力稳定后读取
+                if (IntervalMs > 0)
+                    await Task.Delay(IntervalMs);
+
                 var pressure = await ReadPressureChannelAsync(sensor);
                 if (pressure >= TargetPressure)
                 {
-                    reached = true;
                     logger.Information("压力达到目标: 当前={Pressure}, 目标={Target}, 停止运动",
                         pressure, TargetPressure);
-                    await busAxisDevice.StopAxisAsync(busId);
-                    break;
+                    return;
                 }
-                await Task.Delay(IntervalMs);
+
+                logger.Debug("压力未达标，继续下一步: 当前={Pressure}, 目标={Target}, 已走={Moved}/{Total}",
+                    pressure, TargetPressure, moved, totalAbs);
             }
+
+            logger.Warning("达到最大移动距离但压力未达标: 当前压力={Pressure}, 目标={Target}",
+                await ReadPressureChannelAsync(sensor), TargetPressure);
         }
         finally
         {
-            // 兜底：若运动尚未自然结束，确保轴停止
-            if (!moveTask.IsCompleted)
-            {
-                var stop = await busAxisDevice.StopAxisAsync(busId);
-                if (!stop.IsSuccess)
-                    logger.Warning("最终停止轴失败: {Error}", stop.Message);
-            }
+            var finalStop = await busAxisDevice.StopAxisAsync(busId);
+            if (!finalStop.IsSuccess)
+                logger.Warning("最终停止轴失败: {Error}", finalStop.Message);
         }
-
-        var moveResult = await moveTask;
-        if (reached) return;
-
-        if (!moveResult.IsSuccess)
-            throw new InvalidOperationException($"运动失败: {moveResult.Message}");
-
-        logger.Warning("达到最大移动距离但压力未达标: 当前压力={Pressure}, 目标={Target}",
-            await ReadPressureChannelAsync(sensor), TargetPressure);
     }
 
-    // ==================== 雅克贝斯轴：连续运动 + 并行读取压力，达标即停 ====================
+    // ==================== 雅克贝斯轴：步进式相对运动 + 逐步读取压力 ====================
 
     private async Task MoveAkribisAxisUntilPressure(IPressureSensor sensor, WorkPos station)
     {
@@ -180,43 +195,40 @@ public class MoveUntilPressureNodeDefinition(
         if (!akribisInstances.TryGetValue(instanceName, out var motion))
             throw new InvalidOperationException($"{Axis.GetDescription()}: 未找到控制器 {instanceName}");
 
-        if (Math.Sign(MaxDistance) == 0) return;
+        var direction = Math.Sign(MaxDistance);
+        if (direction == 0) return;
 
-        // 启动连续相对运动（阻塞式等待到位，运动期间可被 StopAxisAsync 打断）
-        var moveTask = motion.MoveRelativeAsync(akAxis, (int)MaxDistance);
+        var stepAbs = Math.Abs(StepDistance);
+        if (stepAbs <= 0) throw new InvalidOperationException("步长必须大于 0");
 
-        var reached = false;
-        try
+        var totalAbs = Math.Abs(MaxDistance);
+        var moved = 0.0;
+        while (moved < totalAbs)
         {
-            while (!moveTask.IsCompleted)
-            {
-                var pressure = await ReadPressureChannelAsync(sensor);
-                if (pressure >= TargetPressure)
-                {
-                    reached = true;
-                    logger.Information("压力达到目标: 当前={Pressure}, 目标={Target}, 停止运动",
-                        pressure, TargetPressure);
-                    await motion.StopAxisAsync(akAxis);
-                    break;
-                }
+            // 每步距离 = min(步长, 剩余距离)，方向与最大距离一致
+            var step = Math.Min(stepAbs, totalAbs - moved) * direction;
+
+            var moveResult = await motion.MoveRelativeAsync(akAxis, (int)step);
+            if (!moveResult.IsSuccess)
+                throw new InvalidOperationException($"运动失败: {moveResult.Message}");
+
+            moved += Math.Abs(step);
+
+            // 等待压力稳定后读取
+            if (IntervalMs > 0)
                 await Task.Delay(IntervalMs);
-            }
-        }
-        finally
-        {
-            if (!moveTask.IsCompleted)
+
+            var pressure = await ReadPressureChannelAsync(sensor);
+            if (pressure >= TargetPressure)
             {
-                var stop = await motion.StopAxisAsync(akAxis);
-                if (!stop.IsSuccess)
-                    logger.Warning("最终停止轴失败: {Error}", stop.Message);
+                logger.Information("压力达到目标: 当前={Pressure}, 目标={Target}, 停止运动",
+                    pressure, TargetPressure);
+                return;
             }
+
+            logger.Debug("压力未达标，继续下一步: 当前={Pressure}, 目标={Target}, 已走={Moved}/{Total}",
+                pressure, TargetPressure, moved, totalAbs);
         }
-
-        var moveResult = await moveTask;
-        if (reached) return;
-
-        if (!moveResult.IsSuccess)
-            throw new InvalidOperationException($"运动失败: {moveResult.Message}");
 
         logger.Warning("达到最大移动距离但压力未达标: 当前压力={Pressure}, 目标={Target}",
             await ReadPressureChannelAsync(sensor), TargetPressure);
