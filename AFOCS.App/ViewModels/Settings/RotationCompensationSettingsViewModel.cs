@@ -14,12 +14,43 @@ namespace AFOCS.App.ViewModels.Settings;
 /// </summary>
 [Export(typeof(ISettingsEditor))]
 [PartCreationPolicy(CreationPolicy.NonShared)]
-[method: ImportingConstructor]
-public class RotationCompensationSettingsViewModel(IConfigService configService, ILogger logger)
+
+public class RotationCompensationSettingsViewModel
     : Screen, ISettingsEditor
 {
-    private readonly IConfigService _configService = configService;
-    private readonly ILogger _logger = logger;
+
+    [ImportingConstructor]
+    public RotationCompensationSettingsViewModel(IConfigService configService, ILogger logger)
+    {
+        _configService = configService;
+        _logger = logger;
+
+        Load();
+    }
+
+    private async void Load()
+    {
+        var loaded = await _configService.LoadAsync<GripperRotationCompensationConfig>();
+        if (loaded != null)
+        {
+            _config.X.InitialAngle = loaded.X.InitialAngle;
+            _config.X.Radius = loaded.X.Radius;
+            _config.Y.InitialAngle = loaded.Y.InitialAngle;
+            _config.Y.Radius = loaded.Y.Radius;
+            _config.Z.InitialAngle = loaded.Z.InitialAngle;
+            _config.Z.Radius = loaded.Z.Radius;
+            StatusMessage = "配置已加载";
+        }
+        else
+        {
+            StatusMessage = "暂无配置，填写后点击保存";
+        }
+
+        NotifyOfPropertyChange(null);
+
+    }
+    private readonly IConfigService _configService;
+    private readonly ILogger _logger;
     private readonly GripperRotationCompensationConfig _config = new();
 
     public string SettingsPageName => "旋转补偿";
@@ -76,27 +107,6 @@ public class RotationCompensationSettingsViewModel(IConfigService configService,
         set { _config.Z.Radius = value; NotifyOfPropertyChange(); }
     }
 
-    protected override async Task OnActivatedAsync(CancellationToken cancellationToken)
-    {
-        var loaded = await _configService.LoadAsync<GripperRotationCompensationConfig>();
-        if (loaded != null)
-        {
-            _config.X.InitialAngle = loaded.X.InitialAngle;
-            _config.X.Radius = loaded.X.Radius;
-            _config.Y.InitialAngle = loaded.Y.InitialAngle;
-            _config.Y.Radius = loaded.Y.Radius;
-            _config.Z.InitialAngle = loaded.Z.InitialAngle;
-            _config.Z.Radius = loaded.Z.Radius;
-            StatusMessage = "配置已加载";
-        }
-        else
-        {
-            StatusMessage = "暂无配置，填写后点击保存";
-        }
-
-        NotifyOfPropertyChange(null);
-        await base.OnActivatedAsync(cancellationToken);
-    }
 
     public async Task SaveAsync()
     {

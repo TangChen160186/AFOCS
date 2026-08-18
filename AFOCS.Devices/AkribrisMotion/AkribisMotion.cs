@@ -157,7 +157,8 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
     public async Task<Result> MoveRelativeAsync(AkribisAxisId axis, int distance,
         int? speed = null, int? accel = null, int? decel = null, int timeoutMs = 0)
     {
-        if (!IsConnected) return Result.Fail("未连接设备");
+        if (!IsConnected) 
+            return Result.Fail("未连接设备");
         var ar = AxisConverter(axis);
         if (!EnsureAxisReady(ar)) return Result.Fail(ResultCode.Fail, "换相或使能失败");
 

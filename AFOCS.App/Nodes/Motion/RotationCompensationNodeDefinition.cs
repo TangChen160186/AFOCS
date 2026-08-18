@@ -51,19 +51,31 @@ public class RotationCompensationNodeDefinition(IConfigService configService, IL
     [ReadOnly(true)]
     [NodePort("CompX", "补偿X", NodePortType.Double, false)]
     [Category("输出")]
-    public double CompX { get; set; }
+    public double CompX
+    {
+        get;
+        set => Set(ref field, value);
+    }
 
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("CompY", "补偿Y", NodePortType.Double, false)]
     [Category("输出")]
-    public double CompY { get; set; }
+    public double CompY
+    {
+        get;
+        set => Set(ref field, value);
+    }
 
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("CompZ", "补偿Z", NodePortType.Double, false)]
     [Category("输出")]
-    public double CompZ { get; set; }
+    public double CompZ
+    {
+        get;
+        set => Set(ref field, value);
+    }
 
     // ========== 输入端口 ==========
 
@@ -93,15 +105,18 @@ public class RotationCompensationNodeDefinition(IConfigService configService, IL
             throw new InvalidOperationException("旋转补偿节点：未找到旋转补偿配置，请先在设置页配置初始角度与半径");
 
         double thetaRad = RotationAngle * Math.PI / 180.0;
-        double Comp(AxisRotationCompensation axis) =>
+        double CompCos(AxisRotationCompensation axis) =>
             axis.Radius * (Math.Cos(axis.InitialAngle * Math.PI / 180.0 + thetaRad)
                            - Math.Cos(axis.InitialAngle * Math.PI / 180.0));
 
+        double CompSin(AxisRotationCompensation axis) =>
+         axis.Radius * (Math.Sin(axis.InitialAngle * Math.PI / 180.0 + thetaRad)
+                        - Math.Sin(axis.InitialAngle * Math.PI / 180.0));
         (CompX, CompY, CompZ) = RotationAxis switch
         {
-            RotationAxisOption.X => (0.0, Comp(cfg.Y), Comp(cfg.Z)),
-            RotationAxisOption.Y => (Comp(cfg.X), 0.0, Comp(cfg.Z)),
-            RotationAxisOption.Z => (Comp(cfg.X), Comp(cfg.Y), 0.0),
+            RotationAxisOption.X => (0.0, CompCos(cfg.X), CompSin(cfg.X)),
+            RotationAxisOption.Y => (CompCos(cfg.Y), 0.0, CompSin(cfg.Y)),
+            RotationAxisOption.Z => (CompCos(cfg.Z), CompSin(cfg.Z), 0.0),
             _ => (0.0, 0.0, 0.0),
         };
 
