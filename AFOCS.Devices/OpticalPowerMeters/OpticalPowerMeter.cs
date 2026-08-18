@@ -72,7 +72,7 @@ public abstract class OpticalPowerMeter<TConfig>(ITcpClient tcpClient, IConfigSe
         try
         {
             string command = $":SLOT{slot}:READY?";
-            var res = await tcpClient.SendAndReceiveAsync(command);
+            var res = await tcpClient.SendAndReceiveAsync(command, terminator: "\n");
 
             if(string.IsNullOrWhiteSpace(res) || !res.Equals("1") || !res.Equals("0"))
                 return Result<bool>.Fail(ResultCode.Fail, $"未知返回数据:{res}");
@@ -92,7 +92,7 @@ public abstract class OpticalPowerMeter<TConfig>(ITcpClient tcpClient, IConfigSe
         try
         {
             string command = $":SLOT{slot}:CHANnel{channel}:STATus?";
-            var res = await tcpClient.SendAndReceiveAsync(command);
+            var res = await tcpClient.SendAndReceiveAsync(command, terminator: "\n");
             if (string.IsNullOrWhiteSpace(res) || !res.Equals("1") || !res.Equals("0"))
                 return Result<bool>.Fail(ResultCode.Fail, $"未知返回数据:{res}");
             return Result<bool>.Success(res.Equals("1"));
@@ -129,7 +129,7 @@ public abstract class OpticalPowerMeter<TConfig>(ITcpClient tcpClient, IConfigSe
         try
         {
             string command = $":SLOT{slot}:CHANnel{channel}:POWer?";
-            var res = await tcpClient.SendAndReceiveAsync(command);
+            var res = await tcpClient.SendAndReceiveAsync(command, terminator:"\n");
             if (double.TryParse(res, out var power))
                 return Result<double>.Success(power);
             return Result<double>.Fail(ResultCode.Fail, $"未知返回数据:{res}");
@@ -149,7 +149,7 @@ public abstract class OpticalPowerMeter<TConfig>(ITcpClient tcpClient, IConfigSe
         try
         {
             string command = $":SLOT{slot}:POWer?";
-            var res = await tcpClient.SendAndReceiveAsync(command);
+            var res = await tcpClient.SendAndReceiveAsync(command, terminator: "\n");
             var splits = res.Split(",");
             if (splits.Length < 1)
                 return Result<double[]>.Fail(ResultCode.Fail, $"未知返回数据:{res}");
@@ -205,7 +205,7 @@ public abstract class OpticalPowerMeter<TConfig>(ITcpClient tcpClient, IConfigSe
         try
         {
             string command = $":SLOT{slot}:CHANnel{channel}:OFFSET?";
-            var res = await tcpClient.SendAndReceiveAsync(command);
+            var res = await tcpClient.SendAndReceiveAsync(command, terminator: "\n");
             if (double.TryParse(res, out var offset))
                 return Result<double>.Success(offset);
             return Result<double>.Fail(ResultCode.Fail, $"未知返回数据:{res}");
