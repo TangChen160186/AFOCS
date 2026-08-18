@@ -90,5 +90,15 @@ namespace AFOCS.App
         [Export]
         public static readonly MenuItemDefinition ViewRightStationMonitorMenuItem = new CommandMenuItemDefinition<ViewRightStationMonitorCommandDefinition>(
             MenuDefinitions.ViewToolsMenuGroup, 21);
+
+        // ===== 工位流程执行监控 =====
+
+        [Export]
+        public static readonly MenuItemDefinition ViewLeftFlowMonitorMenuItem = new CommandMenuItemDefinition<ViewLeftFlowMonitorCommandDefinition>(
+            MenuDefinitions.ViewToolsMenuGroup, 22);
+
+        [Export]
+        public static readonly MenuItemDefinition ViewRightFlowMonitorMenuItem = new CommandMenuItemDefinition<ViewRightFlowMonitorCommandDefinition>(
+            MenuDefinitions.ViewToolsMenuGroup, 23);
     }
 }
