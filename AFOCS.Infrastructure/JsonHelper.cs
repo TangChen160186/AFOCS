@@ -79,7 +79,7 @@ public static class JsonHelper
     {
         if (!File.Exists(filePath))
             throw new FileNotFoundException("文件不存在", filePath);
-        string json = await File.ReadAllTextAsync(filePath);
+        string json =  File.ReadAllText(filePath);
         return Deserialize<T>(json);
     }
     #endregion
