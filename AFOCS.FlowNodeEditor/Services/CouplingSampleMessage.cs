@@ -8,8 +8,11 @@ public enum CouplingSampleType
     /// <summary>扫描开始（曲线图应清空重绘）</summary>
     Start,
 
-    /// <summary>单个采样点（含位置与各通道 RSP）</summary>
+    /// <summary>单个采样点（含位置与各通道 RSP），RX 等实时逐点发布时使用</summary>
     Sample,
+
+    /// <summary>批量采样点（含完整位置序列与各通道数值序列），TX 等一次性返回数据时使用</summary>
+    Batch,
 
     /// <summary>扫描结束（含异常）</summary>
     End,
@@ -48,4 +51,10 @@ public class CouplingSampleMessage
 
     /// <summary>通道号 → 数值（RX=ISP板RSP，TX=雅克贝斯控制器功率），按通道号升序取前 N 个，仅 Sample 有效</summary>
     public IReadOnlyDictionary<int, double> ChannelValues { get; init; } = new Dictionary<int, double>();
+
+    /// <summary>批量采样点 X 轴位置序列（脉冲），仅 Batch 有效</summary>
+    public IReadOnlyList<double> Positions { get; init; } = [];
+
+    /// <summary>批量采样：通道号 → 数值序列（与 Positions 等长），仅 Batch 有效</summary>
+    public IReadOnlyDictionary<int, IReadOnlyList<double>> ChannelSeries { get; init; } = new Dictionary<int, IReadOnlyList<double>>();
 }

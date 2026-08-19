@@ -406,8 +406,8 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
             SetAGenData(517, (int)args.MaxScanSpeed);
             // 最大回归速度
             SetAGenData(518, (int)args.MaxReturnSpeed);
-            // 间距宽度(mm转脉冲): 20微米=4096脉冲
-            int spacingPulse = (int)(args.SpacingWidth * 1000.0 / 20.0 * 4096.0);
+            // 间距宽度(um转脉冲): 20微米=4096脉冲
+            int spacingPulse = (int)(args.SpacingWidthUm / 20.0 * 4096.0);
             SetAGenData(506, spacingPulse);
             // 采集通道
             SetAGenData(511, args.AcquireChannel);
@@ -420,14 +420,35 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
 
             await WaitCouplingDoneAsync(token);
 
+            // 一次拉取全部数据，同时提取功率曲线、峰值位置与结果码，避免重复上传
+            var data = FetchAGenData();
+
             var result = new AkribisCouplingResult
             {
-                ChannelPower = GetSingleAxisCouplingPowerData(),
-                Angle = ParseAGenDataDouble(817) / 1000.0,
-                SuccessCode = ParseAGenDataInt(650),
+                ChannelPower = GetSingleAxisCouplingPowerData(data),
+                // AGenData[1000-3999] 各采样点轴位置坐标
+                AxisPositions = GetSingleAxisCouplingAxisPositions(data),
+                PeakPositions = GetSingleAxisCouplingPeakPositions(data),
+                // AGenData[602] 耦合结果：100/600/700 成功，-100 中断，-200 错误
+                CouplingResult = data is { Length: > 602 } ? (int)data[602] : 0,
+                // AGenData[817] 角度（度）
+                Angle = data is { Length: > 817 } ? data[817] / 1000.0 : 0,
+                // AGenData[650] 报错代码（-200 时用于定位具体错误）
+                SuccessCode = data is { Length: > 650 } ? (int)data[650] : 0,
             };
 
-            _logger.Information("[{Type}] 单轴耦合完成: 角度={Angle:F4}°, 成功码={Code}", GetType().Name, result.Angle, result.SuccessCode);
+            // 失败判断：-200 = 参数/工艺错误（带 650 报错码），-100 = 中断信号
+            if (result.CouplingResult < 0)
+            {
+                var reason = result.CouplingResult == -200
+                    ? $"耦合失败: {GetCouplingErrorMessage(result.SuccessCode)}"
+                    : "耦合失败: 中断信号导致失败";
+                _logger.Error("[{Type}] 单轴耦合失败: 结果码={Result}, {Reason}", GetType().Name, result.CouplingResult, reason);
+                return Result<AkribisCouplingResult>.Fail(ResultCode.Fail, reason);
+            }
+
+            _logger.Information("[{Type}] 单轴耦合完成: 结果码={Result}, 角度={Angle:F4}°, 成功码={Code}",
+                GetType().Name, result.CouplingResult, result.Angle, result.SuccessCode);
             return Result<AkribisCouplingResult>.Success(result);
         }
         catch (OperationCanceledException)
@@ -520,10 +541,60 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
 
     private double ParseAGenDataDouble(int address) => double.TryParse(GetAGenData(address), out double v) ? v : 0;
 
+    // ========== 耦合报错码（AGenData[650]） ==========
+
+    /// <summary>650 报错代码 → 可读信息（来自控制器耦合工艺文档）</summary>
+    private static readonly Dictionary<int, string> CouplingErrorMessages = new()
+    {
+        { 0, "无错误" },
+        { 1, "光功率读数超出范围(0, 50000)" },
+        { 2, "光功率采集通道参数设置错误(螺旋选择1路，单轴选择2路)" },
+        { 3, "耦合轴轴号参数设置错误(0,1,2)" },
+        { 4, "采样间隔参数设置错误" },
+        { 5, "单点采样次数设置超范围" },
+        { 6, "运动中禁止调用" },
+        { 7, "耦合轴速度为0" },
+        { 8, "耦合轴为非使能状态" },
+        { 9, "角度为0" },
+        { 10, "螺旋螺距参数设置错误" },
+        { 11, "分辨率参数设置错误" },
+        { 12, "螺旋圈数有误" },
+        { 13, "光功率阈值设置错误" },
+        { 14, "扫描工艺代码错误" },
+        { 15, "总采样点数超出数组范围" },
+        { 16, "螺旋单位转角系数A设置错误" },
+        { 17, "螺旋总采样点数超限" },
+        { 18, "单轴扫描距离超限" },
+        { 19, "回归模式选择错误" },
+        { 20, "爬山法峰值衰减次数参数设置错误" },
+        { 21, "快速扫描法扫描速度过高" },
+        { 22, "快速往复扫描次数参数设置有误" },
+        { 23, "平坦区衰减幅值参数设置不合理" },
+        { 24, "平坦区边界未找到" },
+        { 25, "爬山法衰减幅值参数设置不合理" },
+        { 26, "未定义错误" },
+        { 27, "平坦区衰减计算值为负" },
+        { 28, "光功率最大值数超限" },
+        { 29, "栅格扫描范围超限" },
+        { 30, "交点数量超出最大范围" },
+        { 31, "未找到交点" },
+        { 32, "最优系数参数设置错误" },
+        { 33, "爬山法不允许选择多路模拟量" },
+        { 34, "螺旋最大扫描半径参数设置错误" },
+        { 38, "调平斜边采数设置错误(FA纤芯距离)" },
+        { 39, "通道切换数字口设置有误" },
+        { 40, "延时时间参数设置错误" },
+    };
+
+    /// <summary>把 650 报错代码转为可读信息，未知代码回退为"未知错误"</summary>
+    private static string GetCouplingErrorMessage(int code)
+        => CouplingErrorMessages.TryGetValue(code, out var msg)
+            ? $"代码{code}: {msg}"
+            : $"代码{code}: 未知错误";
+
     private string SendRawCommand(string command)
     {
-        string response = "";
-        _controller.SendCommandString(command, out response);
+        _controller.SendCommandString(command, out var response);
         return response?.Trim() ?? "";
     }
 
@@ -567,9 +638,8 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
     }
 
     /// <summary>单轴找光功率数据：CH1=[4000-6999], CH2=[7000-9999], CH3=[10000-12999], CH4=[13000-15999]</summary>
-    private Dictionary<int, List<double>>? GetSingleAxisCouplingPowerData()
+    private Dictionary<int, List<double>>? GetSingleAxisCouplingPowerData(double[]? data)
     {
-        var data = FetchAGenData();
         if (data == null || data.Length < 16000) return null;
 
         int validLength = (int)data[735];
@@ -582,6 +652,32 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
             { 2, data.Skip(7000).Take(validLength).ToList() },
             { 3, data.Skip(10000).Take(validLength).ToList() },
             { 4, data.Skip(13000).Take(validLength).ToList() },
+        };
+    }
+
+    /// <summary>单轴找光各采样点轴位置坐标（脉冲）：AGenData[1000-3999]，有效长度同功率数据 AGenData[735]</summary>
+    private static List<double> GetSingleAxisCouplingAxisPositions(double[]? data)
+    {
+        if (data == null || data.Length < 4000) return [];
+
+        int validLength = (int)data[735];
+        if (validLength <= 0) validLength = 3000;
+        if (validLength > 3000) validLength = 3000;
+
+        return data.Skip(1000).Take(validLength).ToList();
+    }
+
+    /// <summary>单轴找光各通道光功率峰值对应位置坐标（脉冲）：CH1~4 = AGenData[704-707]</summary>
+    private static Dictionary<int, double> GetSingleAxisCouplingPeakPositions(double[]? data)
+    {
+        if (data == null || data.Length < 708) return [];
+
+        return new Dictionary<int, double>
+        {
+            { 1, data[704] },
+            { 2, data[705] },
+            { 3, data[706] },
+            { 4, data[707] },
         };
     }
 

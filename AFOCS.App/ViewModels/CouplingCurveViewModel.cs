@@ -88,6 +88,10 @@ public abstract class CouplingCurveViewModelBase : Tool, IHandle<CouplingSampleM
                 AppendSample(message);
                 break;
 
+            case CouplingSampleType.Batch:
+                AppendBatch(message);
+                break;
+
             case CouplingSampleType.End:
                 _logger.Information("耦合曲线[{WorkPos}/{Source}] 扫描结束，共 {Count} 点",
                     _workPos, _source, _xs.Values.FirstOrDefault()?.Count ?? 0);
@@ -113,6 +117,30 @@ public abstract class CouplingCurveViewModelBase : Tool, IHandle<CouplingSampleM
         }
 
         foreach (var channel in message.ChannelValues.Keys)
+        {
+            if (_toggleByChannel.TryGetValue(channel, out var item) && item.IsVisible)
+                UpdateSeries(channel);
+        }
+
+        Plot.Axes.AutoScale();
+    }
+
+    /// <summary>批量追加整条曲线（TX 等一次性返回数据的场景），只做一次曲线更新</summary>
+    private void AppendBatch(CouplingSampleMessage message)
+    {
+        foreach (var (channel, values) in message.ChannelSeries)
+        {
+            if (!_xs.TryGetValue(channel, out var xs))
+            {
+                xs = [];
+                _xs[channel] = xs;
+                _ys[channel] = [];
+            }
+            xs.AddRange(message.Positions);
+            _ys[channel].AddRange(values);
+        }
+
+        foreach (var channel in message.ChannelSeries.Keys)
         {
             if (_toggleByChannel.TryGetValue(channel, out var item) && item.IsVisible)
                 UpdateSeries(channel);
