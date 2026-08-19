@@ -21,26 +21,28 @@
             <TextBlock Grid.Column="3" Text="MPD_OUT" FontWeight="Bold" Foreground="#888" />
         </Grid>
 
-        <!-- 值竖排 -->
-        <ItemsControl Grid.Row="1" ItemsSource="{Binding Channels}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Border BorderBrush="#EEE" BorderThickness="0,0,0,1" Padding="0,5">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding Channel}" Foreground="#999" />
-                            <TextBlock Grid.Column="1" Text="{Binding Rsp, StringFormat={}{0:F3}}" />
-                            <TextBlock Grid.Column="2" Text="{Binding MpdIn, StringFormat={}{0:F0}}" />
-                            <TextBlock Grid.Column="3" Text="{Binding MpdOut, StringFormat={}{0:F0}}" />
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <!-- 值竖排（支持滚动） -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Channels}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="#EEE" BorderThickness="0,0,0,1" Padding="0,5">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Channel}" Foreground="#999" />
+                                <TextBlock Grid.Column="1" Text="{Binding Rsp, StringFormat={}{0:F3}}" />
+                                <TextBlock Grid.Column="2" Text="{Binding MpdIn, StringFormat={}{0:F0}}" />
+                                <TextBlock Grid.Column="3" Text="{Binding MpdOut, StringFormat={}{0:F0}}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
     </Grid>
 </UserControl>

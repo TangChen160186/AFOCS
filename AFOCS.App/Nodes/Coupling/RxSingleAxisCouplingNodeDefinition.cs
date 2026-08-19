@@ -46,21 +46,32 @@ public class RxSingleAxisCouplingNodeDefinition(
     [ReadOnly(true)]
     [NodePort("Angle", "角度", NodePortType.Double, false)]
     [Category("输出")]
-    public double Angle { get; set; }
+    public double Angle
+    {
+        get;
+        set => Set(ref field, value);
+    }
 
     [JsonIgnore]
     [ReadOnly(true)]
     [NodePort("Center", "中心位置", NodePortType.Double, false)]
     [Category("输出")]
-    public double Center { get; set; }
+    public double Center
+    {
+        get;
+        set => Set(ref field, value);
+    }
 
     // ========== 输入端口 ==========
 
     [DisplayName("相邻通道间隙(um)")]
     [Description("相邻两个通道之间的物理间距")]
-    [NodePort("GapUm", "相邻通道间隙", NodePortType.Double, false)]
     [Category("输入")]
-    public double GapUm { get; set; } = 200;
+    public double GapUm
+    {
+        get;
+        set => Set(ref field, value);
+    } = 200;
 
     // ========== 配置属性 ==========
 
@@ -112,6 +123,15 @@ public class RxSingleAxisCouplingNodeDefinition(
         get;
         set => Set(ref field, value);
     } = 2048;
+
+    [DisplayName("速度(脉冲/s)")]
+    [Description("扫描移动速度，0 表示使用控制器默认速度")]
+    [Category("配置")]
+    public int Speed
+    {
+        get;
+        set => Set(ref field, value);
+    } = 0;
 
     [DisplayName("延时(ms)")]
     [Category("配置")]
@@ -165,7 +185,7 @@ public class RxSingleAxisCouplingNodeDefinition(
             // 以当前位置为中心，负方向扫 NegativeLengthPulse，正方向扫 PositiveLengthPulse
             for (int pos = startPos - NegativeLengthPulse; pos <= startPos + PositiveLengthPulse; pos += StepPulse)
             {
-                var moveResult = await motion.MoveAbsAsync(akAxis, pos);
+                var moveResult = await motion.MoveAbsAsync(akAxis, pos, Speed > 0 ? Speed : null);
                 if (!moveResult.IsSuccess)
                     throw new InvalidOperationException($"{Axis.GetDescription()} 移动到 {pos} 失败: {moveResult.Message}");
 

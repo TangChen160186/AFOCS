@@ -61,7 +61,7 @@ public class PixelToPulseNodeDefinition : NodeDefinitionBase, IExecutableNode
     {
         _cameraNames = cameras.Select(c => c.GetType().GetDescription());
         _cameraMap = cameras
-            .ToDictionary(c => c.GetType().Name);
+            .ToDictionary(c => c.GetType().GetDescription());
     }
 
     public Task<Dictionary<string, object?>> ExecuteAsync(Dictionary<string, object?> context)
