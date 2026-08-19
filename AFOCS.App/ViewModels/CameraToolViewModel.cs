@@ -29,8 +29,8 @@ public interface IRightDownCameraTool : ITool;
 /// </summary>
 public abstract class CameraToolViewModelBase : Tool, IHandle<VisionInspectionMessage>
 {
-    private readonly ICamera _camera;
-    private readonly string _cameraName;
+    private ICamera _camera;
+    private string _cameraName;
     private readonly ILogger _logger;
     private readonly DispatcherTimer _renderTimer;
 
@@ -98,6 +98,27 @@ public abstract class CameraToolViewModelBase : Tool, IHandle<VisionInspectionMe
     {
         _halconWindow = null;
         _halconControl = null;
+    }
+
+    /// <summary>切换要显示的相机（多相机查看工具使用）：改订阅事件源并清空旧帧缓存</summary>
+    protected void SwitchCamera(ICamera camera, string cameraName)
+    {
+        _camera.ImageReceived -= OnImageReceived;
+        _camera = camera;
+        _cameraName = cameraName;
+        _camera.ImageReceived += OnImageReceived;
+
+        lock (_frameLock)
+        {
+            _latestFrameData = null;
+            _hasNewFrame = false;
+            _lastFrameTime = DateTime.MinValue;
+        }
+        _displayedW = -1;
+        _displayedH = -1;
+
+        IsConnected = camera.IsConnected;
+        DisplayName = $"{cameraName}实时图像";
     }
 
     // ==================== 实时图像 ====================

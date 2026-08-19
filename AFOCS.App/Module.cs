@@ -47,6 +47,10 @@ namespace AFOCS.App
         public static readonly MenuItemDefinition ViewFaPdCalibrationMenuItem = new CommandMenuItemDefinition<ViewFaPdCalibrationCommandDefinition>(
             MenuDefinitions.ViewToolsMenuGroup, 11);
 
+        [Export]
+        public static readonly MenuItemDefinition ViewCameraViewerMenuItem = new CommandMenuItemDefinition<CameraViewerCommandDefinition>(
+            MenuDefinitions.ViewToolsMenuGroup, 12);
+
         // ===== 工位总览窗口（Window 菜单下） =====
 
         [Export]
