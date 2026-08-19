@@ -68,6 +68,9 @@ public class FlowExecutor
     /// <summary>本次执行的取消源：任一并行节点失败时取消其余节点</summary>
     private CancellationTokenSource _cts = new();
 
+    /// <summary>本次执行是否被外部取消（急停 / 取消按钮触发），用于上层区分"取消"与"成功完成"</summary>
+    public bool WasCancelled { get; private set; }
+
     private WorkPos _currentWorkPos;
 
     [ImportingConstructor]
@@ -223,7 +226,15 @@ public class FlowExecutor
 
         // 每次执行使用全新的取消源，并把令牌注入上下文供可取消节点读取
         _cts = new CancellationTokenSource();
+        WasCancelled = false;
         _context[CancellationTokenKey] = _cts.Token;
+    }
+
+    /// <summary>取消本次执行（外部急停 / 取消按钮调用），正在等待的可取消节点会尽快中止</summary>
+    public void Cancel()
+    {
+        WasCancelled = true;
+        _cts.Cancel();
     }
 
     /// <summary>

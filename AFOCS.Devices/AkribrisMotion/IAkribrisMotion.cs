@@ -4,6 +4,7 @@ namespace AFOCS.Devices.AkribrisMotion;
 
 public interface IAkribisMotion : IDevice
 {
+    WorkPos WorkPos { get; }
     AkribisMotionType AkribisMotionType { get; }
     event EventHandler<AkribisPositionChangedEventArgs>? PositionChanged;
     bool IsMonitoring { get; }

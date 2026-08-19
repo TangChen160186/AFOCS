@@ -58,6 +58,14 @@
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="Bd" Property="Opacity" Value="0.5" />
                             </Trigger>
+                            <!-- 禁用态：明显区别于可用态（深灰底 + 灰字 + 半透明） -->
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="#2D2D2D" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#3A3A3A" />
+                             
+                                <Setter Property="Opacity" Value="0.45" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -80,12 +88,22 @@
         </Grid.RowDefinitions>
 
         <!-- 第1行：流程节点监视（左）/ 生产信息（右） -->
-        <GroupBox Grid.Row="0" Grid.Column="0" Margin="4" Style="{StaticResource FlatCard}" Header="流程监视">
+        <GroupBox Grid.Row="0" Grid.Column="0" Margin="4" Style="{StaticResource FlatCard}">
+            <GroupBox.Header>
+                <!-- 流程状态显示在标题旁，同一行 -->
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="流程监视" />
+                    <TextBlock Text="{Binding FlowMonitor.FlowStatusText}" FontWeight="Bold"
+                               Foreground="{Binding FlowMonitor.FlowStatusBrush}" Margin="10,0,0,0"
+                               TextTrimming="CharacterEllipsis" MaxWidth="200" />
+                </StackPanel>
+            </GroupBox.Header>
             <ContentControl cal:View.Model="{Binding FlowMonitor}" />
         </GroupBox>
         <GroupBox Grid.Row="0" Grid.Column="2" Margin="4" Style="{StaticResource FlatCard}" Header="生产信息">
             <Grid Margin="10">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -136,6 +154,19 @@
                             Style="{StaticResource FlatButton}" cal:Message.Attach="Home" />
                     <Button Grid.Column="2" Content="安全位" Margin="4,0,0,0"
                             Style="{StaticResource FlatButton}" cal:Message.Attach="SafePosition" />
+                </Grid>
+
+                <!-- 第四行：急停 / 取消 -->
+                <Grid Grid.Row="3" Margin="0,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Content="急停" Margin="0,0,4,0" FontWeight="Bold"
+                            Style="{StaticResource FlatButton}" Background="#D9534F" Foreground="White"
+                            cal:Message.Attach="EmergencyStop" />
+                    <Button Grid.Column="1" Content="取消" Margin="4,0,0,0"
+                            Style="{StaticResource FlatButton}" cal:Message.Attach="Cancel" />
                 </Grid>
             </Grid>
         </GroupBox>

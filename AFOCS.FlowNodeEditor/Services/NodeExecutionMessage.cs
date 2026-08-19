@@ -27,6 +27,47 @@ public class FlowExecutionCompletedMessage
     public string? ErrorMessage { get; init; }
 }
 
+/// <summary>流程执行状态</summary>
+public enum FlowExecutionStatus
+{
+    /// <summary>空闲</summary>
+    Idle,
+
+    /// <summary>运行中</summary>
+    Running,
+
+    /// <summary>已取消（取消按钮）</summary>
+    Cancelled,
+
+    /// <summary>急停（急停按钮）</summary>
+    EmergencyStopped,
+
+    /// <summary>执行完成</summary>
+    Completed,
+
+    /// <summary>执行失败</summary>
+    Error,
+}
+
+/// <summary>
+/// 流程执行状态消息 —— 由 IFlowExecutionService 发布，供流程监视界面显示
+/// 当前流程状态（运行中哪个流程 / 急停 / 取消 / 完成 / 失败）。
+/// </summary>
+public class FlowExecutionStateMessage
+{
+    /// <summary>当前工位</summary>
+    public WorkPos WorkPos { get; init; }
+
+    /// <summary>流程状态</summary>
+    public FlowExecutionStatus Status { get; init; }
+
+    /// <summary>流程文件名（运行中的流程，可能为空）</summary>
+    public string FileName { get; init; } = string.Empty;
+
+    /// <summary>附加信息（如失败原因）</summary>
+    public string? Message { get; init; }
+}
+
 /// <summary>
 /// 节点执行结果消息 —— 通过 IEventAggregator 发布，供外部订阅
 /// </summary>

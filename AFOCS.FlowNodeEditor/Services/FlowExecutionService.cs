@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Text.Json;
@@ -14,6 +15,9 @@ public interface IFlowExecutionService
     Task<FlowExecutionResult> ExecuteFlowAsync(FlowGraph graph, WorkPos workPos = WorkPos.Left, bool reportResult = true);
     Task<FlowExecutionResult> ExecuteFromNodeAsync(string filePath, Guid nodeInstanceId, WorkPos workPos = WorkPos.Left);
     Task<FlowExecutionResult> ExecuteSingleNodeAsync(string filePath, Guid nodeInstanceId, WorkPos workPos = WorkPos.Left);
+
+    /// <summary>取消指定工位正在执行的流程（外部急停 / 取消按钮触发）</summary>
+    void CancelExecution(WorkPos workPos, bool emergency);
 }
 
 public class FlowExecutionResult
@@ -31,12 +35,39 @@ public class FlowExecutionService : IFlowExecutionService
     private readonly INodeRegistry _nodeRegistry;
     private readonly IEventAggregator _eventAggregator;
 
+    /// <summary>各工位当前正在执行的执行器（急停 / 取消时用于中止流程）</summary>
+    private readonly ConcurrentDictionary<WorkPos, FlowExecutor> _activeExecutors = new();
+
+    /// <summary>各工位当前正在执行的流程文件名（用于状态消息显示）</summary>
+    private readonly ConcurrentDictionary<WorkPos, string> _activeFileNames = new();
+
+    /// <summary>各工位最近一次取消是否为急停（用于结束状态消息保持急停 / 取消语义）</summary>
+    private readonly ConcurrentDictionary<WorkPos, bool> _cancelEmergency = new();
+
     [ImportingConstructor]
     public FlowExecutionService(INodeRegistry nodeRegistry, IEventAggregator eventAggregator)
     {
         _nodeRegistry = nodeRegistry;
         _eventAggregator = eventAggregator;
     }
+
+    public void CancelExecution(WorkPos workPos, bool emergency)
+    {
+        _cancelEmergency[workPos] = emergency;
+
+        if (_activeExecutors.TryGetValue(workPos, out var executor))
+            executor.Cancel();
+
+        _ = _eventAggregator.PublishOnUIThreadAsync(new FlowExecutionStateMessage
+        {
+            WorkPos = workPos,
+            Status = emergency ? FlowExecutionStatus.EmergencyStopped : FlowExecutionStatus.Cancelled,
+            FileName = GetActiveFileName(workPos),
+        });
+    }
+
+    private string GetActiveFileName(WorkPos workPos)
+        => _activeFileNames.TryGetValue(workPos, out var name) ? name : string.Empty;
 
     public async Task<FlowExecutionResult> ExecuteFlowAsync(string filePath, WorkPos workPos = WorkPos.Left, bool reportResult = true)
     {
@@ -53,6 +84,8 @@ public class FlowExecutionService : IFlowExecutionService
                 };
             }
 
+            // 记录当前流程文件名，供状态消息显示
+            _activeFileNames[workPos] = Path.GetFileName(filePath);
             return await ExecuteFlowAsync(graph, workPos, reportResult);
         }
         catch (FileNotFoundException)
@@ -76,13 +109,14 @@ public class FlowExecutionService : IFlowExecutionService
     public async Task<FlowExecutionResult> ExecuteFlowAsync(FlowGraph graph, WorkPos workPos = WorkPos.Left, bool reportResult = true)
     {
         var result = new FlowExecutionResult();
+        FlowExecutor? executor = null;
 
         try
         {
             var (nodes, connections) = await LoadFlowGraph(graph);
             result.ExecutionLog.Add($"加载流程: {nodes.Count} 个节点, {connections.Count} 条连线");
 
-            var executor = IoC.Get<FlowExecutor>();
+            executor = IoC.Get<FlowExecutor>();
             executor.NodeStateChanged += (nodeId, state) =>
             {
                 var node = nodes.FirstOrDefault(n => n.InstanceId == nodeId);
@@ -92,12 +126,39 @@ public class FlowExecutionService : IFlowExecutionService
                 }
             };
 
-            var outputs = await executor.ExecuteAsync(nodes.ToList(), connections.ToList(), workPos);
+            // 注册为当前工位的活动执行器，供外部急停 / 取消中止流程
+            _activeExecutors[workPos] = executor;
 
-            result.Success = true;
-            result.ExecutedNodeCount = outputs.Count;
-            result.NodeOutputs = outputs;
-            result.ExecutionLog.Add($"执行完成，共 {outputs.Count} 个节点");
+            // 发布"运行中"状态
+            _ = _eventAggregator.PublishOnUIThreadAsync(new FlowExecutionStateMessage
+            {
+                WorkPos = workPos,
+                Status = FlowExecutionStatus.Running,
+                FileName = GetActiveFileName(workPos),
+            });
+
+            try
+            {
+                var outputs = await executor.ExecuteAsync(nodes.ToList(), connections.ToList(), workPos);
+
+                if (executor.WasCancelled)
+                {
+                    result.Success = false;
+                    result.ErrorMessage = "执行已取消";
+                    result.ExecutionLog.Add("执行被取消");
+                }
+                else
+                {
+                    result.Success = true;
+                    result.ExecutedNodeCount = outputs.Count;
+                    result.NodeOutputs = outputs;
+                    result.ExecutionLog.Add($"执行完成，共 {outputs.Count} 个节点");
+                }
+            }
+            finally
+            {
+                _activeExecutors.TryRemove(workPos, out _);
+            }
         }
         catch (Exception ex)
         {
@@ -105,6 +166,29 @@ public class FlowExecutionService : IFlowExecutionService
             result.ErrorMessage = GetErrorMessage(ex);
             result.ExecutionLog.Add($"执行失败: {GetErrorMessage(ex)}");
         }
+
+        // 发布结束状态：被急停 / 取消的流程保持急停 / 取消语义，其余按成功 / 失败
+        FlowExecutionStatus endStatus;
+        if (executor?.WasCancelled == true)
+        {
+            var emergency = _cancelEmergency.TryRemove(workPos, out var e) && e;
+            endStatus = emergency ? FlowExecutionStatus.EmergencyStopped : FlowExecutionStatus.Cancelled;
+        }
+        else
+        {
+            _cancelEmergency.TryRemove(workPos, out _);
+            endStatus = result.Success ? FlowExecutionStatus.Completed : FlowExecutionStatus.Error;
+        }
+
+        _ = _eventAggregator.PublishOnUIThreadAsync(new FlowExecutionStateMessage
+        {
+            WorkPos = workPos,
+            Status = endStatus,
+            FileName = GetActiveFileName(workPos),
+            Message = result.ErrorMessage,
+        });
+
+        _activeFileNames.TryRemove(workPos, out _);
 
         if (reportResult)
         {
