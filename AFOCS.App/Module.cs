@@ -9,25 +9,15 @@ namespace AFOCS.App
     [Export(typeof(IModule))]
     public class Module : ModuleBase
     {
-        // ===== 菜单 =====
+        // ===== 排除框架菜单中不显示的项目 =====
 
         [Export]
-        public static readonly MenuDefinition TestMenu = new MenuDefinition(
-            MenuDefinitions.MainMenuBar, 5, "测试");
-         
-        [Export]
-        public static readonly MenuItemGroupDefinition TestMenuGroup = new MenuItemGroupDefinition(
-            TestMenu, 0);
-
-        // ===== "测试"菜单项 =====
+        public static readonly ExcludeMenuItemDefinition ExcludeToolboxMenuItem = new ExcludeMenuItemDefinition(
+            AFOCS.Framework.Modules.Toolbox.MenuDefinitions.ViewToolboxMenuItem);
 
         [Export]
-        public static readonly MenuItemDefinition ViewTeachingPointTestMenuItem = new CommandMenuItemDefinition<ViewTeachingPointTestCommandDefinition>(
-            TestMenuGroup, 0);
-
-        [Export]
-        public static readonly MenuItemDefinition ViewHomeTestMenuItem = new CommandMenuItemDefinition<ViewHomeTestCommandDefinition>(
-            TestMenuGroup, 1);
+        public static readonly ExcludeMenuItemDefinition ExcludeHistoryMenuItem = new ExcludeMenuItemDefinition(
+            AFOCS.Framework.Modules.UndoRedo.MenuDefinitions.ViewHistoryMenuItem);
 
         // ===== "视图"菜单项 =====
 

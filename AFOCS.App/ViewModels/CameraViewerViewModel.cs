@@ -27,6 +27,9 @@ public class CameraViewerViewModel(
 {
     private readonly ICamera[] _cameraList = cameras.ToArray();
 
+    /// <summary>查看工具不提供右键保存图像功能</summary>
+    public override bool CanSaveImage => false;
+
     /// <summary>可选相机名称列表（Description）</summary>
     public IReadOnlyList<string> CameraNames { get; }
         = cameras.Select(c => c.GetType().GetDescription()).ToArray();

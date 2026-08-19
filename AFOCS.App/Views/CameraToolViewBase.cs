@@ -24,10 +24,10 @@ public abstract class CameraToolViewBase : UserControl
         }
     }
 
-    /// <summary>为相机窗口添加右键菜单（保存为 BMP）</summary>
+    /// <summary>为相机窗口添加右键菜单（保存为 BMP），ViewModel 可关闭该功能</summary>
     private static void EnsureContextMenu(CameraToolViewModelBase vm, HSmartWindowControlWPF control)
     {
-        if (control.ContextMenu != null)
+        if (!vm.CanSaveImage || control.ContextMenu != null)
             return;
 
         var saveItem = new MenuItem { Header = "保存为 BMP" };

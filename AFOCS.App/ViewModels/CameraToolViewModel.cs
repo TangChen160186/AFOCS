@@ -58,6 +58,9 @@ public abstract class CameraToolViewModelBase : Tool, IHandle<VisionInspectionMe
         private set => Set(ref _isConnected, value);
     }
 
+    /// <summary>是否允许右键保存图像（多相机查看工具等可关闭）</summary>
+    public virtual bool CanSaveImage => true;
+
     public string LastResultText
     {
         get;
