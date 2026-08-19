@@ -32,7 +32,6 @@ public class PixelToPulseNodeDefinition : NodeDefinitionBase, IExecutableNode
 
     // ========== 输出端口 ==========
 
-    [Browsable(false)]
     [NodePort("PulseValue", "脉冲值", NodePortType.Double, false)]
     [Category("输出")]
     [ReadOnly(true)]
