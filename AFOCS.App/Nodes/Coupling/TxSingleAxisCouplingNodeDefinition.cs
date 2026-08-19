@@ -153,8 +153,8 @@ public class TxSingleAxisCouplingNodeDefinition(
             throw new InvalidOperationException("扫描长度不能为负");
         if (StepPulse <= 0)
             throw new InvalidOperationException("步长必须大于 0");
-        if (Channel1 < 1 || Channel1 > 4 || Channel2 < 1 || Channel2 > 4)
-            throw new InvalidOperationException("通道1/通道2 必须在 1~4 之间");
+        if (Channel1 < 0 || Channel1 > 3 || Channel2 <0 || Channel2 > 3)
+            throw new InvalidOperationException("通道1/通道2 必须在 0~3 之间");
         if (Channel1 == Channel2)
             throw new InvalidOperationException("通道1 与 通道2 不能相同");
         if (GapUm <= 0)

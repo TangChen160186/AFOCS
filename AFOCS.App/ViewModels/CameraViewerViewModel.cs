@@ -1,4 +1,5 @@
 using System.ComponentModel.Composition;
+using AFOCS.App.Services;
 using AFOCS.Devices.Camera;
 using AFOCS.Framework.Framework;
 using AFOCS.Framework.Framework.Services;
@@ -12,7 +13,7 @@ public interface ICameraViewerTool : ITool;
 
 /// <summary>
 /// 相机查看工具：通过下拉列表在多个相机之间切换实时显示，
-/// 右键窗口可保存当前帧为 PNG（弹出保存对话框由用户选择目录）。
+/// 右键窗口可保存当前帧为 BMP（弹出保存对话框由用户选择目录）。
 /// </summary>
 [Export]
 [Export(typeof(ICameraViewerTool))]
@@ -21,14 +22,12 @@ public interface ICameraViewerTool : ITool;
 public class CameraViewerViewModel(
     [ImportMany] IEnumerable<ICamera> cameras,
     ILogger logger,
-    IEventAggregator events)
+    IEventAggregator events,
+    IToastService toastService)
     : CameraToolViewModelBase(
-        cameras.First(), cameras.First().GetType().GetDescription(), logger, events), ICameraViewerTool
+        cameras.First(), cameras.First().GetType().GetDescription(), logger, events, toastService), ICameraViewerTool
 {
     private readonly ICamera[] _cameraList = cameras.ToArray();
-
-    /// <summary>查看工具不提供右键保存图像功能</summary>
-    public override bool CanSaveImage => false;
 
     /// <summary>可选相机名称列表（Description）</summary>
     public IReadOnlyList<string> CameraNames { get; }

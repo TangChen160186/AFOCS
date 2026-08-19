@@ -46,7 +46,7 @@
                 </StackPanel>
             </Grid>
         </Border>
-        <!-- 实时图像窗口（右键可保存 PNG） -->
+        <!-- 实时图像窗口（右键可保存 BMP） -->
         <halconDotNet:HSmartWindowControlWPF x:Name="HWindowControl" />
     </DockPanel>
 </base:CameraToolViewBase>

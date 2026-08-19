@@ -32,6 +32,7 @@ public abstract class CameraToolViewModelBase : Tool, IHandle<VisionInspectionMe
     private ICamera _camera;
     private string _cameraName;
     private readonly ILogger _logger;
+    private readonly IToastService _toastService;
     private readonly DispatcherTimer _renderTimer;
 
     // ---- Halcon 窗口（由 View 挂接） ----
@@ -67,11 +68,12 @@ public abstract class CameraToolViewModelBase : Tool, IHandle<VisionInspectionMe
         set => Set(ref field, value);
     } = string.Empty;
 
-    protected CameraToolViewModelBase(ICamera camera, string cameraName, ILogger logger, IEventAggregator events)
+    protected CameraToolViewModelBase(ICamera camera, string cameraName, ILogger logger, IEventAggregator events, IToastService toastService)
     {
         _camera = camera;
         _cameraName = cameraName;
         _logger = logger;
+        _toastService = toastService;
         DisplayName = $"{cameraName}实时图像";
         IsConnected = camera.IsConnected;
 
@@ -217,9 +219,15 @@ public abstract class CameraToolViewModelBase : Tool, IHandle<VisionInspectionMe
         }
     }
 
-    /// <summary>右键保存当前帧为 BMP：直接调用相机设备保存方法，弹出保存对话框选择目录</summary>
+    /// <summary>右键保存当前帧为 BMP：未连接时提示并中止，否则弹出保存对话框选择目录</summary>
     public async void SaveAsBmp()
     {
+        if (!_camera.IsConnected)
+        {
+            _toastService.ShowWarning($"{_cameraName} 未连接，无法保存图像");
+            return;
+        }
+
         var dialog = new SaveFileDialog
         {
             Title = "保存图像为 BMP",
@@ -386,8 +394,9 @@ public abstract class CameraToolViewModelBase : Tool, IHandle<VisionInspectionMe
 public class LeftUpCameraViewModel(
     [ImportMany] IEnumerable<ICamera> cameras,
     ILogger logger,
-    IEventAggregator events)
-    : CameraToolViewModelBase(ResolveCamera(cameras, "左上相机"), "左上相机", logger, events), ILeftUpCameraTool
+    IEventAggregator events,
+    IToastService toastService)
+    : CameraToolViewModelBase(ResolveCamera(cameras, "左上相机"), "左上相机", logger, events, toastService), ILeftUpCameraTool
 {
     public override PaneLocation PreferredLocation => PaneLocation.Right;
     public override double PreferredWidth => 640;
@@ -404,8 +413,9 @@ public class LeftUpCameraViewModel(
 public class LeftDownCameraViewModel(
     [ImportMany] IEnumerable<ICamera> cameras,
     ILogger logger,
-    IEventAggregator events)
-    : CameraToolViewModelBase(ResolveCamera(cameras, "左下相机"), "左下相机", logger, events), ILeftDownCameraTool
+    IEventAggregator events,
+    IToastService toastService)
+    : CameraToolViewModelBase(ResolveCamera(cameras, "左下相机"), "左下相机", logger, events, toastService), ILeftDownCameraTool
 {
     public override PaneLocation PreferredLocation => PaneLocation.Right;
     public override double PreferredWidth => 640;
@@ -422,8 +432,9 @@ public class LeftDownCameraViewModel(
 public class RightUpCameraViewModel(
     [ImportMany] IEnumerable<ICamera> cameras,
     ILogger logger,
-    IEventAggregator events)
-    : CameraToolViewModelBase(ResolveCamera(cameras, "右上相机"), "右上相机", logger, events), IRightUpCameraTool
+    IEventAggregator events,
+    IToastService toastService)
+    : CameraToolViewModelBase(ResolveCamera(cameras, "右上相机"), "右上相机", logger, events, toastService), IRightUpCameraTool
 {
     public override PaneLocation PreferredLocation => PaneLocation.Right;
     public override double PreferredWidth => 640;
@@ -440,8 +451,9 @@ public class RightUpCameraViewModel(
 public class RightDownCameraViewModel(
     [ImportMany] IEnumerable<ICamera> cameras,
     ILogger logger,
-    IEventAggregator events)
-    : CameraToolViewModelBase(ResolveCamera(cameras, "右下相机"), "右下相机", logger, events), IRightDownCameraTool
+    IEventAggregator events,
+    IToastService toastService)
+    : CameraToolViewModelBase(ResolveCamera(cameras, "右下相机"), "右下相机", logger, events, toastService), IRightDownCameraTool
 {
     public override PaneLocation PreferredLocation => PaneLocation.Right;
     public override double PreferredWidth => 640;

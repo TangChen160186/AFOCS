@@ -533,7 +533,16 @@ public abstract class AkribisMotion<TConfig> : IAkribisMotion where TConfig: Akr
 
     // ========== AGenData 辅助 ==========
 
-    private void SetAGenData(int address, int value) => SendRawCommand($"AGenData[{address}]={value}");
+    /// <summary>
+    /// 写入 AGenData 寄存器：正常响应为 "OK"，返回其他内容即命令执行错误（如参数非法），
+    /// 抛异常中止当前流程，错误信息随异常向上传播。
+    /// </summary>
+    private void SetAGenData(int address, int value)
+    {
+        var response = SendRawCommand($"AGenData[{address}]={value}");
+        if (!response.Equals("OK", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException($"设置 AGenData[{address}]={value} 失败: 控制器响应 '{response}'");
+    }
 
     private string GetAGenData(int address) => SendRawCommand($"AGenData[{address}]");
 
