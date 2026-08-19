@@ -25,12 +25,12 @@
 
         <!-- ===== D-Pad 方向按钮 ===== -->
         <Style x:Key="DPadBtn" TargetType="Button">
-            <Setter Property="Width" Value="40"/>
-            <Setter Property="Height" Value="34"/>
-            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="FontSize" Value="11"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Padding" Value="0"/>
-            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Margin" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -38,7 +38,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
-                                CornerRadius="5" Padding="0">
+                                CornerRadius="3" Padding="0">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -49,15 +49,6 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
-
-        <!-- ===== 当前位置（竖排）文本 ===== -->
-        <Style x:Key="PosText" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Consolas"/>
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
-            <Setter Property="Margin" Value="0,2"/>
-            <Setter Property="HorizontalAlignment" Value="Left"/>
         </Style>
 
         <!-- ===== 次要按钮（刷新用） ===== -->
@@ -173,9 +164,9 @@
                         </ListBox.ItemsPanel>
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
-                                <Setter Property="Width" Value="88"/>
-                                <Setter Property="Height" Value="32"/>
-                                <Setter Property="FontSize" Value="14"/>
+                                <Setter Property="Width" Value="72"/>
+                                <Setter Property="Height" Value="28"/>
+                                <Setter Property="FontSize" Value="13"/>
                                 <Setter Property="FontWeight" Value="SemiBold"/>
                                 <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
                                 <Setter Property="Background" Value="{StaticResource CardBorder}"/>
@@ -213,28 +204,28 @@
                     BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
                     CornerRadius="8" Padding="10,6" Margin="0,0,0,6">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="相机:" FontSize="12" Foreground="{StaticResource TextSecondary}"
+                    <TextBlock Text="相机:" FontSize="11" Foreground="{StaticResource TextSecondary}"
                                VerticalAlignment="Center" Margin="0,0,4,0"/>
                     <TextBox Text="{Binding CameraJogStep, UpdateSourceTrigger=PropertyChanged}"
-                             Width="80" Height="28" FontSize="12"
+                             Width="80" Height="24" FontSize="11"
                              VerticalContentAlignment="Center" HorizontalContentAlignment="Right"
                              Margin="0,0,12,0" BorderBrush="#D0D0D0"/>
-                    <TextBlock Text="旋转:" FontSize="12" Foreground="{StaticResource TextSecondary}"
+                    <TextBlock Text="旋转:" FontSize="11" Foreground="{StaticResource TextSecondary}"
                                VerticalAlignment="Center" Margin="0,0,4,0"/>
                     <TextBox Text="{Binding RotationJogStep, UpdateSourceTrigger=PropertyChanged}"
-                             Width="42" Height="28" FontSize="12"
+                             Width="42" Height="24" FontSize="11"
                              VerticalContentAlignment="Center" HorizontalContentAlignment="Right"
                              Margin="0,0,12,0" BorderBrush="#D0D0D0"/>
-                    <TextBlock Text="Ak:" FontSize="12" Foreground="{StaticResource TextSecondary}"
+                    <TextBlock Text="Ak:" FontSize="11" Foreground="{StaticResource TextSecondary}"
                                VerticalAlignment="Center" Margin="0,0,4,0"/>
                     <TextBox Text="{Binding AkribisJogStep, UpdateSourceTrigger=PropertyChanged}"
-                             Width="100" Height="28" FontSize="12"
+                             Width="100" Height="24" FontSize="11"
                              VerticalContentAlignment="Center" HorizontalContentAlignment="Right"
                              Margin="0,0,12,0" BorderBrush="#D0D0D0"/>
-                    <TextBlock Text="夹爪:" FontSize="12" Foreground="{StaticResource TextSecondary}"
+                    <TextBlock Text="夹爪:" FontSize="11" Foreground="{StaticResource TextSecondary}"
                                VerticalAlignment="Center" Margin="0,0,4,0"/>
                     <TextBox Text="{Binding GripperStep, UpdateSourceTrigger=PropertyChanged}"
-                             Width="40" Height="28" FontSize="12"
+                             Width="40" Height="24" FontSize="11"
                              VerticalContentAlignment="Center" HorizontalContentAlignment="Right"
                              BorderBrush="#D0D0D0"/>
                 </StackPanel>
@@ -254,30 +245,42 @@
                     <!-- 1. 相机 D-Pad -->
                     <Border Background="{StaticResource CardBg}"
                             BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
-                            CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
+                            CornerRadius="8" Padding="10,8" Margin="0,0,0,6">
                         <StackPanel>
                             <TextBlock Text="相机轴（总线）" FontSize="12" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,6"/>
+                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,2"/>
 
-                            <Grid HorizontalAlignment="Center">
+                            <Grid HorizontalAlignment="Center" Margin="0,2,0,0">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <!-- XY 十字方向 -->
-                                <Grid Grid.Column="0">
+                                <!-- 左：当前位置（竖排） -->
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,18,0"
+                                            Visibility="{Binding HasCameraPos, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="{Binding CameraPosXText}" FontSize="10"
+                                               Foreground="{StaticResource TextMuted}" Margin="0,0,0,1"/>
+                                    <TextBlock Text="{Binding CameraPosYText}" FontSize="10"
+                                               Foreground="{StaticResource TextMuted}" Margin="0,0,0,1"/>
+                                    <TextBlock Text="{Binding CameraPosZText}" FontSize="10"
+                                               Foreground="{StaticResource TextMuted}" Margin="0,0,0,1"/>
+                                    <TextBlock Text="{Binding CameraSidePosText}" FontSize="10"
+                                               Foreground="{StaticResource TextMuted}"/>
+                                </StackPanel>
+
+                                <!-- 中：十字（XY） -->
+                                <Grid Grid.Column="1">
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="26"/>
+                                        <RowDefinition Height="26"/>
+                                        <RowDefinition Height="26"/>
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="28"/>
+                                        <ColumnDefinition Width="28"/>
+                                        <ColumnDefinition Width="28"/>
                                     </Grid.ColumnDefinitions>
 
                                     <Button Grid.Row="0" Grid.Column="1" cal:Message.Attach="JogBusCamera('Y', 1)"
@@ -292,32 +295,29 @@
                                             Content="▼" Style="{StaticResource DPadBtn}" Background="#E67E22"/>
                                 </Grid>
 
-                                <!-- Z 轴列 -->
-                                <StackPanel Grid.Column="1" Margin="8,2,0,0">
-                                    <Button cal:Message.Attach="JogBusCamera('Z', -1)" Content="Z−"
-                                            Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
-                                    <Button cal:Message.Attach="JogBusCamera('Z', 1)" Content="Z+"
-                                            Style="{StaticResource DPadBtn}" Background="#2ECC71"/>
-                                </StackPanel>
+                                <!-- 右：Z 竖排 + 侧相机（竖排，位于 Z 右侧） -->
+                                <Grid Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
 
-                                <!-- 侧向机列 -->
-                                <StackPanel Grid.Column="2" Margin="8,2,0,0">
-                                    <Button cal:Message.Attach="JogBusCameraSide(-1)" Content="侧−"
-                                            Style="{StaticResource DPadBtn}" Background="#8E44AD"/>
-                                    <Button cal:Message.Attach="JogBusCameraSide(1)" Content="侧+"
-                                            Style="{StaticResource DPadBtn}" Background="#8E44AD"/>
-                                </StackPanel>
+                                    <!-- Z 列 -->
+                                    <StackPanel Grid.Column="0">
+                                        <Button cal:Message.Attach="JogBusCamera('Z', 1)" Content="Z+"
+                                                Style="{StaticResource DPadBtn}" Background="#2ECC71" Margin="0,0,4,4"/>
+                                        <Button cal:Message.Attach="JogBusCamera('Z', -1)" Content="Z−"
+                                                Style="{StaticResource DPadBtn}" Background="#95A5A6" Margin="0,0,4,0"/>
+                                    </StackPanel>
 
-                                <!-- 当前位置（竖排，占右侧横向空间） -->
-                                <StackPanel Grid.Column="3" Margin="14,0,0,0" VerticalAlignment="Center"
-                                            Visibility="{Binding HasCameraPos, Converter={StaticResource BoolToVis}}">
-                                    <TextBlock Text="位置" FontSize="10" Foreground="{StaticResource TextSecondary}"
-                                               Margin="0,0,0,2"/>
-                                    <TextBlock Text="{Binding CameraPosXText}" Style="{StaticResource PosText}"/>
-                                    <TextBlock Text="{Binding CameraPosYText}" Style="{StaticResource PosText}"/>
-                                    <TextBlock Text="{Binding CameraPosZText}" Style="{StaticResource PosText}"/>
-                                    <TextBlock Text="{Binding CameraSidePosText}" Style="{StaticResource PosText}"/>
-                                </StackPanel>
+                                    <!-- 侧相机列（Y 方向，竖排） -->
+                                    <StackPanel Grid.Column="1">
+                                        <Button cal:Message.Attach="JogBusCameraSide(-1)" Content="◀"
+                                                Style="{StaticResource DPadBtn}" Background="#E74C3C" Margin="0,0,0,4"/>
+                                        <Button cal:Message.Attach="JogBusCameraSide(1)" Content="▶"
+                                                Style="{StaticResource DPadBtn}" Background="#27AE60"/>
+                                    </StackPanel>
+                                </Grid>
                             </Grid>
                         </StackPanel>
                     </Border>
@@ -325,29 +325,40 @@
                     <!-- 2. 左旋转 D-Pad -->
                     <Border Background="{StaticResource CardBg}"
                             BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
-                            CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
+                            CornerRadius="8" Padding="10,8" Margin="0,0,0,6">
                         <StackPanel>
                             <TextBlock Text="左耦合旋转轴（总线）" FontSize="12" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,6"/>
+                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,2"/>
 
-                            <Grid HorizontalAlignment="Center">
+                            <Grid HorizontalAlignment="Center" Margin="0,2,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <!-- XY 十字方向 -->
-                                <Grid Grid.Column="0">
+                                <!-- 左：当前位置（竖排） -->
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,18,0"
+                                            Visibility="{Binding HasLeftRotPos, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="{Binding LeftRotPosXText}" FontSize="10"
+                                               Foreground="{StaticResource TextMuted}" Margin="0,0,0,1"/>
+                                    <TextBlock Text="{Binding LeftRotPosYText}" FontSize="10"
+                                               Foreground="{StaticResource TextMuted}" Margin="0,0,0,1"/>
+                                    <TextBlock Text="{Binding LeftRotPosZText}" FontSize="10"
+                                               Foreground="{StaticResource TextMuted}"/>
+                                </StackPanel>
+
+                                <!-- 中：十字（XY） -->
+                                <Grid Grid.Column="1">
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="26"/>
+                                        <RowDefinition Height="26"/>
+                                        <RowDefinition Height="26"/>
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="28"/>
+                                        <ColumnDefinition Width="28"/>
+                                        <ColumnDefinition Width="28"/>
                                     </Grid.ColumnDefinitions>
 
                                     <Button Grid.Row="0" Grid.Column="1" cal:Message.Attach="JogBusLeftRot('Y', 1)"
@@ -362,22 +373,12 @@
                                             Content="▼" Style="{StaticResource DPadBtn}" Background="#E67E22"/>
                                 </Grid>
 
-                                <!-- Z 轴列 -->
-                                <StackPanel Grid.Column="1" Margin="8,2,0,0">
-                                    <Button cal:Message.Attach="JogBusLeftRot('Z', -1)" Content="Z−"
-                                            Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
+                                <!-- 右：Z 竖排 -->
+                                <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center">
                                     <Button cal:Message.Attach="JogBusLeftRot('Z', 1)" Content="Z+"
                                             Style="{StaticResource DPadBtn}" Background="#2ECC71"/>
-                                </StackPanel>
-
-                                <!-- 当前位置（竖排，占右侧横向空间） -->
-                                <StackPanel Grid.Column="2" Margin="14,0,0,0" VerticalAlignment="Center"
-                                            Visibility="{Binding HasLeftRotPos, Converter={StaticResource BoolToVis}}">
-                                    <TextBlock Text="位置" FontSize="10" Foreground="{StaticResource TextSecondary}"
-                                               Margin="0,0,0,2"/>
-                                    <TextBlock Text="{Binding LeftRotPosXText}" Style="{StaticResource PosText}"/>
-                                    <TextBlock Text="{Binding LeftRotPosYText}" Style="{StaticResource PosText}"/>
-                                    <TextBlock Text="{Binding LeftRotPosZText}" Style="{StaticResource PosText}"/>
+                                    <Button cal:Message.Attach="JogBusLeftRot('Z', -1)" Content="Z−"
+                                            Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
@@ -386,29 +387,40 @@
                     <!-- 3. 右旋转 D-Pad -->
                     <Border Background="{StaticResource CardBg}"
                             BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
-                            CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
+                            CornerRadius="8" Padding="10,8" Margin="0,0,0,6">
                         <StackPanel>
                             <TextBlock Text="右耦合旋转轴（总线）" FontSize="12" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,6"/>
+                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,2"/>
 
-                            <Grid HorizontalAlignment="Center">
+                            <Grid HorizontalAlignment="Center" Margin="0,2,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <!-- XY 十字方向 -->
-                                <Grid Grid.Column="0">
+                                <!-- 左：当前位置（竖排） -->
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,18,0"
+                                            Visibility="{Binding HasRightRotPos, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="{Binding RightRotPosXText}" FontSize="10"
+                                               Foreground="{StaticResource TextMuted}" Margin="0,0,0,1"/>
+                                    <TextBlock Text="{Binding RightRotPosYText}" FontSize="10"
+                                               Foreground="{StaticResource TextMuted}" Margin="0,0,0,1"/>
+                                    <TextBlock Text="{Binding RightRotPosZText}" FontSize="10"
+                                               Foreground="{StaticResource TextMuted}"/>
+                                </StackPanel>
+
+                                <!-- 中：十字（XY） -->
+                                <Grid Grid.Column="1">
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="26"/>
+                                        <RowDefinition Height="26"/>
+                                        <RowDefinition Height="26"/>
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="28"/>
+                                        <ColumnDefinition Width="28"/>
+                                        <ColumnDefinition Width="28"/>
                                     </Grid.ColumnDefinitions>
 
                                     <Button Grid.Row="0" Grid.Column="1" cal:Message.Attach="JogBusRightRot('Y', 1)"
@@ -423,22 +435,12 @@
                                             Content="▼" Style="{StaticResource DPadBtn}" Background="#E67E22"/>
                                 </Grid>
 
-                                <!-- Z 轴列 -->
-                                <StackPanel Grid.Column="1" Margin="8,2,0,0">
-                                    <Button cal:Message.Attach="JogBusRightRot('Z', -1)" Content="Z−"
-                                            Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
+                                <!-- 右：Z 竖排 -->
+                                <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center">
                                     <Button cal:Message.Attach="JogBusRightRot('Z', 1)" Content="Z+"
                                             Style="{StaticResource DPadBtn}" Background="#2ECC71"/>
-                                </StackPanel>
-
-                                <!-- 当前位置（竖排，占右侧横向空间） -->
-                                <StackPanel Grid.Column="2" Margin="14,0,0,0" VerticalAlignment="Center"
-                                            Visibility="{Binding HasRightRotPos, Converter={StaticResource BoolToVis}}">
-                                    <TextBlock Text="位置" FontSize="10" Foreground="{StaticResource TextSecondary}"
-                                               Margin="0,0,0,2"/>
-                                    <TextBlock Text="{Binding RightRotPosXText}" Style="{StaticResource PosText}"/>
-                                    <TextBlock Text="{Binding RightRotPosYText}" Style="{StaticResource PosText}"/>
-                                    <TextBlock Text="{Binding RightRotPosZText}" Style="{StaticResource PosText}"/>
+                                    <Button cal:Message.Attach="JogBusRightRot('Z', -1)" Content="Z−"
+                                            Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
@@ -452,29 +454,40 @@
                     <!-- 4. 雅克贝斯 L D-Pad -->
                     <Border Background="{StaticResource CardBg}"
                             BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
-                            CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
+                            CornerRadius="8" Padding="10,8" Margin="0,0,0,6">
                         <StackPanel>
                             <TextBlock Text="{Binding AkribisLDisplay}" FontSize="12" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,6"/>
+                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,2"/>
 
-                            <Grid HorizontalAlignment="Center">
+                            <Grid HorizontalAlignment="Center" Margin="0,2,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <!-- XY 十字方向 -->
-                                <Grid Grid.Column="0">
+                                <!-- 左：当前位置（竖排） -->
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,18,0"
+                                            Visibility="{Binding HasAkribisLPos, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="{Binding AkribisLPosXText}" FontSize="10"
+                                               Foreground="{StaticResource TextMuted}" Margin="0,0,0,1"/>
+                                    <TextBlock Text="{Binding AkribisLPosYText}" FontSize="10"
+                                               Foreground="{StaticResource TextMuted}" Margin="0,0,0,1"/>
+                                    <TextBlock Text="{Binding AkribisLPosZText}" FontSize="10"
+                                               Foreground="{StaticResource TextMuted}"/>
+                                </StackPanel>
+
+                                <!-- 中：十字（XY） -->
+                                <Grid Grid.Column="1">
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="26"/>
+                                        <RowDefinition Height="26"/>
+                                        <RowDefinition Height="26"/>
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="28"/>
+                                        <ColumnDefinition Width="28"/>
+                                        <ColumnDefinition Width="28"/>
                                     </Grid.ColumnDefinitions>
 
                                     <Button Grid.Row="0" Grid.Column="1" cal:Message.Attach="JogAkribisL('Y', 1)"
@@ -489,22 +502,12 @@
                                             Content="▼" Style="{StaticResource DPadBtn}" Background="#E67E22"/>
                                 </Grid>
 
-                                <!-- Z 轴列 -->
-                                <StackPanel Grid.Column="1" Margin="8,2,0,0">
-                                    <Button cal:Message.Attach="JogAkribisL('Z', -1)" Content="Z−"
-                                            Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
+                                <!-- 右：Z 竖排 -->
+                                <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center">
                                     <Button cal:Message.Attach="JogAkribisL('Z', 1)" Content="Z+"
                                             Style="{StaticResource DPadBtn}" Background="#2ECC71"/>
-                                </StackPanel>
-
-                                <!-- 当前位置（竖排，占右侧横向空间） -->
-                                <StackPanel Grid.Column="2" Margin="14,0,0,0" VerticalAlignment="Center"
-                                            Visibility="{Binding HasAkribisLPos, Converter={StaticResource BoolToVis}}">
-                                    <TextBlock Text="位置" FontSize="10" Foreground="{StaticResource TextSecondary}"
-                                               Margin="0,0,0,2"/>
-                                    <TextBlock Text="{Binding AkribisLPosXText}" Style="{StaticResource PosText}"/>
-                                    <TextBlock Text="{Binding AkribisLPosYText}" Style="{StaticResource PosText}"/>
-                                    <TextBlock Text="{Binding AkribisLPosZText}" Style="{StaticResource PosText}"/>
+                                    <Button cal:Message.Attach="JogAkribisL('Z', -1)" Content="Z−"
+                                            Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
@@ -513,29 +516,40 @@
                     <!-- 5. 雅克贝斯 R D-Pad -->
                     <Border Background="{StaticResource CardBg}"
                             BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
-                            CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
+                            CornerRadius="8" Padding="10,8" Margin="0,0,0,6">
                         <StackPanel>
                             <TextBlock Text="{Binding AkribisRDisplay}" FontSize="12" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,6"/>
+                                       Foreground="{StaticResource TextPrimary}" Margin="0,0,0,2"/>
 
-                            <Grid HorizontalAlignment="Center">
+                            <Grid HorizontalAlignment="Center" Margin="0,2,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <!-- XY 十字方向 -->
-                                <Grid Grid.Column="0">
+                                <!-- 左：当前位置（竖排） -->
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,18,0"
+                                            Visibility="{Binding HasAkribisRPos, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="{Binding AkribisRPosXText}" FontSize="10"
+                                               Foreground="{StaticResource TextMuted}" Margin="0,0,0,1"/>
+                                    <TextBlock Text="{Binding AkribisRPosYText}" FontSize="10"
+                                               Foreground="{StaticResource TextMuted}" Margin="0,0,0,1"/>
+                                    <TextBlock Text="{Binding AkribisRPosZText}" FontSize="10"
+                                               Foreground="{StaticResource TextMuted}"/>
+                                </StackPanel>
+
+                                <!-- 中：十字（XY） -->
+                                <Grid Grid.Column="1">
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="26"/>
+                                        <RowDefinition Height="26"/>
+                                        <RowDefinition Height="26"/>
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="28"/>
+                                        <ColumnDefinition Width="28"/>
+                                        <ColumnDefinition Width="28"/>
                                     </Grid.ColumnDefinitions>
 
                                     <Button Grid.Row="0" Grid.Column="1" cal:Message.Attach="JogAkribisR('Y', 1)"
@@ -550,22 +564,12 @@
                                             Content="▼" Style="{StaticResource DPadBtn}" Background="#E67E22"/>
                                 </Grid>
 
-                                <!-- Z 轴列 -->
-                                <StackPanel Grid.Column="1" Margin="8,2,0,0">
-                                    <Button cal:Message.Attach="JogAkribisR('Z', -1)" Content="Z−"
-                                            Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
+                                <!-- 右：Z 竖排 -->
+                                <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center">
                                     <Button cal:Message.Attach="JogAkribisR('Z', 1)" Content="Z+"
                                             Style="{StaticResource DPadBtn}" Background="#2ECC71"/>
-                                </StackPanel>
-
-                                <!-- 当前位置（竖排，占右侧横向空间） -->
-                                <StackPanel Grid.Column="2" Margin="14,0,0,0" VerticalAlignment="Center"
-                                            Visibility="{Binding HasAkribisRPos, Converter={StaticResource BoolToVis}}">
-                                    <TextBlock Text="位置" FontSize="10" Foreground="{StaticResource TextSecondary}"
-                                               Margin="0,0,0,2"/>
-                                    <TextBlock Text="{Binding AkribisRPosXText}" Style="{StaticResource PosText}"/>
-                                    <TextBlock Text="{Binding AkribisRPosYText}" Style="{StaticResource PosText}"/>
-                                    <TextBlock Text="{Binding AkribisRPosZText}" Style="{StaticResource PosText}"/>
+                                    <Button cal:Message.Attach="JogAkribisR('Z', -1)" Content="Z−"
+                                            Style="{StaticResource DPadBtn}" Background="#95A5A6"/>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
@@ -581,42 +585,44 @@
 
                             <!-- 夹爪 L -->
                             <Border Background="{StaticResource AccentLightBrush}"
-                                    CornerRadius="6" Padding="6,4" Margin="0,0,0,4">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="{Binding GripperLDisplay}" FontSize="10" FontWeight="SemiBold"
-                                               Foreground="{StaticResource TextPrimary}" Margin="0,0,0,1"/>
-                                    <TextBlock Text="{Binding GripperLPosText}" FontSize="9"
-                                               Foreground="{StaticResource TextMuted}" Margin="0,0,0,3"
-                                               Visibility="{Binding HasGripperL, Converter={StaticResource BoolToVis}}"/>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Button cal:Message.Attach="JogGripperL(-1)" Content="◀ 关闭"
-                                                Style="{StaticResource DPadBtn}" Width="68"
-                                                Background="#E74C3C"/>
-                                        <Button cal:Message.Attach="JogGripperL(1)" Content="打开 ▶"
-                                                Style="{StaticResource DPadBtn}" Width="68"
-                                                Background="#27AE60"/>
-                                    </StackPanel>
-                                </StackPanel>
+                                    CornerRadius="6" Padding="8,5" Margin="0,0,0,4">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding GripperLPosText}" FontSize="11"
+                                               Foreground="{StaticResource TextPrimary}"
+                                               VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <Button Grid.Column="1" cal:Message.Attach="JogGripperL(-1)"
+                                            Content="关闭" Style="{StaticResource DPadBtn}" Width="44"
+                                            Background="#E74C3C" Margin="0,0,4,0"/>
+                                    <Button Grid.Column="2" cal:Message.Attach="JogGripperL(1)"
+                                            Content="打开" Style="{StaticResource DPadBtn}" Width="44"
+                                            Background="#27AE60"/>
+                                </Grid>
                             </Border>
 
                             <!-- 夹爪 R -->
                             <Border Background="{StaticResource AccentLightBrush}"
-                                    CornerRadius="6" Padding="6,4">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="{Binding GripperRDisplay}" FontSize="10" FontWeight="SemiBold"
-                                               Foreground="{StaticResource TextPrimary}" Margin="0,0,0,1"/>
-                                    <TextBlock Text="{Binding GripperRPosText}" FontSize="9"
-                                               Foreground="{StaticResource TextMuted}" Margin="0,0,0,3"
-                                               Visibility="{Binding HasGripperR, Converter={StaticResource BoolToVis}}"/>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Button cal:Message.Attach="JogGripperR(-1)" Content="◀ 关闭"
-                                                Style="{StaticResource DPadBtn}" Width="68"
-                                                Background="#E74C3C"/>
-                                        <Button cal:Message.Attach="JogGripperR(1)" Content="打开 ▶"
-                                                Style="{StaticResource DPadBtn}" Width="68"
-                                                Background="#27AE60"/>
-                                    </StackPanel>
-                                </StackPanel>
+                                    CornerRadius="6" Padding="8,5">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding GripperRPosText}" FontSize="11"
+                                               Foreground="{StaticResource TextPrimary}"
+                                               VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <Button Grid.Column="1" cal:Message.Attach="JogGripperR(-1)"
+                                            Content="关闭" Style="{StaticResource DPadBtn}" Width="44"
+                                            Background="#E74C3C" Margin="0,0,4,0"/>
+                                    <Button Grid.Column="2" cal:Message.Attach="JogGripperR(1)"
+                                            Content="打开" Style="{StaticResource DPadBtn}" Width="44"
+                                            Background="#27AE60"/>
+                                </Grid>
                             </Border>
                         </StackPanel>
                     </Border>

@@ -290,21 +290,15 @@
                                                    FontWeight="SemiBold"
                                                    FontSize="13"
                                                    HorizontalAlignment="Center" />
-                                        <!-- 节点描述：高对比标签，一眼可见 -->
-                                        <Border Background="#FFFDEBB3"
-                                                CornerRadius="4"
-                                                Padding="8,2"
-                                                Margin="0,3,0,0"
-                                                MaxWidth="200"
-                                                HorizontalAlignment="Center"
-                                                Visibility="{Binding Definition.Description, Converter={StaticResource StringToVisibilityConverter}}">
-                                            <TextBlock Text="{Binding Definition.Description}"
-                                                       Foreground="#7A5C00"
-                                                       FontWeight="Bold"
-                                                       FontSize="12"
-                                                       HorizontalAlignment="Center"
-                                                       TextWrapping="Wrap" />
-                                        </Border>
+                                        <TextBlock Text="{Binding Definition.Description}"
+                                                   Foreground="#FFB0B0B0"
+                                                   FontWeight="Medium"
+                                                   FontSize="12"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,2,0,0"
+                                                   TextWrapping="Wrap"
+                                                   MaxWidth="180"
+                                                   Visibility="{Binding Definition.Description, Converter={StaticResource StringToVisibilityConverter}}" />
                                     </StackPanel>
                                 </Border>
 

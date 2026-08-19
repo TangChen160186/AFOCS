@@ -32,7 +32,7 @@ public class GamepadControlViewModel(
     private readonly Dictionary<(WorkPos, PressureSensorType), IPressureSensor> _pressureSensors = [];
 
     public override PaneLocation PreferredLocation => PaneLocation.Right;
-    public override double PreferredWidth => 720;
+    public override double PreferredWidth => 390;
     public override double PreferredHeight => 600;
 
     public override string DisplayName => "手柄控制";
@@ -53,10 +53,6 @@ public class GamepadControlViewModel(
                 NotifyOfPropertyChange(nameof(AkribisRDisplay));
                 NotifyOfPropertyChange(nameof(GripperLName));
                 NotifyOfPropertyChange(nameof(GripperRName));
-                NotifyOfPropertyChange(nameof(GripperLDisplay));
-                NotifyOfPropertyChange(nameof(GripperRDisplay));
-                NotifyOfPropertyChange(nameof(HasGripperL));
-                NotifyOfPropertyChange(nameof(HasGripperR));
                 ReadAkribisPositions();
                 ReadGripperPositions();
                 ReadPressureValues();
@@ -113,50 +109,42 @@ public class GamepadControlViewModel(
     public string GripperRName =>
         SelectedStation == WorkPos.Left ? nameof(LeftCouplingRGripper) : nameof(RightCouplingRGripper);
 
-    public string GripperLDisplay =>
-        SelectedStation == WorkPos.Left ? "左耦合左夹爪" : "右耦合左夹爪";
-
-    public string GripperRDisplay =>
-        SelectedStation == WorkPos.Left ? "左耦合右夹爪" : "右耦合右夹爪";
-
     // ========== 位置显示字段 ==========
 
     private double _camX, _camY, _camZ, _camSide;
-    public string CameraPosXText => $"X: {_camX:F1}";
-    public string CameraPosYText => $"Y: {_camY:F1}";
-    public string CameraPosZText => $"Z: {_camZ:F1}";
-    public string CameraSidePosText => $"侧: {_camSide:F1}";
+    public string CameraPosXText => $"X:{_camX:F1}";
+    public string CameraPosYText => $"Y:{_camY:F1}";
+    public string CameraPosZText => $"Z:{_camZ:F1}";
+    public string CameraSidePosText => $"侧Y: {_camSide:F1}";
     public bool HasCameraPos => !double.IsNaN(_camX);
 
     private double _lrx, _lry, _lrz;
-    public string LeftRotPosXText => $"θX: {_lrx:F1}";
-    public string LeftRotPosYText => $"θY: {_lry:F1}";
-    public string LeftRotPosZText => $"θZ: {_lrz:F1}";
+    public string LeftRotPosXText => $"θX:{_lrx:F1}";
+    public string LeftRotPosYText => $"θY:{_lry:F1}";
+    public string LeftRotPosZText => $"θZ:{_lrz:F1}";
     public bool HasLeftRotPos => !double.IsNaN(_lrx);
 
     private double _rrx, _rry, _rrz;
-    public string RightRotPosXText => $"θX: {_rrx:F1}";
-    public string RightRotPosYText => $"θY: {_rry:F1}";
-    public string RightRotPosZText => $"θZ: {_rrz:F1}";
+    public string RightRotPosXText => $"θX:{_rrx:F1}";
+    public string RightRotPosYText => $"θY:{_rry:F1}";
+    public string RightRotPosZText => $"θZ:{_rrz:F1}";
     public bool HasRightRotPos => !double.IsNaN(_rrx);
 
     private int _alx, _aly, _alz;
-    public string AkribisLPosXText => $"X: {_alx}";
-    public string AkribisLPosYText => $"Y: {_aly}";
-    public string AkribisLPosZText => $"Z: {_alz}";
+    public string AkribisLPosXText => $"X:{_alx}";
+    public string AkribisLPosYText => $"Y:{_aly}";
+    public string AkribisLPosZText => $"Z:{_alz}";
     public bool HasAkribisLPos => _akribisInstances.ContainsKey(AkribisLName);
 
     private int _arx, _ary, _arz;
-    public string AkribisRPosXText => $"X: {_arx}";
-    public string AkribisRPosYText => $"Y: {_ary}";
-    public string AkribisRPosZText => $"Z: {_arz}";
+    public string AkribisRPosXText => $"X:{_arx}";
+    public string AkribisRPosYText => $"Y:{_ary}";
+    public string AkribisRPosZText => $"Z:{_arz}";
     public bool HasAkribisRPos => _akribisInstances.ContainsKey(AkribisRName);
 
     private int _glpos, _grpos;
     public string GripperLPosText => $"位置: {_glpos} / 400";
     public string GripperRPosText => $"位置: {_grpos} / 400";
-    public bool HasGripperL => _grippers.ContainsKey(GripperLName);
-    public bool HasGripperR => _grippers.ContainsKey(GripperRName);
 
     // ========== 压力值显示字段 ==========
 
@@ -384,22 +372,37 @@ public class GamepadControlViewModel(
 
     // ========== 总线轴 D-Pad ==========
 
-    public Task JogBusCamera(string axisId, int direction) => JogBus(axisId switch
+    public Task JogBusCamera(string axisId, int direction)
     {
-        "X" => "CamUpX", "Y" => "CamUpY", "Z" => "CamUpZ", _ => axisId,
-    }, direction);
+        // 相机 Y 轴反向运行
+        if (axisId == "Y") direction = -direction;
+        return JogBus(axisId switch
+        {
+            "X" => "CamUpX", "Y" => "CamUpY", "Z" => "CamUpZ", _ => axisId,
+        }, direction);
+    }
 
     public Task JogBusCameraSide(int direction) => JogBus("CamSideY", direction);
 
-    public Task JogBusLeftRot(string axisId, int direction) => JogBus(axisId switch
+    public Task JogBusLeftRot(string axisId, int direction)
     {
-        "X" => "CouplingLThetaX", "Y" => "CouplingLThetaY", "Z" => "CouplingLThetaZ", _ => axisId,
-    }, direction);
+        // 左耦合 Z 轴反向运行
+        if (axisId == "Z") direction = -direction;
+        return JogBus(axisId switch
+        {
+            "X" => "CouplingLThetaX", "Y" => "CouplingLThetaY", "Z" => "CouplingLThetaZ", _ => axisId,
+        }, direction);
+    }
 
-    public Task JogBusRightRot(string axisId, int direction) => JogBus(axisId switch
+    public Task JogBusRightRot(string axisId, int direction)
     {
-        "X" => "CouplingRThetaX", "Y" => "CouplingRThetaY", "Z" => "CouplingRThetaZ", _ => axisId,
-    }, direction);
+        // 右耦合 X/Y 与左耦合相反，Z 轴反向运行
+        direction = -direction;
+        return JogBus(axisId switch
+        {
+            "X" => "CouplingRThetaX", "Y" => "CouplingRThetaY", "Z" => "CouplingRThetaZ", _ => axisId,
+        }, direction);
+    }
 
     private async Task JogBus(string axisName, int direction)
     {
