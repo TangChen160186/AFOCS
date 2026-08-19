@@ -214,34 +214,30 @@ public abstract class CameraToolViewModelBase : Tool, IHandle<VisionInspectionMe
         }
     }
 
-    /// <summary>右键保存当前显示帧为 PNG：弹出保存对话框选择目录</summary>
-    public void SaveAsPng()
+    /// <summary>右键保存当前帧为 BMP：直接调用相机设备保存方法，弹出保存对话框选择目录</summary>
+    public async void SaveAsBmp()
     {
-        var image = _displayImage;
-        if (image == null)
-        {
-            _logger.Warning("[{Camera}] 当前无图像可保存", _cameraName);
-            return;
-        }
-
         var dialog = new SaveFileDialog
         {
-            Title = "保存图像为 PNG",
-            Filter = "PNG 图片 (*.png)|*.png",
-            DefaultExt = ".png",
-            FileName = $"{_cameraName}_{DateTime.Now:yyyyMMdd_HHmmss_fff}.png",
+            Title = "保存图像为 BMP",
+            Filter = "BMP 图片 (*.bmp)|*.bmp",
+            DefaultExt = ".bmp",
+            FileName = $"{_cameraName}_{DateTime.Now:yyyyMMdd_HHmmss_fff}.bmp",
         };
         if (dialog.ShowDialog() != true)
             return;
 
         try
         {
-            image.WriteImage("png", 0, dialog.FileName);
-            _logger.Information("[{Camera}] 图像已保存: {Path}", _cameraName, dialog.FileName);
+            var result = await _camera.CaptureImageAsync(dialog.FileName);
+            if (result.IsSuccess)
+                _logger.Information("[{Camera}] 图像已保存: {Path}", _cameraName, result.Data);
+            else
+                _logger.Warning("[{Camera}] 保存 BMP 失败: {Msg}", _cameraName, result.Message);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "[{Camera}] 保存 PNG 失败", _cameraName);
+            _logger.Error(ex, "[{Camera}] 保存 BMP 失败", _cameraName);
         }
     }
 
